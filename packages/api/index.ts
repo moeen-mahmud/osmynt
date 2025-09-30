@@ -3,7 +3,7 @@ const version = process.env.NEXT_PUBLIC_API_DOC_VERSION!;
 
 // Create a simplified client that provides the expected method signatures
 export const client = (name?: string, token?: string) => {
-	const baseURL = `${baseUrl}/talinq-api-engine/${version}/${name || ""}`;
+	const baseURL = `${baseUrl}/osmynt-api-engine/${version}/${name || ""}`;
 	const headers = {
 		"Content-Type": "application/json",
 		...(token ? { Authorization: `Bearer ${token}` } : {}),
