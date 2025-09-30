@@ -5,6 +5,12 @@ export const ENV = {
 
 	JWT_SECRET: Bun.env.JWT_SECRET,
 
+	GITHUB: {
+		CLIENT_ID: Bun.env.GITHUB_CLIENT_ID,
+		CLIENT_SECRET: Bun.env.GITHUB_CLIENT_SECRET,
+		REDIRECT_URI: Bun.env.GITHUB_REDIRECT_URI,
+	},
+
 	// Database configuration
 	SUPABASE: {
 		URL: Bun.env.SUPABASE_URL,
@@ -14,7 +20,13 @@ export const ENV = {
 
 	// Validation flag for environment variables
 	isConfigValid: function () {
-		const requiredVars = [this.SUPABASE.URL, this.SUPABASE.SERVICE_ROLE_KEY];
+		const requiredVars = [
+			this.SUPABASE.URL,
+			this.SUPABASE.SERVICE_ROLE_KEY,
+			this.GITHUB.CLIENT_ID,
+			this.GITHUB.CLIENT_SECRET,
+			this.JWT_SECRET,
+		];
 
 		return requiredVars.every(Boolean);
 	},

@@ -9,12 +9,15 @@ export const Routes = {
 	// Auth
 	auth: {
 		base: "/auth",
+		github: "/github",
 		callback: "/callback",
 		refresh: "/refresh",
 		loginWithToken: "/login-with-token",
 		logout: "/protected/logout",
 		checkToken: "/check-token",
 		betaSignup: "/beta-signup",
+		handshakeInit: "/handshake/init",
+		handshakeRetrieve: "/handshake/retrieve",
 	},
 
 	// User

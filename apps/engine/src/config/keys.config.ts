@@ -17,3 +17,7 @@ export const AuditLogActions = {
 		TEAM_DELETED_EXT: "TEAM_DELETED_EXT",
 	},
 };
+
+export const AuthCookieKeys = {
+	session: "osmynt-session",
+};

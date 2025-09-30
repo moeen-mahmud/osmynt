@@ -5,3 +5,5 @@ export const GITHUB_ACCEPT_APPLICATION_JSON = "application/vnd.github.v3+json";
 
 export const CodeShareActionKey = "share_code";
 export const TeamCodeShareActionKey = "share_team_code";
+
+export const HANDSHAKE_EXPIRY_MS = 1000 * 60 * 5; // 5 minutes

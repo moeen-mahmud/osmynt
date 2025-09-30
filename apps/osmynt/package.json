@@ -43,12 +43,6 @@
 	],
 	"icon": "resources/osmynt-128x.png",
 	"contributes": {
-		"viewsWelcome": [
-			{
-				"view": "osmyntView",
-				"contents": "Welcome to Osmynt! Share your code snippets with your team in real-time."
-			}
-		],
 		"commands": [
 			{
 				"command": "osmynt.login",
@@ -59,6 +53,16 @@
 				"command": "osmynt.logout",
 				"title": "Logout",
 				"category": "Osmynt"
+			},
+			{
+				"command": "osmynt.refreshEntry",
+				"title": "Refresh",
+				"category": "Osmynt"
+			},
+			{
+				"command": "osmynt.shareCode",
+				"title": "Share Selected Code",
+				"category": "Osmynt"
 			}
 		],
 		"menus": {
@@ -68,36 +72,24 @@
 					"group": "navigation",
 					"when": "editor.hasSelection"
 				}
-			],
-			"view/title": [
-				{
-					"command": "osmynt.refreshEntry",
-					"group": "navigation",
-					"when": "osmynt.isLoggedIn == true && osmyntViewActive == true"
-				}
 			]
 		},
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "osmynt",
-					"title": "Osmynt",
-					"icon": "resources/osmynt.svg"
+		"configuration": {
+			"title": "Osmynt",
+			"properties": {
+				"osmynt.engineBaseUrl": {
+					"type": "string",
+					"default": "http://localhost:3000/osmynt-api-engine",
+					"description": "Osmynt Engine base URL (e.g. https://api.osmynt.com/osmynt-api-engine)"
 				}
-			]
-		},
-		"views": {
-			"osmynt": [
-				{
-					"id": "osmyntView",
-					"name": "Osmynt",
-					"contextualTitle": "Osmynt",
-					"icon": "resources/osmynt.svg"
-				}
-			]
+			}
 		}
 	},
-	"activationEvents": [],
+	"activationEvents": [
+		"onCommand:osmynt.login",
+		"onCommand:osmynt.logout",
+		"onCommand:osmynt.shareCode"
+	],
 	"engines": {
 		"vscode": "^1.94.0"
 	}
