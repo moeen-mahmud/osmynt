@@ -1,0 +1,3 @@
+export const MAX_RECONNECT_ATTEMPTS = 3;
+export const RECONNECT_DELAY = 2000;
+export const WEBSOCKET_INIT_TIMEOUT = 10000;

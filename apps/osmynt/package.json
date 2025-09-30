@@ -1,0 +1,156 @@
+{
+	"main": "dist/extension.cjs",
+	"dependencies": {
+		"@types/bun": "^1.1.13",
+		"@types/vscode": "^1.86.0",
+		"uuid": "^11.0.3",
+		"ws": "^8.18.0"
+	},
+	"author": {
+		"name": "Moeen Mahmud",
+		"email": "moeen.mahmud007@gmail.com",
+		"url": "https://github.com/moeen-mahmud"
+	},
+	"devDependencies": {
+		"@types/bun": "1.1.13",
+		"@osmynt-core/api": "workspace:*",
+		"@osmynt-core/library": "workspace:*",
+		"bun": "1.1.34",
+		"@types/ws": "^8.5.12",
+		"@vscode/vsce": "^3.2.1",
+		"esbuild": "^0.20.0"
+	},
+	"peerDependencies": {
+		"typescript": "^5.0.0"
+	},
+	"type": "module",
+	"scripts": {
+		"dev": "echo 'Open this directory in VSCode and then run your extension with F5 or `Run and Debug > Run Extension`!'",
+		"build": "bun run ./scripts/build-with-esbuild.ts",
+		"watch": "bun run ./scripts/watch-with-esbuild.ts",
+		"vsce-package": "bun run vsce package --no-dependencies",
+		"package": "bun run build && bun run vsce-package",
+		"clean": "rm -r ./dist"
+	},
+	"publisher": "osmynt",
+	"name": "osmynt",
+	"version": "0.17.3",
+	"displayName": "Osmynt Extension Beta",
+	"description": "Real-time snippet sharing through Osmynt",
+	"categories": [
+		"Snippets",
+		"Other",
+		"Chat"
+	],
+	"icon": "resources/osmynt-128x.png",
+	"contributes": {
+		"viewsWelcome": [
+			{
+				"view": "osmyntView",
+				"contents": "Welcome to Osmynt! Share your code snippets with your team in real-time."
+			}
+		],
+		"commands": [
+			{
+				"command": "osmynt.login",
+				"title": "Login",
+				"category": "Osmynt"
+			},
+			{
+				"command": "osmynt.logout",
+				"title": "Logout",
+				"category": "Osmynt"
+			},
+			{
+				"command": "osmynt.shareCode",
+				"title": "Share with Osmynt",
+				"category": "Osmynt",
+				"icon": "$(share)"
+			},
+			{
+				"command": "osmynt.inviteTeamMember",
+				"title": "Invite Team Member",
+				"category": "Osmynt",
+				"icon": "$(add)"
+			},
+			{
+				"command": "osmynt.joinTeam",
+				"title": "Join Team",
+				"category": "Osmynt",
+				"icon": "$(plug)"
+			},
+			{
+				"command": "osmynt.leaveTeam",
+				"title": "Leave Team",
+				"category": "Osmynt",
+				"icon": "$(unplug)"
+			},
+			{
+				"command": "osmynt.showSnippet",
+				"title": "Show Snippet",
+				"category": "Osmynt",
+				"icon": "$(code)"
+			},
+			{
+				"command": "osmynt.refreshEntry",
+				"title": "Refresh",
+				"category": "Osmynt",
+				"icon": "$(refresh)"
+			},
+			{
+				"command": "osmynt.trackInsertedSnippet",
+				"title": "Track Inserted Snippet",
+				"category": "Osmynt"
+			},
+			{
+				"command": "osmynt.showSnippetDetails",
+				"title": "Show Snippet Details",
+				"category": "Osmynt"
+			},
+			{
+				"command": "osmynt.openOriginalFile",
+				"title": "Open Original File",
+				"category": "Osmynt"
+			}
+		],
+		"menus": {
+			"editor/context": [
+				{
+					"command": "osmynt.shareCode",
+					"group": "navigation",
+					"when": "editor.hasSelection"
+				}
+			],
+			"view/title": [
+				{
+					"command": "osmynt.refreshEntry",
+					"group": "navigation",
+					"when": "osmynt.isLoggedIn == true && osmyntViewActive == true"
+				}
+			]
+		},
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "osmynt",
+					"title": "Osmynt",
+					"icon": "resources/osmynt.svg"
+				}
+			]
+		},
+		"views": {
+			"osmynt": [
+				{
+					"id": "osmyntView",
+					"name": "Osmynt",
+					"contextualTitle": "Osmynt",
+					"icon": "resources/osmynt.svg"
+				}
+			]
+		}
+	},
+	"activationEvents": [],
+	"engines": {
+		"vscode": "^1.94.0"
+	}
+}

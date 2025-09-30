@@ -1,2 +1,2 @@
 # .husky/pre-commit
-npx biome lint --write . && npx biome format --write .
+npx biome check --fix && npx biome format --fix

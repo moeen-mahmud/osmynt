@@ -6,7 +6,8 @@
 		"useIgnoreFile": false
 	},
 	"files": {
-		"ignoreUnknown": false
+		"ignoreUnknown": false,
+		"includes": ["**", "!scripts/**/*"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -19,6 +20,12 @@
 			"suspicious": {
 				"noExplicitAny": "off",
 				"useErrorMessage": "warn"
+			},
+			"correctness": {
+				"noUnusedImports": "warn"
+			},
+			"style": {
+				"noNonNullAssertion": "warn"
 			}
 		}
 	},
