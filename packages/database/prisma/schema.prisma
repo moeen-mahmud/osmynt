@@ -27,6 +27,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   AuditLog    AuditLog[]
+  TeamMembers TeamMember[]
+  OwnedTeams  Team[]     @relation("UserOwnedTeams")
 
   @@index([id, githubId, email])
 }
@@ -41,4 +43,38 @@ model AuditLog {
   updatedAt DateTime @updatedAt
 
   User        User     @relation(fields: [userId], references: [id])
+}
+
+enum TeamRole {
+  OWNER
+  MEMBER
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  ownerId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Owner        User         @relation("UserOwnedTeams", fields: [ownerId], references: [id])
+  Members      TeamMember[]
+
+  @@index([slug])
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  role      TeamRole @default(MEMBER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Team  Team @relation(fields: [teamId], references: [id])
+  User  User @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+  @@index([userId, teamId])
 }

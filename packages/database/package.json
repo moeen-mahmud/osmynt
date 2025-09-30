@@ -6,11 +6,12 @@
 	"type": "module",
 	"private": true,
 	"scripts": {
+		"prepare-env": "NODE_ENV=development bun --env-file=../../.env run",
 		"db:generate": "prisma generate",
-		"db:migrate": "prisma migrate dev",
-		"db:deploy": "prisma migrate deploy",
-		"db:studio": "prisma studio",
-		"db:push": "prisma db push"
+		"db:migrate": "bun run prepare-env prisma migrate dev",
+		"db:deploy": "bun run prepare-env prisma migrate deploy",
+		"db:studio": "bun run prepare-env prisma studio",
+		"db:push": "bun run prepare-env prisma db push"
 	},
 	"dependencies": {
 		"@prisma/client": "^6.8.2"
