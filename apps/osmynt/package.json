@@ -3,7 +3,6 @@
 	"dependencies": {
 		"@types/bun": "^1.1.13",
 		"@types/vscode": "^1.86.0",
-		"uuid": "^11.0.3",
 		"ws": "^8.18.0"
 	},
 	"author": {
@@ -35,7 +34,7 @@
 	"publisher": "osmynt",
 	"name": "osmynt",
 	"version": "0.17.3",
-	"displayName": "Osmynt Extension Beta",
+	"displayName": "Osmynt Beta",
 	"description": "Real-time snippet sharing through Osmynt",
 	"categories": [
 		"Snippets",
@@ -59,57 +58,6 @@
 			{
 				"command": "osmynt.logout",
 				"title": "Logout",
-				"category": "Osmynt"
-			},
-			{
-				"command": "osmynt.shareCode",
-				"title": "Share with Osmynt",
-				"category": "Osmynt",
-				"icon": "$(share)"
-			},
-			{
-				"command": "osmynt.inviteTeamMember",
-				"title": "Invite Team Member",
-				"category": "Osmynt",
-				"icon": "$(add)"
-			},
-			{
-				"command": "osmynt.joinTeam",
-				"title": "Join Team",
-				"category": "Osmynt",
-				"icon": "$(plug)"
-			},
-			{
-				"command": "osmynt.leaveTeam",
-				"title": "Leave Team",
-				"category": "Osmynt",
-				"icon": "$(unplug)"
-			},
-			{
-				"command": "osmynt.showSnippet",
-				"title": "Show Snippet",
-				"category": "Osmynt",
-				"icon": "$(code)"
-			},
-			{
-				"command": "osmynt.refreshEntry",
-				"title": "Refresh",
-				"category": "Osmynt",
-				"icon": "$(refresh)"
-			},
-			{
-				"command": "osmynt.trackInsertedSnippet",
-				"title": "Track Inserted Snippet",
-				"category": "Osmynt"
-			},
-			{
-				"command": "osmynt.showSnippetDetails",
-				"title": "Show Snippet Details",
-				"category": "Osmynt"
-			},
-			{
-				"command": "osmynt.openOriginalFile",
-				"title": "Open Original File",
 				"category": "Osmynt"
 			}
 		],
