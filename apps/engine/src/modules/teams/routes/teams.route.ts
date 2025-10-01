@@ -8,7 +8,7 @@ export const route_me = createRoute({
 	path: Routes.teams.me,
 	responses: {
 		200: {
-			description: "Current user's team and members", 
+			description: "Current user's team and members",
 		},
 	},
 });
