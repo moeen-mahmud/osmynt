@@ -6,9 +6,14 @@ import { poweredBy } from "hono/powered-by";
 import { logger } from "hono/logger";
 import { healthCheckMiddleware } from "@/middlewares/health-check.middleware";
 import { cors } from "hono/cors";
-import { Scalar } from "@scalar/hono-api-reference";
+
 import type { Server } from "bun";
 import { AuthAPIModule } from "@/modules/auth/auth.module";
+import { respondSuccess } from "@osmynt-core/library";
+import { API_DOC_CONFIG } from "@/config/api-doc.config";
+import { scalarHeaderMiddleware } from "@/middlewares/scalar.middleware";
+import { scalarConfig } from "@/config/scalar.config";
+import { HealthCheckAPIModule } from "@/modules/health-check/health-check.module";
 
 const app = new OpenAPIHono<Env>().basePath(Routes.basePath);
 
@@ -32,52 +37,29 @@ app.use(
 
 // MAIN ENTRY ROUTE
 app.get("/", c => {
-	return c.json({ message: "Server is running F A S T 🔥" });
+	return respondSuccess(
+		c,
+		{
+			status: "running",
+			timestamp: new Date().toISOString(),
+			version: "1.0.0",
+		},
+		"Server is running F A S T 🔥"
+	);
 });
+
+// API DOC ROUTES
+app.doc(Routes.doc, API_DOC_CONFIG);
+
+// SCALAR ROUTES
+app.use(Routes.reference, scalarHeaderMiddleware);
+app.get(Routes.reference, scalarConfig);
+
+// Health check routes
+app.route(Routes.health, HealthCheckAPIModule);
+
 // Auth routes
 app.route(Routes.auth.base, AuthAPIModule);
-// app.get(`${Routes.auth.base}${Routes.auth.github}`, AuthController.githubAuthorize);
-
-// app.get(`${Routes.auth.base}${Routes.auth.callback}`, AuthController.githubCallback);
-
-// app.post(`${Routes.auth.base}${Routes.auth.handshakeInit}`, AuthController.handshakeInit);
-
-// app.get(`${Routes.auth.base}${Routes.auth.handshakeRetrieve}`, AuthController.handshakeRetrieve);
-
-// app.post(`${Routes.auth.base}${Routes.auth.loginWithToken}`, AuthController.loginWithToken);
-
-// api reference
-app.doc("/doc", {
-	openapi: "3.0.0",
-	security: [{ Bearer: [] }],
-	info: {
-		contact: {
-			name: "Osmynt",
-			email: "support@osmynt.com",
-			url: "https://osmynt.com",
-		},
-		title: "Osmynt API Reference",
-		description:
-			"Welcome to Osmynt API Reference. This API reference provides the detailed information about all the endpoints available in Osmynt API.",
-		version: "0.0.1",
-	},
-});
-app.get(
-	"/reference",
-	Scalar({
-		_integration: "hono",
-		darkMode: true,
-		theme: "purple",
-		metaData: {
-			title: "Osmynt API Reference",
-		},
-		customCss: `
-			body { 
-				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-			}
-		`,
-	})
-);
 
 // main server
 export default {
