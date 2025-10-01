@@ -17,7 +17,8 @@
 		"bun": "^1.2.23",
 		"hono": "^4.9.9",
 		"hono-rate-limiter": "^0.4.2",
-		"zod": "^4.1.11"
+		"zod": "^4.1.11",
+		"ioredis": "^5.3.2"
 	},
 	"devDependencies": {
 		"@osmynt-core/database": "workspace:*",

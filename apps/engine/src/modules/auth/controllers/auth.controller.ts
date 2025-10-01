@@ -129,7 +129,20 @@ export class AuthController {
 			const aesKey = await deriveAesGcmKey(serverPriv, clientPub);
 			const encrypted = await aesGcmEncryptJson(aesKey, { tokens });
 
-			return c.json({ serverPublicKeyJwk: server.serverPublicKeyJwk, payload: encrypted }, 200);
+			// persist handshake snapshot for observability/auditing
+			const id = crypto.randomUUID();
+			const stored: StoredHandshake = {
+				id,
+				clientPublicKeyJwk: handshake.clientPublicKeyJwk as unknown as JsonWebKey,
+				serverPublicKeyJwk: server.serverPublicKeyJwk,
+				serverPrivateKeyJwk: server.serverPrivateKeyJwk,
+				encryptedPayload: encrypted,
+				createdAt: Date.now(),
+				expiresAt: Date.now() + HANDSHAKE_EXPIRY_MS,
+			};
+			await AuthService.storeHandshake(id, stored);
+
+			return c.json({ handshakeId: id, serverPublicKeyJwk: server.serverPublicKeyJwk, payload: encrypted }, 200);
 		} catch (e) {
 			return c.json({ error: (e as Error).message }, 500);
 		}

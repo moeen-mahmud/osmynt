@@ -2,8 +2,8 @@ import prisma from "@/config/database.config";
 import { ENV } from "@/config/env.config";
 import { GITHUB_ACCESS_TOKEN_URL, GITHUB_EMAIL_URL, GITHUB_GET_USER_URL } from "@/config/constants";
 import { signJwtHS256 } from "@/utils/jwt.util";
-import { supabase } from "@/config/supabase.config";
 import type { StoredHandshake } from "@/modules/auth/types/auth.types";
+import { HandshakeStore } from "@/modules/auth/services/handshake.store";
 import type { GithubTokenResponse, GithubUser, GithubEmail } from "@/modules/auth/types/auth.types";
 import { logger } from "@osmynt-core/library";
 
@@ -118,29 +118,17 @@ export class AuthService {
 	}
 
 	static async storeHandshake(id: string, data: StoredHandshake): Promise<void> {
-		const content = JSON.stringify(data);
-
-		const { error } = await supabase.storage
-			.from("handshakes")
-			.upload(`${id}.json`, new Blob([content], { type: "application/json" }), {
-				upsert: true,
-				cacheControl: "0",
-			});
-		if (error) {
-			logger.error("Failed to store handshake", { error });
-			throw error;
-		}
+		await HandshakeStore.save(id, data, data.expiresAt - Date.now());
 		logger.success("Stored handshake successfully", { id });
 	}
 
 	static async getHandshake(id: string): Promise<StoredHandshake | null> {
-		const { data, error } = await supabase.storage.from("handshakes").download(`${id}.json`);
-		if (error) {
-			logger.error("Failed to get handshake", { error });
+		const rec = await HandshakeStore.get(id);
+		if (!rec) {
+			logger.error("Failed to get handshake", { id });
 			return null;
 		}
 		logger.success("Handshake retrieved successfully", { id });
-		const text = await data.text();
-		return JSON.parse(text) as StoredHandshake;
+		return rec;
 	}
 }

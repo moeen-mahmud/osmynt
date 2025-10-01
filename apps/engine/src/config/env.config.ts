@@ -11,6 +11,15 @@ export const ENV = {
 		REDIRECT_URI: Bun.env.GITHUB_REDIRECT_URI,
 	},
 
+	REDIS: {
+		URL: Bun.env.SUPABASE_REDIS_URL,
+		TLS: (Bun.env.SUPABASE_REDIS_TLS ?? "true").toLowerCase() !== "false",
+	},
+
+	FEATURE_FLAGS: {
+		SAVE_HANDSHAKES_TO_STORAGE: (Bun.env.SAVE_HANDSHAKES_TO_STORAGE ?? "true").toLowerCase() !== "false",
+	},
+
 	// Database configuration
 	SUPABASE: {
 		URL: Bun.env.SUPABASE_URL,
