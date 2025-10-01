@@ -5,9 +5,10 @@ import { signJwtHS256 } from "@/utils/jwt.util";
 import { supabase } from "@/config/supabase.config";
 import type { StoredHandshake } from "@/modules/auth/types/auth.types";
 import type { GithubTokenResponse, GithubUser, GithubEmail } from "@/modules/auth/types/auth.types";
+import { logger } from "@osmynt-core/library";
 
 export class AuthService {
-	static async exchangeCodeForToken(code: string): Promise<string> {
+	static fetchGithubToken = async (code: string) => {
 		const res = await fetch(GITHUB_ACCESS_TOKEN_URL, {
 			method: "POST",
 			headers: {
@@ -25,30 +26,47 @@ export class AuthService {
 			throw new Error("Failed to exchange code for token");
 		}
 		const data = (await res.json()) as GithubTokenResponse;
+		logger.success("Github token fetched successfully", { data });
 		return data.access_token;
+	};
+
+	static async exchangeCodeForToken(code: string): Promise<string> {
+		return AuthService.fetchGithubToken(code);
 	}
 
 	static async fetchGithubUser(accessToken: string): Promise<{ user: GithubUser; email: string }> {
 		const userRes = await fetch(GITHUB_GET_USER_URL, {
 			headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" },
 		});
-		if (!userRes.ok) throw new Error("Failed to fetch GitHub user");
+		if (!userRes.ok) {
+			logger.error("Failed to fetch GitHub user", { error: userRes.statusText });
+			throw new Error("Failed to fetch GitHub user");
+		}
 		const user = (await userRes.json()) as GithubUser;
-
+		logger.success("Github user fetched successfully", { user });
 		const emailRes = await fetch(GITHUB_EMAIL_URL, {
 			headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" },
 		});
-		if (!emailRes.ok) throw new Error("Failed to fetch GitHub emails");
+		if (!emailRes.ok) {
+			logger.error("Failed to fetch GitHub emails", { error: emailRes.statusText });
+			throw new Error("Failed to fetch GitHub emails");
+		}
 		const emails = (await emailRes.json()) as GithubEmail[];
 		const primary = emails.find(e => e.primary) ?? emails[0];
-		if (!primary) throw new Error("No email found for GitHub user");
-
+		if (!primary) {
+			logger.error("No email found for GitHub user");
+			throw new Error("No email found for GitHub user");
+		}
+		logger.success("Github emails fetched successfully", { user, email: primary.email });
 		return { user, email: primary.email };
 	}
 
 	static async findOrCreateUser(github: { id: number; name: string | null; avatar: string; email: string }) {
 		const existing = await prisma.user.findFirst({ where: { githubId: String(github.id) } });
-		if (existing) return existing;
+		if (existing) {
+			logger.info("User already exists", { user: existing });
+			return existing;
+		}
 
 		const created = await prisma.user.create({
 			data: {
@@ -60,11 +78,10 @@ export class AuthService {
 			},
 		});
 		// Ensure default personal team (best-effort; skip if model not generated yet)
-		const anyPrisma = prisma as unknown as { team?: any };
 		let teamId: string | null = null;
-		if (anyPrisma.team) {
+		if (prisma.team) {
 			const slug = `team-${created.id.slice(0, 8)}`;
-			const team = await anyPrisma.team.create({
+			const team = await prisma.team.create({
 				data: {
 					name: `${created.name}'s Team`,
 					slug,
@@ -83,30 +100,46 @@ export class AuthService {
 				metadata: { teamId },
 			},
 		});
+		logger.success("User created successfully", { user: created });
 		return created;
 	}
 
 	static async issueTokens(userId: string) {
-		if (!ENV.JWT_SECRET) throw new Error("JWT secret missing");
+		if (!ENV.JWT_SECRET) {
+			logger.error("JWT secret missing");
+			throw new Error("JWT secret missing");
+		}
+
 		const access = await signJwtHS256({ sub: userId, typ: "access" }, ENV.JWT_SECRET, 60 * 60 * 12);
 		const refresh = await signJwtHS256({ sub: userId, typ: "refresh" }, ENV.JWT_SECRET, 60 * 60 * 24 * 30);
+
+		logger.success("Tokens issued successfully");
 		return { access, refresh };
 	}
 
 	static async storeHandshake(id: string, data: StoredHandshake): Promise<void> {
 		const content = JSON.stringify(data);
+
 		const { error } = await supabase.storage
 			.from("handshakes")
 			.upload(`${id}.json`, new Blob([content], { type: "application/json" }), {
 				upsert: true,
 				cacheControl: "0",
 			});
-		if (error) throw error;
+		if (error) {
+			logger.error("Failed to store handshake", { error });
+			throw error;
+		}
+		logger.success("Stored handshake successfully", { id });
 	}
 
 	static async getHandshake(id: string): Promise<StoredHandshake | null> {
 		const { data, error } = await supabase.storage.from("handshakes").download(`${id}.json`);
-		if (error) return null;
+		if (error) {
+			logger.error("Failed to get handshake", { error });
+			return null;
+		}
+		logger.success("Handshake retrieved successfully", { id });
 		const text = await data.text();
 		return JSON.parse(text) as StoredHandshake;
 	}

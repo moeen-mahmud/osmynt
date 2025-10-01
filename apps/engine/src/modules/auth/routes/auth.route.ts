@@ -1,5 +1,12 @@
 import { Routes } from "@/config/routes.config";
 import { createRoute, z } from "@hono/zod-openapi";
+import {
+	authGithubAuthorizeSchema,
+	authGithubCallbackSchema,
+	authHandshakeInitSchema,
+	authHandshakeRetrieveSchema,
+	authLoginWithTokenSchema,
+} from "@/modules/auth/schemas/auth.schema";
 
 export const route_authGithubAuthorize = createRoute({
 	tags: ["Auth"],
@@ -11,15 +18,7 @@ export const route_authGithubAuthorize = createRoute({
 			description: "Successfully get the github authorize url",
 			content: {
 				"application/json": {
-					schema: z
-						.object({
-							url: z.string(),
-						})
-						.openapi({
-							example: {
-								url: "https://github.com/login/oauth/authorize?client_id=1234567890&redirect_uri=http://localhost:3000/auth/github/callback&scope=user:email",
-							},
-						}),
+					schema: authGithubAuthorizeSchema,
 				},
 			},
 		},
@@ -36,36 +35,7 @@ export const route_authGithubCallback = createRoute({
 			description: "Successfully get the github callback url",
 			content: {
 				"application/json": {
-					schema: z
-						.union([
-							z.object({
-								user: z.object({
-									id: z.string(),
-									email: z.string(),
-									name: z.string(),
-									avatarUrl: z.string(),
-								}),
-								tokens: z.object({
-									access: z.string(),
-									refresh: z.string(),
-								}),
-							}),
-							z.object({
-								ok: z.literal(true),
-								handshakeId: z.string(),
-								serverPublicKeyJwk: z.any(),
-							}),
-						])
-						.openapi({
-							example: {
-								user: {
-									id: "1234567890",
-									email: "test@test.com",
-									name: "Test User",
-									avatarUrl: "https://test.com/avatar.png",
-								},
-							},
-						}),
+					schema: authGithubCallbackSchema,
 				},
 			},
 		},
@@ -114,17 +84,7 @@ export const route_authHandshakeInit = createRoute({
 			description: "Successfully init the handshake",
 			content: {
 				"application/json": {
-					schema: z
-						.object({
-							handshakeId: z.string(),
-							expiresInMs: z.number(),
-						})
-						.openapi({
-							example: {
-								handshakeId: "1234567890",
-								expiresInMs: 1000 * 60 * 60 * 24,
-							},
-						}),
+					schema: authHandshakeInitSchema,
 				},
 			},
 		},
@@ -173,17 +133,7 @@ export const route_authHandshakeRetrieve = createRoute({
 			description: "Successfully retrieve the handshake",
 			content: {
 				"application/json": {
-					schema: z.discriminatedUnion("ready", [
-						z.object({ ready: z.literal(false) }),
-						z.object({
-							ready: z.literal(true),
-							serverPublicKeyJwk: z.any(),
-							payload: z.object({
-								ivB64u: z.string(),
-								ciphertextB64u: z.string(),
-							}),
-						}),
-					]),
+					schema: authHandshakeRetrieveSchema,
 				},
 			},
 		},
@@ -248,13 +198,7 @@ export const route_authLoginWithToken = createRoute({
 			description: "Successfully login with token",
 			content: {
 				"application/json": {
-					schema: z.object({
-						serverPublicKeyJwk: z.any(),
-						payload: z.object({
-							ivB64u: z.string(),
-							ciphertextB64u: z.string(),
-						}),
-					}),
+					schema: authLoginWithTokenSchema,
 				},
 			},
 		},
