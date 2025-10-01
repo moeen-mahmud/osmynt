@@ -99,6 +99,16 @@
 					"type": "string",
 					"default": "http://localhost:3000/osmynt-api-engine",
 					"description": "Osmynt Engine base URL (e.g. https://api.osmynt.com/osmynt-api-engine)"
+				},
+				"osmynt.teamKeyMode": {
+					"type": "boolean",
+					"default": false,
+					"description": "Use a single symmetric team key instead of per-recipient key wrapping."
+				},
+				"osmynt.teamKeyNamespace": {
+					"type": "string",
+					"default": "default",
+					"description": "Namespace/key for team key storage (used when teamKeyMode is enabled)."
 				}
 			}
 		}

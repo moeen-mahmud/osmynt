@@ -74,7 +74,49 @@ export const route_listTeam = createRoute({
 	},
 });
 
+export const route_getById = createRoute({
+	tags: ["CodeShare"],
+	operationId: "codeShareGetById",
+	method: "get",
+	path: Routes.codeShare.getById,
+	responses: {
+		200: {
+			description: "Get item",
+			// content: {
+			//     "application/json": {
+			//         schema: z.object({
+			//             id: z.string(),
+			//             authorId: z.string(),
+			//             createdAt: z.string(),
+			//             ciphertextB64u: z.string(),
+			//             ivB64u: z.string(),
+			//             aad: z.string().nullable().optional(),
+			//             wrappedKeys: z.array(
+			//                 z.object({
+			//                     recipientUserId: z.string(),
+			//                     recipientDeviceId: z.string(),
+			//                     senderEphemeralPublicKeyJwk: z.any(),
+			//                     wrappedCekB64u: z.string(),
+			//                 })
+			//             ),
+			//             metadata: z.any().optional(),
+			//         }),
+			//     },
+			// },
+		},
+		404: {
+			description: "Not Found",
+			// content: { "application/json": { schema: z.object({ error: z.string() }) } }
+		},
+		401: {
+			description: "Unauthorized",
+			// content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+	},
+});
+
 export type CodeShareRoutes = {
 	codeShareShare: typeof route_share;
 	codeShareListTeam: typeof route_listTeam;
+	codeShareGetById: typeof route_getById;
 };

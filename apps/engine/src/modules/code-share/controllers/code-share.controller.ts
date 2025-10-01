@@ -50,4 +50,25 @@ export class CodeShareController {
 		});
 		return c.json({ items: items.map(i => ({ ...i, createdAt: i.createdAt.toISOString() })) });
 	}
+
+	static async getById(c: Context) {
+		const user = c.get("user") as { id: string } | undefined;
+		if (!user) return c.json({ error: "Unauthorized" });
+		const id = c.req.param("id");
+		const item = await prisma.codeShare.findUnique({
+			where: { id },
+			select: {
+				id: true,
+				authorId: true,
+				createdAt: true,
+				ciphertextB64u: true,
+				ivB64u: true,
+				aad: true,
+				wrappedKeys: true,
+				metadata: true,
+			},
+		});
+		if (!item) return c.json({ error: "Not Found" });
+		return c.json({ ...item, createdAt: item.createdAt.toISOString() });
+	}
 }
