@@ -2,26 +2,9 @@ import prisma from "@/config/database.config";
 import { ENV } from "@/config/env.config";
 import { GITHUB_ACCESS_TOKEN_URL, GITHUB_EMAIL_URL, GITHUB_GET_USER_URL } from "@/config/constants";
 import { signJwtHS256 } from "@/utils/jwt.util";
-
-type GithubTokenResponse = {
-	access_token: string;
-	scope: string;
-	token_type: string;
-};
-
-type GithubUser = {
-	id: number;
-	login: string;
-	avatar_url: string;
-	name: string | null;
-};
-
-type GithubEmail = {
-	email: string;
-	primary: boolean;
-	verified: boolean;
-	visibility: string | null;
-};
+import { supabase } from "@/config/supabase.config";
+import type { StoredHandshake } from "@/modules/auth/types/auth.types";
+import type { GithubTokenResponse, GithubUser, GithubEmail } from "@/modules/auth/types/auth.types";
 
 export class AuthService {
 	static async exchangeCodeForToken(code: string): Promise<string> {
@@ -108,5 +91,23 @@ export class AuthService {
 		const access = await signJwtHS256({ sub: userId, typ: "access" }, ENV.JWT_SECRET, 60 * 60 * 12);
 		const refresh = await signJwtHS256({ sub: userId, typ: "refresh" }, ENV.JWT_SECRET, 60 * 60 * 24 * 30);
 		return { access, refresh };
+	}
+
+	static async storeHandshake(id: string, data: StoredHandshake): Promise<void> {
+		const content = JSON.stringify(data);
+		const { error } = await supabase.storage
+			.from("handshakes")
+			.upload(`${id}.json`, new Blob([content], { type: "application/json" }), {
+				upsert: true,
+				cacheControl: "0",
+			});
+		if (error) throw error;
+	}
+
+	static async getHandshake(id: string): Promise<StoredHandshake | null> {
+		const { data, error } = await supabase.storage.from("handshakes").download(`${id}.json`);
+		if (error) return null;
+		const text = await data.text();
+		return JSON.parse(text) as StoredHandshake;
 	}
 }

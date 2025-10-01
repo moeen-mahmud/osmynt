@@ -8,7 +8,7 @@ import { healthCheckMiddleware } from "@/middlewares/health-check.middleware";
 import { cors } from "hono/cors";
 import { Scalar } from "@scalar/hono-api-reference";
 import type { Server } from "bun";
-import { AuthController } from "@/controllers/auth.controller";
+import { AuthAPIModule } from "@/modules/auth/auth.module";
 
 const app = new OpenAPIHono<Env>().basePath(Routes.basePath);
 
@@ -35,11 +35,16 @@ app.get("/", c => {
 	return c.json({ message: "Server is running F A S T 🔥" });
 });
 // Auth routes
-app.get(`${Routes.auth.base}${Routes.auth.github}`, AuthController.githubAuthorize);
-app.get(`${Routes.auth.base}${Routes.auth.callback}`, AuthController.githubCallback);
-app.post(`${Routes.auth.base}${Routes.auth.handshakeInit}`, AuthController.handshakeInit);
-app.get(`${Routes.auth.base}${Routes.auth.handshakeRetrieve}`, AuthController.handshakeRetrieve);
-app.post(`${Routes.auth.base}${Routes.auth.loginWithToken}`, AuthController.loginWithToken);
+app.route(Routes.auth.base, AuthAPIModule);
+// app.get(`${Routes.auth.base}${Routes.auth.github}`, AuthController.githubAuthorize);
+
+// app.get(`${Routes.auth.base}${Routes.auth.callback}`, AuthController.githubCallback);
+
+// app.post(`${Routes.auth.base}${Routes.auth.handshakeInit}`, AuthController.handshakeInit);
+
+// app.get(`${Routes.auth.base}${Routes.auth.handshakeRetrieve}`, AuthController.handshakeRetrieve);
+
+// app.post(`${Routes.auth.base}${Routes.auth.loginWithToken}`, AuthController.loginWithToken);
 
 // api reference
 app.doc("/doc", {
