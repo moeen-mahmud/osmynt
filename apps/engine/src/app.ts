@@ -66,18 +66,8 @@ app.get(
 	"/reference",
 	Scalar({
 		_integration: "hono",
-		configuration: {
-			authentication: {
-				http: {
-					scheme: "bearer",
-				},
-			},
-		},
 		darkMode: true,
 		theme: "purple",
-		spec: {
-			url: `${Routes.basePath}${Routes.doc}`,
-		},
 		metaData: {
 			title: "Osmynt API Reference",
 		},

@@ -4,6 +4,7 @@
 	"main": "src/app.ts",
 	"version": "0.18.2",
 	"scripts": {
+		"type-check": "tsc --noEmit",
 		"start": "bun run src/app.ts",
 		"dev": "NODE_ENV=development bun --env-file=../../.env --hot run src/app.ts"
 	},

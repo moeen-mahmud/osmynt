@@ -11,9 +11,15 @@ export const route_authGithubAuthorize = createRoute({
 			description: "Successfully get the github authorize url",
 			content: {
 				"application/json": {
-					schema: z.object({
-						url: z.string(),
-					}),
+					schema: z
+						.object({
+							url: z.string(),
+						})
+						.openapi({
+							example: {
+								url: "https://github.com/login/oauth/authorize?client_id=1234567890&redirect_uri=http://localhost:3000/auth/github/callback&scope=user:email",
+							},
+						}),
 				},
 			},
 		},
@@ -30,25 +36,36 @@ export const route_authGithubCallback = createRoute({
 			description: "Successfully get the github callback url",
 			content: {
 				"application/json": {
-					schema: z.union([
-						z.object({
-							user: z.object({
-								id: z.string(),
-								email: z.string(),
-								name: z.string(),
-								avatarUrl: z.string(),
+					schema: z
+						.union([
+							z.object({
+								user: z.object({
+									id: z.string(),
+									email: z.string(),
+									name: z.string(),
+									avatarUrl: z.string(),
+								}),
+								tokens: z.object({
+									access: z.string(),
+									refresh: z.string(),
+								}),
 							}),
-							tokens: z.object({
-								access: z.string(),
-								refresh: z.string(),
+							z.object({
+								ok: z.literal(true),
+								handshakeId: z.string(),
+								serverPublicKeyJwk: z.any(),
 							}),
+						])
+						.openapi({
+							example: {
+								user: {
+									id: "1234567890",
+									email: "test@test.com",
+									name: "Test User",
+									avatarUrl: "https://test.com/avatar.png",
+								},
+							},
 						}),
-						z.object({
-							ok: z.literal(true),
-							handshakeId: z.string(),
-							serverPublicKeyJwk: z.any(),
-						}),
-					]),
 				},
 			},
 		},
@@ -56,9 +73,15 @@ export const route_authGithubCallback = createRoute({
 			description: "Bad Request",
 			content: {
 				"application/json": {
-					schema: z.object({
-						error: z.string(),
-					}),
+					schema: z
+						.object({
+							error: z.string(),
+						})
+						.openapi({
+							example: {
+								error: "Bad Request",
+							},
+						}),
 				},
 			},
 		},
@@ -66,9 +89,15 @@ export const route_authGithubCallback = createRoute({
 			description: "Internal Server Error",
 			content: {
 				"application/json": {
-					schema: z.object({
-						error: z.string(),
-					}),
+					schema: z
+						.object({
+							error: z.string(),
+						})
+						.openapi({
+							example: {
+								error: "Internal Server Error",
+							},
+						}),
 				},
 			},
 		},
@@ -85,10 +114,17 @@ export const route_authHandshakeInit = createRoute({
 			description: "Successfully init the handshake",
 			content: {
 				"application/json": {
-					schema: z.object({
-						handshakeId: z.string(),
-						expiresInMs: z.number(),
-					}),
+					schema: z
+						.object({
+							handshakeId: z.string(),
+							expiresInMs: z.number(),
+						})
+						.openapi({
+							example: {
+								handshakeId: "1234567890",
+								expiresInMs: 1000 * 60 * 60 * 24,
+							},
+						}),
 				},
 			},
 		},
@@ -96,9 +132,15 @@ export const route_authHandshakeInit = createRoute({
 			description: "Bad Request",
 			content: {
 				"application/json": {
-					schema: z.object({
-						error: z.string(),
-					}),
+					schema: z
+						.object({
+							error: z.string(),
+						})
+						.openapi({
+							example: {
+								error: "Bad Request",
+							},
+						}),
 				},
 			},
 		},
@@ -106,9 +148,15 @@ export const route_authHandshakeInit = createRoute({
 			description: "Internal Server Error",
 			content: {
 				"application/json": {
-					schema: z.object({
-						error: z.string(),
-					}),
+					schema: z
+						.object({
+							error: z.string(),
+						})
+						.openapi({
+							example: {
+								error: "Internal Server Error",
+							},
+						}),
 				},
 			},
 		},
@@ -143,9 +191,15 @@ export const route_authHandshakeRetrieve = createRoute({
 			description: "Bad Request",
 			content: {
 				"application/json": {
-					schema: z.object({
-						error: z.string(),
-					}),
+					schema: z
+						.object({
+							error: z.string(),
+						})
+						.openapi({
+							example: {
+								error: "Bad Request",
+							},
+						}),
 				},
 			},
 		},
@@ -153,9 +207,15 @@ export const route_authHandshakeRetrieve = createRoute({
 			description: "Not Found",
 			content: {
 				"application/json": {
-					schema: z.object({
-						error: z.string(),
-					}),
+					schema: z
+						.object({
+							error: z.string(),
+						})
+						.openapi({
+							example: {
+								error: "Not Found",
+							},
+						}),
 				},
 			},
 		},
@@ -163,9 +223,15 @@ export const route_authHandshakeRetrieve = createRoute({
 			description: "Gone",
 			content: {
 				"application/json": {
-					schema: z.object({
-						error: z.string(),
-					}),
+					schema: z
+						.object({
+							error: z.string(),
+						})
+						.openapi({
+							example: {
+								error: "Gone",
+							},
+						}),
 				},
 			},
 		},
@@ -196,9 +262,15 @@ export const route_authLoginWithToken = createRoute({
 			description: "Bad Request",
 			content: {
 				"application/json": {
-					schema: z.object({
-						error: z.string(),
-					}),
+					schema: z
+						.object({
+							error: z.string(),
+						})
+						.openapi({
+							example: {
+								error: "Bad Request",
+							},
+						}),
 				},
 			},
 		},
@@ -206,9 +278,15 @@ export const route_authLoginWithToken = createRoute({
 			description: "Internal Server Error",
 			content: {
 				"application/json": {
-					schema: z.object({
-						error: z.string(),
-					}),
+					schema: z
+						.object({
+							error: z.string(),
+						})
+						.openapi({
+							example: {
+								error: "Internal Server Error",
+							},
+						}),
 				},
 			},
 		},
