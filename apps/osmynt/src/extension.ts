@@ -134,7 +134,10 @@ async function ensureDeviceKeys(context: vscode.ExtensionContext) {
 
 	let encKeypairJwk = await context.secrets.get(ENC_KEYPAIR_JWK_KEY);
 	if (!encKeypairJwk) {
-		const kp: any = await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey", "deriveBits"]);
+		const kp: any = await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, [
+			"deriveKey",
+			"deriveBits",
+		]);
 		const pub = await subtle.exportKey("jwk", kp.publicKey);
 		const priv = await subtle.exportKey("jwk", kp.privateKey);
 		encKeypairJwk = JSON.stringify({ publicKeyJwk: pub, privateKeyJwk: priv });
@@ -171,10 +174,18 @@ async function shareSelectedCode(context: vscode.ExtensionContext, code: string)
 	// Load our device key
 	const encKeypair = JSON.parse((await context.secrets.get(ENC_KEYPAIR_JWK_KEY)) || "{}");
 	if (!encKeypair?.privateKeyJwk || !encKeypair?.publicKeyJwk) throw new Error("Missing device keys");
-	const myPriv: any = await subtle.importKey("jwk", encKeypair.privateKeyJwk, { name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey", "deriveBits"]);
+	const myPriv: any = await subtle.importKey(
+		"jwk",
+		encKeypair.privateKeyJwk,
+		{ name: "ECDH", namedCurve: "P-256" },
+		true,
+		["deriveKey", "deriveBits"]
+	);
 
 	// Fetch recipients
-	const recipientsRes = await fetch(`${base}/protected/keys/team/default`, { headers: { Authorization: `Bearer ${access}` } });
+	const recipientsRes = await fetch(`${base}/protected/keys/team/default`, {
+		headers: { Authorization: `Bearer ${access}` },
+	});
 	const { recipients } = await recipientsRes.json();
 	if (!Array.isArray(recipients) || recipients.length === 0) throw new Error("No recipients");
 
@@ -208,11 +219,26 @@ async function shareSelectedCode(context: vscode.ExtensionContext, code: string)
 		}
 	} else {
 		// Per-recipient wrap using ephemeral ECDH
-		const eph = (await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey", "deriveBits"])) as any;
+		const eph = (await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, [
+			"deriveKey",
+			"deriveBits",
+		])) as any;
 		const ephPubJwk = await subtle.exportKey("jwk", eph.publicKey);
 		for (const r of recipients) {
-			const recipientPub = await subtle.importKey("jwk", r.encryptionPublicKeyJwk, { name: "ECDH", namedCurve: "P-256" }, true, []);
-			const kek = await subtle.deriveKey({ name: "ECDH", public: recipientPub }, eph.privateKey, { name: "AES-GCM", length: 256 }, false, ["wrapKey"]);
+			const recipientPub = await subtle.importKey(
+				"jwk",
+				r.encryptionPublicKeyJwk,
+				{ name: "ECDH", namedCurve: "P-256" },
+				true,
+				[]
+			);
+			const kek = await subtle.deriveKey(
+				{ name: "ECDH", public: recipientPub },
+				eph.privateKey,
+				{ name: "AES-GCM", length: 256 },
+				false,
+				["wrapKey"]
+			);
 			const wrapped = await subtle.wrapKey("raw", cek, kek, { name: "AES-GCM", iv });
 			const wrappedCekB64u = b64url(new Uint8Array(wrapped as ArrayBuffer));
 			wrappedKeys.push({
@@ -238,9 +264,5 @@ async function shareSelectedCode(context: vscode.ExtensionContext, code: string)
 }
 
 function b64url(bytes: Uint8Array) {
-	return Buffer.from(bytes)
-		.toString("base64")
-		.replace(/=/g, "")
-		.replace(/\+/g, "-")
-		.replace(/\//g, "_");
+	return Buffer.from(bytes).toString("base64").replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 }
