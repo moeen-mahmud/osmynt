@@ -4,6 +4,10 @@ const ACCESS_SECRET_KEY = "osmynt.accessToken";
 const REFRESH_SECRET_KEY = "osmynt.refreshToken";
 
 export async function activate(context: vscode.ExtensionContext) {
+	// Register a basic TreeDataProvider to make the activity bar view render
+	const tree = new OsmyntTreeProvider();
+	context.subscriptions.push(vscode.window.registerTreeDataProvider("osmyntView", tree));
+
 	context.subscriptions.push(
 		vscode.commands.registerCommand("osmynt.login", async () => {
 			try {
@@ -47,6 +51,18 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {}
+
+class OsmyntTreeProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
+	getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
+		return element;
+	}
+	getChildren(): vscode.ProviderResult<vscode.TreeItem[]> {
+		return [
+			new vscode.TreeItem("Login", vscode.TreeItemCollapsibleState.None),
+			new vscode.TreeItem("Share code", vscode.TreeItemCollapsibleState.None),
+		];
+	}
+}
 
 async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessToken: string) {
 	const config = vscode.workspace.getConfiguration("osmynt");

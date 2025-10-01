@@ -65,6 +65,24 @@
 				"category": "Osmynt"
 			}
 		],
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "osmynt",
+					"title": "Osmynt",
+					"icon": "resources/osmynt.svg"
+				}
+			]
+		},
+		"views": {
+			"osmynt": [
+				{
+					"id": "osmyntView",
+					"name": "Osmynt",
+					"contextualTitle": "Osmynt"
+				}
+			]
+		},
 		"menus": {
 			"editor/context": [
 				{
@@ -85,11 +103,6 @@
 			}
 		}
 	},
-	"activationEvents": [
-		"onCommand:osmynt.login",
-		"onCommand:osmynt.logout",
-		"onCommand:osmynt.shareCode"
-	],
 	"engines": {
 		"vscode": "^1.94.0"
 	}
