@@ -9,6 +9,8 @@ import { cors } from "hono/cors";
 
 import type { Server } from "bun";
 import { AuthAPIModule } from "@/modules/auth/auth.module";
+import { KeysAPIModule } from "@/modules/keys/keys.module";
+import { CodeShareAPIModule } from "@/modules/code-share/code-share.module";
 import { respondSuccess } from "@osmynt-core/library";
 import { API_DOC_CONFIG } from "@/config/api-doc.config";
 import { scalarHeaderMiddleware } from "@/middlewares/scalar.middleware";
@@ -60,6 +62,8 @@ app.route(Routes.health, HealthCheckAPIModule);
 
 // Auth routes
 app.route(Routes.auth.base, AuthAPIModule);
+app.route(Routes.keys.base, KeysAPIModule);
+app.route(Routes.codeShare.base, CodeShareAPIModule);
 
 // main server
 export default {

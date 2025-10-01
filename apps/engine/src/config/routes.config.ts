@@ -40,11 +40,20 @@ export const Routes = {
 		getAll: "/get-all",
 	},
 
+	keys: {
+		base: "/protected/keys",
+		register: "/register",
+		me: "/me",
+		teamDefault: "/team/default",
+	},
+
 	// code share
 	codeShare: {
 		base: "/protected/code-share",
 		extensionBase: "/extension/code-share",
 		share: "/share",
+		listTeam: "/team/list",
+		getById: "/:id",
 		shareTeam: "/share-team",
 		checkOnline: "/check-online",
 		deliverPendingCodes: "/deliver-pending-codes",

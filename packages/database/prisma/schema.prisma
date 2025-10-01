@@ -29,6 +29,8 @@ model User {
   AuditLog    AuditLog[]
   TeamMembers TeamMember[]
   OwnedTeams  Team[]     @relation("UserOwnedTeams")
+  DeviceKeys  DeviceKey[]
+  CodeShares  CodeShare[]
 
   @@index([id, githubId, email])
 }
@@ -77,4 +79,39 @@ model TeamMember {
 
   @@unique([teamId, userId])
   @@index([userId, teamId])
+}
+
+// Device public keys per user device (for E2EE)
+model DeviceKey {
+  id                     String   @id @default(cuid())
+  userId                 String
+  deviceId               String
+  encryptionPublicKeyJwk Json
+  signingPublicKeyJwk    Json?
+  algorithm              String
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  User User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, deviceId], name: "userId_deviceId")
+  @@index([userId])
+}
+
+// Ciphertext-only code share entries (server cannot decrypt)
+model CodeShare {
+  id              String   @id @default(cuid())
+  authorId        String
+  ciphertextB64u  String
+  ivB64u          String
+  aad             String?
+  wrappedKeys     Json
+  metadata        Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  Author User @relation(fields: [authorId], references: [id])
+
+  @@index([authorId])
+  @@index([createdAt])
 }
