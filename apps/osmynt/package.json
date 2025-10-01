@@ -63,6 +63,16 @@
 				"command": "osmynt.shareCode",
 				"title": "Share Selected Code",
 				"category": "Osmynt"
+			},
+			{
+				"command": "osmynt.inviteMember",
+				"title": "Invite Member",
+				"category": "Osmynt"
+			},
+			{
+				"command": "osmynt.acceptInvitation",
+				"title": "Accept Invitation",
+				"category": "Osmynt"
 			}
 		],
 		"viewsContainers": {

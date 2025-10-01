@@ -8,7 +8,7 @@ const SIGN_KEYPAIR_JWK_KEY = "osmynt.signKeypair.jwk";
 
 export async function activate(context: vscode.ExtensionContext) {
 	// Register a basic TreeDataProvider to make the activity bar view render
-	const tree = new OsmyntTreeProvider();
+	const tree = new OsmyntTreeProvider(context);
 	context.subscriptions.push(vscode.window.registerTreeDataProvider("osmyntView", tree));
 
 	context.subscriptions.push(
@@ -22,6 +22,7 @@ export async function activate(context: vscode.ExtensionContext) {
 					return;
 				}
 				await nativeSecureLogin(context, session.accessToken);
+				tree.refresh();
 			} catch (e) {
 				vscode.window.showErrorMessage(`Login failed: ${e}`);
 			}
@@ -62,14 +63,40 @@ export async function activate(context: vscode.ExtensionContext) {
 export function deactivate() {}
 
 class OsmyntTreeProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
+	private _onDidChangeTreeData: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+	readonly onDidChangeTreeData: vscode.Event<void> = this._onDidChangeTreeData.event;
+
+	constructor(private readonly context: vscode.ExtensionContext) {}
 	getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
 		return element;
 	}
-	getChildren(): vscode.ProviderResult<vscode.TreeItem[]> {
-		return [
-			new vscode.TreeItem("Login", vscode.TreeItemCollapsibleState.None),
-			new vscode.TreeItem("Share code", vscode.TreeItemCollapsibleState.None),
-		];
+	async getChildren(): Promise<vscode.TreeItem[]> {
+		const items: vscode.TreeItem[] = [];
+		try {
+			const { base, access } = await getBaseAndAccess(this.context);
+			const list = await fetch(`${base}/protected/teams/me`, {
+				headers: { Authorization: `Bearer ${access}` },
+			}).then(r => r.json());
+			if (!list?.team) {
+				items.push(new vscode.TreeItem("No team", vscode.TreeItemCollapsibleState.None));
+				return items;
+			}
+			const teamItem = new vscode.TreeItem(`Team: ${list.team.name}`, vscode.TreeItemCollapsibleState.Collapsed);
+			teamItem.description = list.team.id;
+			items.push(teamItem);
+			for (const m of list.members ?? []) {
+				const ti = new vscode.TreeItem(m.name || m.email, vscode.TreeItemCollapsibleState.None);
+				ti.description = m.email;
+				items.push(ti);
+			}
+		} catch (e) {
+			items.push(new vscode.TreeItem("Sign in to view team", vscode.TreeItemCollapsibleState.None));
+		}
+		return items;
+	}
+
+	refresh() {
+		this._onDidChangeTreeData.fire();
 	}
 }
 
@@ -88,6 +115,54 @@ async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessT
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ provider: "github", accessToken: githubAccessToken, handshake: { clientPublicKeyJwk } }),
 	});
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand("osmynt.inviteMember", async () => {
+			try {
+				const teamId = await promptTeamId(context);
+				if (!teamId) return;
+				const { base, access } = await getBaseAndAccess(context);
+				const res = await fetch(`${base}/protected/teams/${encodeURIComponent(teamId)}/invite`, {
+					method: "POST",
+					headers: { Authorization: `Bearer ${access}` },
+				});
+				const j = await res.json();
+				if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
+				await vscode.env.clipboard.writeText(j.token);
+				vscode.window.showInformationMessage("Invitation token copied to clipboard");
+			} catch (e) {
+				vscode.window.showErrorMessage(`Invite failed: ${e}`);
+			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand("osmynt.acceptInvitation", async () => {
+			try {
+				const raw = await vscode.window.showInputBox({ prompt: "Enter invitation token or URL" });
+				if (!raw) return;
+				const token = extractInviteToken(raw);
+				if (!token) return;
+				const { base, access } = await getBaseAndAccess(context);
+				const res = await fetch(`${base}/protected/teams/invite/${encodeURIComponent(token)}`, {
+					method: "POST",
+					headers: { Authorization: `Bearer ${access}` },
+				});
+				const j = await res.json();
+				if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
+				vscode.window.showInformationMessage("Joined team successfully");
+				// refresh the team view
+				(await import("vscode")).commands.executeCommand("workbench.view.extension.osmynt");
+				setTimeout(() => {
+					// force refresh by toggling view
+					vscode.commands.executeCommand("workbench.action.closePanel");
+					vscode.commands.executeCommand("workbench.view.extension.osmynt");
+				}, 150);
+			} catch (e) {
+				vscode.window.showErrorMessage(`Accept failed: ${e}`);
+			}
+		})
+	);
 	if (!res.ok) throw new Error(`Engine login failed (${res.status})`);
 	const j = await res.json();
 
@@ -192,7 +267,7 @@ async function shareSelectedCode(context: vscode.ExtensionContext, code: string)
 	// Encrypt content with AES-GCM
 	const iv = nodeCrypto.randomBytes(12);
 	const cekRaw = nodeCrypto.randomBytes(32);
-	const cek = await subtle.importKey("raw", cekRaw, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);
+	const cek = await subtle.importKey("raw", cekRaw, { name: "AES-GCM", length: 256 }, true, ["encrypt", "wrapKey"]);
 	const ciphertext = await subtle.encrypt({ name: "AES-GCM", iv }, cek, new TextEncoder().encode(code));
 
 	const wrappedKeys: any[] = [];
@@ -207,7 +282,8 @@ async function shareSelectedCode(context: vscode.ExtensionContext, code: string)
 		}
 		const teamKeyRaw = Buffer.from(teamKeyRawB64, "base64");
 		const teamKey = await subtle.importKey("raw", teamKeyRaw, { name: "AES-GCM", length: 256 }, true, ["wrapKey"]);
-		const wrapped = await subtle.wrapKey("raw", cek, teamKey, { name: "AES-GCM", iv });
+		const wrapIv = nodeCrypto.randomBytes(12);
+		const wrapped = await subtle.wrapKey("raw", cek, teamKey, { name: "AES-GCM", iv: wrapIv });
 		const wrappedCekB64u = b64url(new Uint8Array(wrapped as ArrayBuffer));
 		for (const r of recipients) {
 			wrappedKeys.push({
@@ -239,7 +315,8 @@ async function shareSelectedCode(context: vscode.ExtensionContext, code: string)
 				false,
 				["wrapKey"]
 			);
-			const wrapped = await subtle.wrapKey("raw", cek, kek, { name: "AES-GCM", iv });
+			const wrapIv2 = nodeCrypto.randomBytes(12);
+			const wrapped = await subtle.wrapKey("raw", cek, kek, { name: "AES-GCM", iv: wrapIv2 });
 			const wrappedCekB64u = b64url(new Uint8Array(wrapped as ArrayBuffer));
 			wrappedKeys.push({
 				recipientUserId: r.userId,
@@ -265,4 +342,41 @@ async function shareSelectedCode(context: vscode.ExtensionContext, code: string)
 
 function b64url(bytes: Uint8Array) {
 	return Buffer.from(bytes).toString("base64").replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+}
+
+function extractInviteToken(input: string): string | undefined {
+	try {
+		// If it's a URL with ?token= param
+		if (input.includes("http")) {
+			const u = new URL(input);
+			const t = u.searchParams.get("token");
+			if (t) return t;
+			// Or path /invite/:token
+			const parts = u.pathname.split("/").filter(Boolean);
+			const idx = parts.findIndex(p => p === "invite");
+			if (idx >= 0 && parts[idx + 1]) return parts[idx + 1];
+		}
+		return input.trim();
+	} catch {
+		return input.trim();
+	}
+}
+
+async function getBaseAndAccess(context: vscode.ExtensionContext) {
+	const config = vscode.workspace.getConfiguration("osmynt");
+	const base = (config.get<string>("engineBaseUrl") ?? "http://localhost:3000/osmynt-api-engine").replace(/\/$/, "");
+	const access = await context.secrets.get(ACCESS_SECRET_KEY);
+	if (!access) throw new Error("Not logged in");
+	return { base, access };
+}
+
+async function promptTeamId(context: vscode.ExtensionContext): Promise<string | undefined> {
+	try {
+		const { base, access } = await getBaseAndAccess(context);
+		const res = await fetch(`${base}/protected/teams/me`, { headers: { Authorization: `Bearer ${access}` } });
+		const j = await res.json();
+		return j?.team?.id as string | undefined;
+	} catch {
+		return undefined;
+	}
 }

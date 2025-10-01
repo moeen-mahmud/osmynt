@@ -31,7 +31,7 @@ model User {
   OwnedTeams  Team[]     @relation("UserOwnedTeams")
   DeviceKeys  DeviceKey[]
   CodeShares  CodeShare[]
-
+  TeamInvitations TeamInvitation[]
   @@index([id, githubId, email])
 }
 
@@ -62,6 +62,7 @@ model Team {
 
   Owner        User         @relation("UserOwnedTeams", fields: [ownerId], references: [id])
   Members      TeamMember[]
+  Invitations  TeamInvitation[]
 
   @@index([slug])
 }
@@ -114,4 +115,22 @@ model CodeShare {
 
   @@index([authorId])
   @@index([createdAt])
+}
+
+// Team invitation tokens
+model TeamInvitation {
+  id         String   @id @default(cuid())
+  teamId     String
+  inviterId  String
+  token      String   @unique
+  email      String?
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  acceptedAt DateTime?
+
+  Team    Team @relation(fields: [teamId], references: [id])
+  Inviter User @relation(fields: [inviterId], references: [id])
+
+  @@index([teamId])
+  @@index([inviterId])
 }

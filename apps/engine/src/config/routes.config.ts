@@ -62,18 +62,9 @@ export const Routes = {
 	// teams
 	teams: {
 		base: "/protected/teams",
-		extensionBase: "/extension/teams",
-		create: "/create",
-		generateTeamInvitationLink: "/:teamId/invite",
-		getInvitationByToken: "/invite/:inviteToken",
-		join: "/join/:inviteToken",
-		getAll: "/get-all",
-		getById: "/:teamId",
-		leave: "/:teamId/leave",
-		removeTeamMember: "/:teamId/remove-member/:memberId",
-		checkTeamNameExists: "/check-team-name-exists",
-		updateTeamName: "/update-team-name",
-		getLatestTeamActivity: "/:teamId/activity",
+		me: "/me",
+		invite: "/:teamId/invite",
+		accept: "/invite/:inviteToken",
 	},
 
 	codeSnippet: {
