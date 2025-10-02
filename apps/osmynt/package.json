@@ -133,6 +133,16 @@
 			}
 		}
 	},
+	"activationEvents": [
+		"onView:osmyntView",
+		"onCommand:osmynt.refreshTeam",
+		"onCommand:osmynt.viewSnippet",
+		"onCommand:osmynt.shareCode",
+		"onCommand:osmynt.login",
+		"onCommand:osmynt.logout",
+		"onCommand:osmynt.inviteMember",
+		"onCommand:osmynt.acceptInvitation"
+	],
 	"engines": {
 		"vscode": "^1.94.0"
 	}

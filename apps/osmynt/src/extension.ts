@@ -35,6 +35,8 @@ export async function activate(context: vscode.ExtensionContext) {
 			await context.secrets.delete(REFRESH_SECRET_KEY);
 			await vscode.commands.executeCommand("setContext", "osmynt.isLoggedIn", false);
 			vscode.window.showInformationMessage("Logged out of Osmynt.");
+
+			tree.refresh();
 		})
 	);
 
@@ -81,6 +83,7 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 
 	private cachedTeam: any | null = null;
 	private cachedMembers: any[] = [];
+	private cachedRecent: any[] = [];
 
 	constructor(private readonly context: vscode.ExtensionContext) {}
 
@@ -112,8 +115,13 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					`Members (${this.cachedMembers.length})`,
 					vscode.TreeItemCollapsibleState.Collapsed
 				);
+				const recentRoot = new OsmyntItem(
+					"actionsRoot",
+					"Recent Snippets",
+					vscode.TreeItemCollapsibleState.Collapsed
+				);
 				const actionsRoot = new OsmyntItem("actionsRoot", "Actions", vscode.TreeItemCollapsibleState.Collapsed);
-				return [membersRoot, actionsRoot];
+				return [membersRoot, recentRoot, actionsRoot];
 			}
 
 			// Children of members root
@@ -125,13 +133,23 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 				});
 			}
 
+			// Children of recent root (reuse kind)
+			if (element.label === "Recent Snippets") {
+				await this.ensureRecent();
+				return this.cachedRecent.map(s => {
+					const label = s.metadata?.title ? `${s.metadata.title}` : `Snippet ${s.id.slice(0, 6)}`;
+					const item = new OsmyntItem("action", label, vscode.TreeItemCollapsibleState.None, s);
+					item.command = { command: "osmynt.viewSnippet", title: "View Snippet", arguments: [s.id] };
+					item.description = new Date(s.createdAt).toLocaleString();
+					return item;
+				});
+			}
+
 			// Children of actions root
 			if (element.kind === "actionsRoot") {
 				const refresh = new OsmyntItem("action", "Refresh Team", vscode.TreeItemCollapsibleState.None);
 				refresh.command = { command: "osmynt.refreshTeam", title: "Refresh Team" };
-				const view = new OsmyntItem("action", "View Snippet", vscode.TreeItemCollapsibleState.None);
-				view.command = { command: "osmynt.viewSnippet", title: "View Snippet" };
-				return [refresh, view];
+				return [refresh];
 			}
 
 			return [];
@@ -156,6 +174,19 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 		}
 		this.cachedTeam = j.team;
 		this.cachedMembers = Array.isArray(j.members) ? j.members : [];
+	}
+
+	private async ensureRecent() {
+		const { base, access } = await getBaseAndAccess(this.context).catch(() => ({ base: "", access: "" }));
+		if (!base || !access) {
+			this.cachedRecent = [];
+			return;
+		}
+		const res = await fetch(`${base}/protected/code-share/team/list`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const j = await res.json();
+		this.cachedRecent = Array.isArray(j.items) ? j.items : [];
 	}
 
 	refresh() {
