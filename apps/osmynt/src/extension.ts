@@ -46,9 +46,10 @@ export async function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 			const selected = editor.document.getText(editor.selection);
+			const title = await vscode.window.showInputBox({ prompt: "Snippet title (optional)" });
 			try {
 				await ensureDeviceKeys(context);
-				await shareSelectedCode(context, selected);
+				await shareSelectedCode(context, selected, title);
 				vscode.window.showInformationMessage("Osmynt: Snippet shared securely");
 			} catch (e) {
 				vscode.window.showErrorMessage(`Share failed: ${e}`);
@@ -62,40 +63,105 @@ export async function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {}
 
-class OsmyntTreeProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
+type OsmyntNodeKind = "team" | "membersRoot" | "member" | "actionsRoot" | "action";
+
+class OsmyntItem extends vscode.TreeItem {
+	kind: OsmyntNodeKind;
+	data?: any;
+	constructor(kind: OsmyntNodeKind, label: string, collapsible: vscode.TreeItemCollapsibleState, data?: any) {
+		super(label, collapsible);
+		this.kind = kind;
+		this.data = data;
+	}
+}
+
+class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 	private _onDidChangeTreeData: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
 	readonly onDidChangeTreeData: vscode.Event<void> = this._onDidChangeTreeData.event;
 
+	private cachedTeam: any | null = null;
+	private cachedMembers: any[] = [];
+
 	constructor(private readonly context: vscode.ExtensionContext) {}
-	getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
+
+	getTreeItem(element: OsmyntItem): vscode.TreeItem {
 		return element;
 	}
-	async getChildren(): Promise<vscode.TreeItem[]> {
-		const items: vscode.TreeItem[] = [];
+
+	async getChildren(element?: OsmyntItem): Promise<OsmyntItem[]> {
 		try {
-			const { base, access } = await getBaseAndAccess(this.context);
-			const list = await fetch(`${base}/protected/teams/me`, {
-				headers: { Authorization: `Bearer ${access}` },
-			}).then(r => r.json());
-			if (!list?.team) {
-				items.push(new vscode.TreeItem("No team", vscode.TreeItemCollapsibleState.None));
-				return items;
+			// Root
+			if (!element) {
+				await this.ensureTeam();
+				if (!this.cachedTeam) {
+					return [new OsmyntItem("action", "Sign in to view team", vscode.TreeItemCollapsibleState.None)];
+				}
+				const team = new OsmyntItem(
+					"team",
+					`Team: ${this.cachedTeam.name}`,
+					vscode.TreeItemCollapsibleState.Expanded,
+					this.cachedTeam
+				);
+				return [team];
 			}
-			const teamItem = new vscode.TreeItem(`Team: ${list.team.name}`, vscode.TreeItemCollapsibleState.Collapsed);
-			teamItem.description = list.team.id;
-			items.push(teamItem);
-			for (const m of list.members ?? []) {
-				const ti = new vscode.TreeItem(m.name || m.email, vscode.TreeItemCollapsibleState.None);
-				ti.description = m.email;
-				items.push(ti);
+
+			// Children of team
+			if (element.kind === "team") {
+				const membersRoot = new OsmyntItem(
+					"membersRoot",
+					`Members (${this.cachedMembers.length})`,
+					vscode.TreeItemCollapsibleState.Collapsed
+				);
+				const actionsRoot = new OsmyntItem("actionsRoot", "Actions", vscode.TreeItemCollapsibleState.Collapsed);
+				return [membersRoot, actionsRoot];
 			}
-		} catch (e) {
-			items.push(new vscode.TreeItem("Sign in to view team", vscode.TreeItemCollapsibleState.None));
+
+			// Children of members root
+			if (element.kind === "membersRoot") {
+				return this.cachedMembers.map(m => {
+					const item = new OsmyntItem("member", m.name || m.email, vscode.TreeItemCollapsibleState.None, m);
+					item.description = m.email;
+					return item;
+				});
+			}
+
+			// Children of actions root
+			if (element.kind === "actionsRoot") {
+				const refresh = new OsmyntItem("action", "Refresh Team", vscode.TreeItemCollapsibleState.None);
+				refresh.command = { command: "osmynt.refreshTeam", title: "Refresh Team" };
+				const view = new OsmyntItem("action", "View Snippet", vscode.TreeItemCollapsibleState.None);
+				view.command = { command: "osmynt.viewSnippet", title: "View Snippet" };
+				return [refresh, view];
+			}
+
+			return [];
+		} catch {
+			return [new OsmyntItem("action", "Sign in to view team", vscode.TreeItemCollapsibleState.None)];
 		}
-		return items;
+	}
+
+	async ensureTeam() {
+		const { base, access } = await getBaseAndAccess(this.context).catch(() => ({ base: "", access: "" }));
+		if (!base || !access) {
+			this.cachedTeam = null;
+			this.cachedMembers = [];
+			return;
+		}
+		const res = await fetch(`${base}/protected/teams/me`, { headers: { Authorization: `Bearer ${access}` } });
+		const j = await res.json();
+		if (!res.ok || !j?.team) {
+			this.cachedTeam = null;
+			this.cachedMembers = [];
+			return;
+		}
+		this.cachedTeam = j.team;
+		this.cachedMembers = Array.isArray(j.members) ? j.members : [];
 	}
 
 	refresh() {
+		// clear cache and notify
+		this.cachedTeam = null;
+		this.cachedMembers = [];
 		this._onDidChangeTreeData.fire();
 	}
 }
@@ -160,6 +226,36 @@ async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessT
 				}, 150);
 			} catch (e) {
 				vscode.window.showErrorMessage(`Accept failed: ${e}`);
+			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand("osmynt.refreshTeam", async () => {
+			// trigger tree data reload
+			await vscode.commands.executeCommand("workbench.view.extension.osmynt");
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand("osmynt.viewSnippet", async (id?: string) => {
+			try {
+				const { base, access } = await getBaseAndAccess(context);
+				const snippetId = id ?? (await vscode.window.showInputBox({ prompt: "Enter snippet id" }));
+				if (!snippetId) return;
+				const res = await fetch(`${base}/protected/code-share/${encodeURIComponent(snippetId)}`, {
+					headers: { Authorization: `Bearer ${access}` },
+				});
+				const j = await res.json();
+				if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
+				// NOTE: decryption path to be wired next; show header for now
+				const doc = await vscode.workspace.openTextDocument({
+					language: "markdown",
+					content: `# ${j?.metadata?.title ?? "Snippet"}\n\nID: ${j.id}\nAuthor: ${j.authorId}\nCreated: ${j.createdAt}`,
+				});
+				await vscode.window.showTextDocument(doc, { preview: false });
+			} catch (e) {
+				vscode.window.showErrorMessage(`Open failed: ${e}`);
 			}
 		})
 	);
@@ -234,7 +330,7 @@ async function registerDeviceKey(context: vscode.ExtensionContext, deviceId: str
 	});
 }
 
-async function shareSelectedCode(context: vscode.ExtensionContext, code: string) {
+async function shareSelectedCode(context: vscode.ExtensionContext, code: string, title?: string | undefined) {
 	const config = vscode.workspace.getConfiguration("osmynt");
 	const base = (config.get<string>("engineBaseUrl") ?? "http://localhost:3000/osmynt-api-engine").replace(/\/$/, "");
 	const teamKeyMode = config.get<boolean>("teamKeyMode") ?? false;
@@ -334,7 +430,7 @@ async function shareSelectedCode(context: vscode.ExtensionContext, code: string)
 			ciphertextB64u: b64url(new Uint8Array(ciphertext as ArrayBuffer)),
 			ivB64u: b64url(new Uint8Array(iv)),
 			wrappedKeys,
-			metadata: { teamId: "default" },
+			metadata: { teamId: "default", title },
 		}),
 	});
 	if (!res.ok) throw new Error(`Share failed (${res.status})`);

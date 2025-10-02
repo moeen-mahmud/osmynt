@@ -73,6 +73,16 @@
 				"command": "osmynt.acceptInvitation",
 				"title": "Accept Invitation",
 				"category": "Osmynt"
+			},
+			{
+				"command": "osmynt.viewSnippet",
+				"title": "View Snippet",
+				"category": "Osmynt"
+			},
+			{
+				"command": "osmynt.refreshTeam",
+				"title": "Refresh Team",
+				"category": "Osmynt"
 			}
 		],
 		"viewsContainers": {

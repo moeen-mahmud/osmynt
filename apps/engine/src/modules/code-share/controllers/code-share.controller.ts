@@ -23,14 +23,14 @@ export class CodeShareController {
 		});
 		const parsed = schema.safeParse(body);
 		if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
-		const created = await prisma.codeShare.create({
+        const created = await prisma.codeShare.create({
 			data: {
 				authorId: user.id,
 				ciphertextB64u: parsed.data.ciphertextB64u,
 				ivB64u: parsed.data.ivB64u,
 				aad: parsed.data.aad ?? null,
 				wrappedKeys: parsed.data.wrappedKeys as unknown as object,
-				metadata: parsed.data.metadata as unknown as object,
+                metadata: parsed.data.metadata as unknown as object,
 			},
 		});
 		return c.json({ id: created.id });

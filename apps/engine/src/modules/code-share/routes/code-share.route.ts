@@ -22,7 +22,7 @@ export const route_share = createRoute({
 								wrappedCekB64u: z.string(),
 							})
 						),
-						metadata: z.object({ teamId: z.string().optional() }).optional(),
+						metadata: z.object({ teamId: z.string().optional(), title: z.string().optional() }).optional(),
 					}),
 				},
 			},
