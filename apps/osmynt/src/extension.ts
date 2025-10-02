@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { createClient, RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 
 const ACCESS_SECRET_KEY = "osmynt.accessToken";
 const REFRESH_SECRET_KEY = "osmynt.refreshToken";
@@ -22,6 +23,9 @@ export async function activate(context: vscode.ExtensionContext) {
 					return;
 				}
 				await nativeSecureLogin(context, session.accessToken);
+				try {
+					await connectRealtime(context);
+				} catch {}
 				tree.refresh();
 			} catch (e) {
 				vscode.window.showErrorMessage(`Login failed: ${e}`);
@@ -36,6 +40,10 @@ export async function activate(context: vscode.ExtensionContext) {
 			await vscode.commands.executeCommand("setContext", "osmynt.isLoggedIn", false);
 			vscode.window.showInformationMessage("Logged out of Osmynt.");
 
+			// disconnect realtime if available
+			try {
+				await disconnectRealtime(context);
+			} catch {}
 			tree.refresh();
 		})
 	);
@@ -49,9 +57,10 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 			const selected = editor.document.getText(editor.selection);
 			const title = await vscode.window.showInputBox({ prompt: "Snippet title (optional)" });
+			const target = await pickShareTarget(context);
 			try {
 				await ensureDeviceKeys(context);
-				await shareSelectedCode(context, selected, title);
+				await shareSelectedCode(context, selected, title, target);
 				vscode.window.showInformationMessage("Osmynt: Snippet shared securely");
 			} catch (e) {
 				vscode.window.showErrorMessage(`Share failed: ${e}`);
@@ -64,6 +73,33 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {}
+let supabaseClient: SupabaseClient | null = null;
+let realtimeChannel: RealtimeChannel | null = null;
+
+async function connectRealtime(context: vscode.ExtensionContext) {
+	const cfg = vscode.workspace.getConfiguration("osmynt");
+	const url = cfg.get<string>("supabaseUrl") || "";
+	const anon = cfg.get<string>("supabaseAnonKey") || "";
+	if (!url || !anon) return;
+	supabaseClient = createClient(url, anon, { realtime: { params: { eventsPerSecond: 3 } } });
+	const channel = supabaseClient.channel("osmynt-recent-snippets");
+	realtimeChannel = channel
+		.on("broadcast", { event: "snippet:created" }, payload => {
+			vscode.window.showInformationMessage(`New snippet: ${payload?.payload?.title ?? "Untitled"}`);
+		})
+		.subscribe();
+}
+
+async function disconnectRealtime(context: vscode.ExtensionContext) {
+	try {
+		await realtimeChannel?.unsubscribe();
+	} catch {}
+	try {
+		await supabaseClient?.removeAllChannels();
+	} catch {}
+	realtimeChannel = null;
+	supabaseClient = null;
+}
 
 type OsmyntNodeKind = "team" | "membersRoot" | "member" | "actionsRoot" | "action";
 
@@ -279,10 +315,11 @@ async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessT
 				});
 				const j = await res.json();
 				if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
-				// NOTE: decryption path to be wired next; show header for now
+				// Attempt decrypt (per-recipient ECDH or team key)
+				const text = await tryDecryptSnippet(context, j);
 				const doc = await vscode.workspace.openTextDocument({
-					language: "markdown",
-					content: `# ${j?.metadata?.title ?? "Snippet"}\n\nID: ${j.id}\nAuthor: ${j.authorId}\nCreated: ${j.createdAt}`,
+					language: "plaintext",
+					content: text ?? "[Encrypted snippet opened. Decrypt failed or not addressed to this device.]",
 				});
 				await vscode.window.showTextDocument(doc, { preview: false });
 			} catch (e) {
@@ -361,7 +398,14 @@ async function registerDeviceKey(context: vscode.ExtensionContext, deviceId: str
 	});
 }
 
-async function shareSelectedCode(context: vscode.ExtensionContext, code: string, title?: string | undefined) {
+type ShareTarget = { kind: "team" } | { kind: "user"; userId: string };
+
+async function shareSelectedCode(
+	context: vscode.ExtensionContext,
+	code: string,
+	title: string | undefined,
+	target: ShareTarget
+) {
 	const config = vscode.workspace.getConfiguration("osmynt");
 	const base = (config.get<string>("engineBaseUrl") ?? "http://localhost:3000/osmynt-api-engine").replace(/\/$/, "");
 	const teamKeyMode = config.get<boolean>("teamKeyMode") ?? false;
@@ -388,8 +432,12 @@ async function shareSelectedCode(context: vscode.ExtensionContext, code: string,
 	const recipientsRes = await fetch(`${base}/protected/keys/team/default`, {
 		headers: { Authorization: `Bearer ${access}` },
 	});
-	const { recipients } = await recipientsRes.json();
-	if (!Array.isArray(recipients) || recipients.length === 0) throw new Error("No recipients");
+	let { recipients } = await recipientsRes.json();
+	if (!Array.isArray(recipients)) recipients = [];
+	if (target.kind === "user") {
+		recipients = recipients.filter((r: any) => r.userId === target.userId);
+	}
+	if (recipients.length === 0) throw new Error("No recipients");
 
 	// Encrypt content with AES-GCM
 	const iv = nodeCrypto.randomBytes(12);
@@ -418,6 +466,7 @@ async function shareSelectedCode(context: vscode.ExtensionContext, code: string,
 				recipientDeviceId: r.deviceId,
 				senderEphemeralPublicKeyJwk: encKeypair.publicKeyJwk,
 				wrappedCekB64u,
+				wrapIvB64u: b64url(new Uint8Array(wrapIv)),
 			});
 		}
 	} else {
@@ -450,6 +499,7 @@ async function shareSelectedCode(context: vscode.ExtensionContext, code: string,
 				recipientDeviceId: r.deviceId,
 				senderEphemeralPublicKeyJwk: ephPubJwk,
 				wrappedCekB64u,
+				wrapIvB64u: b64url(new Uint8Array(wrapIv2)),
 			});
 		}
 	}
@@ -506,4 +556,125 @@ async function promptTeamId(context: vscode.ExtensionContext): Promise<string | 
 	} catch {
 		return undefined;
 	}
+}
+
+async function tryDecryptSnippet(context: vscode.ExtensionContext, j: any): Promise<string | null> {
+	try {
+		const nodeCrypto = await import("crypto");
+		const subtle: any = (globalThis as any).crypto?.subtle ?? (nodeCrypto as any).webcrypto?.subtle;
+		if (!subtle) return null;
+
+		// 1) Try team-key mode first
+		const config = vscode.workspace.getConfiguration("osmynt");
+		const teamKeyMode = config.get<boolean>("teamKeyMode") ?? false;
+		if (teamKeyMode) {
+			const teamKeyNamespace = config.get<string>("teamKeyNamespace") ?? "default";
+			const teamKeyStorageKey = `osmynt.teamKey.${teamKeyNamespace}`;
+			const teamKeyRawB64 = await context.secrets.get(teamKeyStorageKey);
+			if (teamKeyRawB64) {
+				const teamKeyRaw = Buffer.from(teamKeyRawB64, "base64");
+				const teamKey = await subtle.importKey("raw", teamKeyRaw, { name: "AES-GCM", length: 256 }, true, [
+					"unwrapKey",
+				]);
+				// Find any wrappedKey entry (same wrapped for all)
+				const wk = (j.wrappedKeys ?? [])[0];
+				if (wk?.wrappedCekB64u && wk?.wrapIvB64u) {
+					const wrappedBytes = b64uToBytes(wk.wrappedCekB64u);
+					const wrapIv = b64uToBytes(wk.wrapIvB64u);
+					const cek = await subtle.unwrapKey(
+						"raw",
+						wrappedBytes,
+						teamKey,
+						{ name: "AES-GCM", iv: wrapIv },
+						{ name: "AES-GCM", length: 256 },
+						false,
+						["decrypt"]
+					);
+					const iv = b64uToBytes(j.ivB64u);
+					const ciphertext = b64uToBytes(j.ciphertextB64u);
+					const plaintext = await subtle.decrypt({ name: "AES-GCM", iv }, cek, ciphertext);
+					return Buffer.from(new Uint8Array(plaintext)).toString("utf-8");
+				}
+			}
+		}
+
+		// 2) Per-recipient unwrap by matching our device key
+		const encKeypair = JSON.parse((await context.secrets.get(ENC_KEYPAIR_JWK_KEY)) || "{}");
+		if (!encKeypair?.privateKeyJwk) return null;
+		const priv: any = await subtle.importKey(
+			"jwk",
+			encKeypair.privateKeyJwk,
+			{ name: "ECDH", namedCurve: "P-256" },
+			true,
+			["deriveKey", "deriveBits"]
+		);
+		// Find a wrappedKey entry addressed to us (we can’t know deviceId here; try all)
+		for (const wk of j.wrappedKeys ?? []) {
+			if (!wk?.senderEphemeralPublicKeyJwk || !wk?.wrappedCekB64u || !wk?.wrapIvB64u) continue;
+			try {
+				const senderPub = await subtle.importKey(
+					"jwk",
+					wk.senderEphemeralPublicKeyJwk,
+					{ name: "ECDH", namedCurve: "P-256" },
+					true,
+					[]
+				);
+				const kek = await subtle.deriveKey(
+					{ name: "ECDH", public: senderPub },
+					priv,
+					{ name: "AES-GCM", length: 256 },
+					false,
+					["unwrapKey"]
+				);
+				const wrappedBytes = b64uToBytes(wk.wrappedCekB64u);
+				const wrapIv = b64uToBytes(wk.wrapIvB64u);
+				const cek = await subtle.unwrapKey(
+					"raw",
+					wrappedBytes,
+					kek,
+					{ name: "AES-GCM", iv: wrapIv },
+					{ name: "AES-GCM", length: 256 },
+					false,
+					["decrypt"]
+				);
+				const iv = b64uToBytes(j.ivB64u);
+				const ciphertext = b64uToBytes(j.ciphertextB64u);
+				const plaintext = await subtle.decrypt({ name: "AES-GCM", iv }, cek, ciphertext);
+				return Buffer.from(new Uint8Array(plaintext)).toString("utf-8");
+			} catch {
+				// try next entry
+			}
+		}
+		return null;
+	} catch {
+		return null;
+	}
+}
+
+function b64uToBytes(s: string) {
+	const padded = s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4);
+	return Uint8Array.from(Buffer.from(padded, "base64"));
+}
+
+async function pickShareTarget(context: vscode.ExtensionContext): Promise<ShareTarget> {
+	const { base, access } = await getBaseAndAccess(context);
+	const res = await fetch(`${base}/protected/teams/me`, { headers: { Authorization: `Bearer ${access}` } });
+	const j = await res.json();
+	const members: Array<{ label: string; description: string; userId: string }> = (j?.members ?? []).map((m: any) => ({
+		label: m.name || m.email,
+		description: m.email,
+		userId: m.id,
+	}));
+	const items: (vscode.QuickPickItem & { _kind?: "team" | "user"; userId?: string })[] = [
+		{ label: "Share with Team", description: j?.team?.name || "", _kind: "team" as "team" },
+		...members.map(m => ({
+			label: `Share with ${m.label}`,
+			description: m.description,
+			_kind: "user" as "user",
+			userId: m.userId,
+		})),
+	];
+	const choice = await vscode.window.showQuickPick(items, { placeHolder: "Select share target" });
+	if (!choice || choice._kind === "team") return { kind: "team" };
+	return { kind: "user", userId: choice.userId! } as ShareTarget;
 }

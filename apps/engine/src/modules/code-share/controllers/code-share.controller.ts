@@ -33,6 +33,15 @@ export class CodeShareController {
 				metadata: parsed.data.metadata as unknown as object,
 			},
 		});
+		// broadcast via supabase realtime (if configured in env)
+		try {
+			const { supabase } = await import("@/config/supabase.config");
+			await supabase.channel("osmynt-recent-snippets").send({
+				type: "broadcast",
+				event: "snippet:created",
+				payload: { id: created.id, title: (parsed.data.metadata as any)?.title },
+			} as any);
+		} catch {}
 		return c.json({ id: created.id });
 	}
 

@@ -20,6 +20,7 @@ export const route_share = createRoute({
 								recipientDeviceId: z.string(),
 								senderEphemeralPublicKeyJwk: z.any(),
 								wrappedCekB64u: z.string(),
+								wrapIvB64u: z.string(),
 							})
 						),
 						metadata: z.object({ teamId: z.string().optional(), title: z.string().optional() }).optional(),

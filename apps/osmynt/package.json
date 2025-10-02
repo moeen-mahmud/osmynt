@@ -3,7 +3,8 @@
 	"dependencies": {
 		"@types/bun": "^1.1.13",
 		"@types/vscode": "^1.86.0",
-		"ws": "^8.18.0"
+		"ws": "^8.18.0",
+		"@supabase/supabase-js": "^2.58.0"
 	},
 	"author": {
 		"name": "Moeen Mahmud",
@@ -119,6 +120,16 @@
 					"type": "string",
 					"default": "http://localhost:3000/osmynt-api-engine",
 					"description": "Osmynt Engine base URL (e.g. https://api.osmynt.com/osmynt-api-engine)"
+				},
+				"osmynt.supabaseUrl": {
+					"type": "string",
+					"default": "https://tylxgkeecqxgaasmtitr.supabase.co",
+					"description": "Supabase project URL for realtime subscriptions (optional)"
+				},
+				"osmynt.supabaseAnonKey": {
+					"type": "string",
+					"default": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5bHhna2VlY3F4Z2Fhc210aXRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMjMzNDgsImV4cCI6MjA3NDc5OTM0OH0.nhFCGI3dWAq18nrBWl-fFvP-WZsaiEVWHnxxgGom8xk",
+					"description": "Supabase anon key for realtime (optional)"
 				},
 				"osmynt.teamKeyMode": {
 					"type": "boolean",
