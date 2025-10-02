@@ -18,7 +18,9 @@
 		"strict": true,
 		"noFallthroughCasesInSwitch": true,
 		"forceConsistentCasingInFileNames": true,
+		"baseUrl": ".",
 		"paths": {
+			"@/*": ["./src/*"],
 			"vscode": ["./mocks/vscode.ts"]
 		}
 	}

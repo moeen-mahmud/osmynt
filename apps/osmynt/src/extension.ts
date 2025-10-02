@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { createClient, RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
+import { createClient, type RealtimeChannel, type SupabaseClient } from "@supabase/supabase-js";
 
 const ACCESS_SECRET_KEY = "osmynt.accessToken";
 const REFRESH_SECRET_KEY = "osmynt.refreshToken";
@@ -8,7 +8,6 @@ const ENC_KEYPAIR_JWK_KEY = "osmynt.encKeypair.jwk";
 const SIGN_KEYPAIR_JWK_KEY = "osmynt.signKeypair.jwk";
 
 export async function activate(context: vscode.ExtensionContext) {
-	// Register a basic TreeDataProvider to make the activity bar view render
 	const tree = new OsmyntTreeProvider(context);
 	context.subscriptions.push(vscode.window.registerTreeDataProvider("osmyntView", tree));
 
@@ -80,12 +79,18 @@ async function connectRealtime(context: vscode.ExtensionContext) {
 	const cfg = vscode.workspace.getConfiguration("osmynt");
 	const url = cfg.get<string>("supabaseUrl") || "";
 	const anon = cfg.get<string>("supabaseAnonKey") || "";
-	if (!url || !anon) return;
+	if (!url || !anon) {
+		vscode.window.showWarningMessage("Error connecting to realtime. Please check your configuration.");
+		return;
+	}
 	supabaseClient = createClient(url, anon, { realtime: { params: { eventsPerSecond: 3 } } });
 	const channel = supabaseClient.channel("osmynt-recent-snippets");
 	realtimeChannel = channel
-		.on("broadcast", { event: "snippet:created" }, payload => {
+		.on("broadcast", { event: "snippet:created" }, async payload => {
 			vscode.window.showInformationMessage(`New snippet: ${payload?.payload?.title ?? "Untitled"}`);
+			try {
+				await vscode.commands.executeCommand("osmynt.refreshTeam");
+			} catch {}
 		})
 		.subscribe();
 }
@@ -101,7 +106,7 @@ async function disconnectRealtime(context: vscode.ExtensionContext) {
 	supabaseClient = null;
 }
 
-type OsmyntNodeKind = "team" | "membersRoot" | "member" | "actionsRoot" | "action";
+type OsmyntNodeKind = "team" | "membersRoot" | "member" | "actionsRoot" | "recentRoot" | "action";
 
 class OsmyntItem extends vscode.TreeItem {
 	kind: OsmyntNodeKind;
@@ -152,7 +157,7 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					vscode.TreeItemCollapsibleState.Collapsed
 				);
 				const recentRoot = new OsmyntItem(
-					"actionsRoot",
+					"recentRoot",
 					"Recent Snippets",
 					vscode.TreeItemCollapsibleState.Collapsed
 				);
@@ -169,8 +174,8 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 				});
 			}
 
-			// Children of recent root (reuse kind)
-			if (element.label === "Recent Snippets") {
+			// Children of recent root
+			if (element.kind === "recentRoot") {
 				await this.ensureRecent();
 				return this.cachedRecent.map(s => {
 					const label = s.metadata?.title ? `${s.metadata.title}` : `Snippet ${s.id.slice(0, 6)}`;
@@ -253,7 +258,10 @@ async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessT
 		vscode.commands.registerCommand("osmynt.inviteMember", async () => {
 			try {
 				const teamId = await promptTeamId(context);
-				if (!teamId) return;
+				if (!teamId) {
+					vscode.window.showWarningMessage("No team ID provided");
+					return;
+				}
 				const { base, access } = await getBaseAndAccess(context);
 				const res = await fetch(`${base}/protected/teams/${encodeURIComponent(teamId)}/invite`, {
 					method: "POST",
@@ -327,7 +335,10 @@ async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessT
 			}
 		})
 	);
-	if (!res.ok) throw new Error(`Engine login failed (${res.status})`);
+	if (!res.ok) {
+		vscode.window.showErrorMessage(`Engine login failed (${res.status})`);
+		throw new Error(`Engine login failed (${res.status})`);
+	}
 	const j = await res.json();
 
 	const serverPub: any = await subtle.importKey(
@@ -504,6 +515,9 @@ async function shareSelectedCode(
 		}
 	}
 
+	// Resolve current team id so recent list matches
+	const currentTeamId = await promptTeamId(context);
+
 	const res = await fetch(`${base}/protected/code-share/share`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json", Authorization: `Bearer ${access}` },
@@ -511,7 +525,7 @@ async function shareSelectedCode(
 			ciphertextB64u: b64url(new Uint8Array(ciphertext as ArrayBuffer)),
 			ivB64u: b64url(new Uint8Array(iv)),
 			wrappedKeys,
-			metadata: { teamId: "default", title },
+			metadata: { teamId: currentTeamId, title },
 		}),
 	});
 	if (!res.ok) throw new Error(`Share failed (${res.status})`);

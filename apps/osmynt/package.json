@@ -3,7 +3,6 @@
 	"dependencies": {
 		"@types/bun": "^1.1.13",
 		"@types/vscode": "^1.86.0",
-		"ws": "^8.18.0",
 		"@supabase/supabase-js": "^2.58.0"
 	},
 	"author": {
@@ -32,7 +31,7 @@
 		"package": "bun run build && bun run vsce-package",
 		"clean": "rm -r ./dist"
 	},
-	"publisher": "osmynt",
+	"publisher": "Osmynt",
 	"name": "osmynt",
 	"version": "0.17.3",
 	"displayName": "Osmynt Beta",
@@ -133,7 +132,7 @@
 				},
 				"osmynt.teamKeyMode": {
 					"type": "boolean",
-					"default": false,
+					"default": true,
 					"description": "Use a single symmetric team key instead of per-recipient key wrapping."
 				},
 				"osmynt.teamKeyNamespace": {
