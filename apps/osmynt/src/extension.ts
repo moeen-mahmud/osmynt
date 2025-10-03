@@ -70,6 +70,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	const access = await context.secrets.get(ACCESS_SECRET_KEY);
 	await vscode.commands.executeCommand("setContext", "osmynt.isLoggedIn", Boolean(access));
+	// Ensure this device has registered encryption keys if already logged in
+	if (access) {
+		try {
+			await ensureDeviceKeys(context);
+		} catch {}
+	}
 }
 
 export function deactivate() {}
@@ -325,6 +331,7 @@ async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessT
 				if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
 				// Attempt decrypt (per-recipient ECDH or team key)
 				const text = await tryDecryptSnippet(context, j);
+				vscode.window.showInformationMessage(JSON.stringify(text, null, 2));
 				const doc = await vscode.workspace.openTextDocument({
 					language: "plaintext",
 					content: text ?? "[Encrypted snippet opened. Decrypt failed or not addressed to this device.]",
@@ -369,6 +376,10 @@ async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessT
 	await context.secrets.store(REFRESH_SECRET_KEY, tokens.refresh);
 	await vscode.commands.executeCommand("setContext", "osmynt.isLoggedIn", true);
 	vscode.window.showInformationMessage("Osmynt: Logged in");
+	// Register device keys immediately after login so others can share to this device
+	try {
+		await ensureDeviceKeys(context);
+	} catch {}
 }
 
 async function ensureDeviceKeys(context: vscode.ExtensionContext) {
@@ -393,6 +404,14 @@ async function ensureDeviceKeys(context: vscode.ExtensionContext) {
 		encKeypairJwk = JSON.stringify({ publicKeyJwk: pub, privateKeyJwk: priv });
 		await context.secrets.store(ENC_KEYPAIR_JWK_KEY, encKeypairJwk);
 		await registerDeviceKey(context, deviceId, pub);
+	} else {
+		// Ensure server has our device key registered (idempotent upsert)
+		try {
+			const parsed = JSON.parse(encKeypairJwk);
+			if (parsed?.publicKeyJwk) {
+				await registerDeviceKey(context, deviceId, parsed.publicKeyJwk);
+			}
+		} catch {}
 	}
 	return { deviceId };
 }
@@ -478,6 +497,39 @@ async function shareSelectedCode(
 				senderEphemeralPublicKeyJwk: encKeypair.publicKeyJwk,
 				wrappedCekB64u,
 				wrapIvB64u: b64url(new Uint8Array(wrapIv)),
+			});
+		}
+
+		// Also include per-recipient ECDH-wrapped CEK so recipients without team key can decrypt
+		const eph = (await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, [
+			"deriveKey",
+			"deriveBits",
+		])) as any;
+		const ephPubJwk = await subtle.exportKey("jwk", eph.publicKey);
+		for (const r of recipients) {
+			const recipientPub = await subtle.importKey(
+				"jwk",
+				r.encryptionPublicKeyJwk,
+				{ name: "ECDH", namedCurve: "P-256" },
+				true,
+				[]
+			);
+			const kek = await subtle.deriveKey(
+				{ name: "ECDH", public: recipientPub },
+				eph.privateKey,
+				{ name: "AES-GCM", length: 256 },
+				false,
+				["encrypt"]
+			);
+			const wrapIv2 = nodeCrypto.randomBytes(12);
+			const wrapped2 = await subtle.encrypt({ name: "AES-GCM", iv: wrapIv2 }, kek, cekRaw);
+			const wrappedCekB64u_2 = b64url(new Uint8Array(wrapped2 as ArrayBuffer));
+			wrappedKeys.push({
+				recipientUserId: r.userId,
+				recipientDeviceId: r.deviceId,
+				senderEphemeralPublicKeyJwk: ephPubJwk,
+				wrappedCekB64u: wrappedCekB64u_2,
+				wrapIvB64u: b64url(new Uint8Array(wrapIv2)),
 			});
 		}
 	} else {
@@ -578,75 +630,81 @@ async function tryDecryptSnippet(context: vscode.ExtensionContext, j: any): Prom
 		const subtle: any = (globalThis as any).crypto?.subtle ?? (nodeCrypto as any).webcrypto?.subtle;
 		if (!subtle) return null;
 
-		// 1) Try team-key mode first
-		const config = vscode.workspace.getConfiguration("osmynt");
-		const teamKeyMode = config.get<boolean>("teamKeyMode") ?? false;
-		if (teamKeyMode) {
-			const teamKeyNamespace = config.get<string>("teamKeyNamespace") ?? "default";
-			const teamKeyStorageKey = `osmynt.teamKey.${teamKeyNamespace}`;
-			const teamKeyRawB64 = await context.secrets.get(teamKeyStorageKey);
-			if (teamKeyRawB64) {
-				const teamKeyRaw = Buffer.from(teamKeyRawB64, "base64");
-				const teamKey = await subtle.importKey("raw", teamKeyRaw, { name: "AES-GCM", length: 256 }, false, [
-					"decrypt",
-				]);
-				// Find any wrappedKey entry (same wrapped for all)
-				const wk = (j.wrappedKeys ?? [])[0];
-				if (wk?.wrappedCekB64u && wk?.wrapIvB64u) {
-					const wrappedBytes = b64uToBytes(wk.wrappedCekB64u);
-					const wrapIv = b64uToBytes(wk.wrapIvB64u);
-					const cekRaw = await subtle.decrypt({ name: "AES-GCM", iv: wrapIv }, teamKey, wrappedBytes);
-					const cek = await subtle.importKey("raw", cekRaw, { name: "AES-GCM", length: 256 }, false, [
-						"decrypt",
-					]);
-					const iv = b64uToBytes(j.ivB64u);
-					const ciphertext = b64uToBytes(j.ciphertextB64u);
-					const plaintext = await subtle.decrypt({ name: "AES-GCM", iv }, cek, ciphertext);
-					return Buffer.from(new Uint8Array(plaintext)).toString("utf-8");
-				}
-			}
-		}
-
-		// 2) Per-recipient unwrap by matching our device key
-		const encKeypair = JSON.parse((await context.secrets.get(ENC_KEYPAIR_JWK_KEY)) || "{}");
-		if (!encKeypair?.privateKeyJwk) return null;
-		const priv: any = await subtle.importKey(
-			"jwk",
-			encKeypair.privateKeyJwk,
-			{ name: "ECDH", namedCurve: "P-256" },
-			true,
-			["deriveKey", "deriveBits"]
-		);
-		// Find a wrappedKey entry addressed to us (we can’t know deviceId here; try all)
-		for (const wk of j.wrappedKeys ?? []) {
-			if (!wk?.senderEphemeralPublicKeyJwk || !wk?.wrappedCekB64u || !wk?.wrapIvB64u) continue;
-			try {
-				const senderPub = await subtle.importKey(
+		// 1) Try per-recipient unwrap first so we don't fail early on team-key mismatch
+		try {
+			const encKeypair = JSON.parse((await context.secrets.get(ENC_KEYPAIR_JWK_KEY)) || "{}");
+			if (encKeypair?.privateKeyJwk) {
+				const priv: any = await subtle.importKey(
 					"jwk",
-					wk.senderEphemeralPublicKeyJwk,
+					encKeypair.privateKeyJwk,
 					{ name: "ECDH", namedCurve: "P-256" },
 					true,
-					[]
+					["deriveKey", "deriveBits"]
 				);
-				const kek = await subtle.deriveKey(
-					{ name: "ECDH", public: senderPub },
-					priv,
-					{ name: "AES-GCM", length: 256 },
-					false,
-					["decrypt"]
-				);
-				const wrappedBytes = b64uToBytes(wk.wrappedCekB64u);
-				const wrapIv = b64uToBytes(wk.wrapIvB64u);
-				const cekRaw = await subtle.decrypt({ name: "AES-GCM", iv: wrapIv }, kek, wrappedBytes);
-				const cek = await subtle.importKey("raw", cekRaw, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
-				const iv = b64uToBytes(j.ivB64u);
-				const ciphertext = b64uToBytes(j.ciphertextB64u);
-				const plaintext = await subtle.decrypt({ name: "AES-GCM", iv }, cek, ciphertext);
-				return Buffer.from(new Uint8Array(plaintext)).toString("utf-8");
-			} catch {
-				// try next entry
+				for (const wk of j.wrappedKeys ?? []) {
+					if (!wk?.senderEphemeralPublicKeyJwk || !wk?.wrappedCekB64u || !wk?.wrapIvB64u) continue;
+					try {
+						const senderPub = await subtle.importKey(
+							"jwk",
+							wk.senderEphemeralPublicKeyJwk,
+							{ name: "ECDH", namedCurve: "P-256" },
+							true,
+							[]
+						);
+						const kek = await subtle.deriveKey(
+							{ name: "ECDH", public: senderPub },
+							priv,
+							{ name: "AES-GCM", length: 256 },
+							false,
+							["decrypt"]
+						);
+						const wrappedBytes = b64uToBytes(wk.wrappedCekB64u);
+						const wrapIv = b64uToBytes(wk.wrapIvB64u);
+						const cekRaw = await subtle.decrypt({ name: "AES-GCM", iv: wrapIv }, kek, wrappedBytes);
+						const cek = await subtle.importKey("raw", cekRaw, { name: "AES-GCM", length: 256 }, false, [
+							"decrypt",
+						]);
+						const iv = b64uToBytes(j.ivB64u);
+						const ciphertext = b64uToBytes(j.ciphertextB64u);
+						const plaintext = await subtle.decrypt({ name: "AES-GCM", iv }, cek, ciphertext);
+						return Buffer.from(new Uint8Array(plaintext)).toString("utf-8");
+					} catch {
+						// try next entry
+					}
+				}
 			}
-		}
+		} catch {}
+
+		// 2) Fallback: team-key mode, but don't abort on failure
+		try {
+			const config = vscode.workspace.getConfiguration("osmynt");
+			const teamKeyMode = config.get<boolean>("teamKeyMode") ?? false;
+			if (teamKeyMode) {
+				const teamKeyNamespace = config.get<string>("teamKeyNamespace") ?? "default";
+				const teamKeyStorageKey = `osmynt.teamKey.${teamKeyNamespace}`;
+				const teamKeyRawB64 = await context.secrets.get(teamKeyStorageKey);
+				if (teamKeyRawB64) {
+					const teamKeyRaw = Buffer.from(teamKeyRawB64, "base64");
+					const teamKey = await subtle.importKey("raw", teamKeyRaw, { name: "AES-GCM", length: 256 }, false, [
+						"decrypt",
+					]);
+					const wk = (j.wrappedKeys ?? [])[0];
+					if (wk?.wrappedCekB64u && wk?.wrapIvB64u) {
+						const wrappedBytes = b64uToBytes(wk.wrappedCekB64u);
+						const wrapIv = b64uToBytes(wk.wrapIvB64u);
+						const cekRaw = await subtle.decrypt({ name: "AES-GCM", iv: wrapIv }, teamKey, wrappedBytes);
+						const cek = await subtle.importKey("raw", cekRaw, { name: "AES-GCM", length: 256 }, false, [
+							"decrypt",
+						]);
+						const iv = b64uToBytes(j.ivB64u);
+						const ciphertext = b64uToBytes(j.ciphertextB64u);
+						const plaintext = await subtle.decrypt({ name: "AES-GCM", iv }, cek, ciphertext);
+						return Buffer.from(new Uint8Array(plaintext)).toString("utf-8");
+					}
+				}
+			}
+		} catch {}
+
 		return null;
 	} catch {
 		return null;

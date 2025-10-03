@@ -17,6 +17,7 @@ export class CodeShareController {
 					recipientDeviceId: z.string(),
 					senderEphemeralPublicKeyJwk: z.any(),
 					wrappedCekB64u: z.string(),
+					wrapIvB64u: z.string(),
 				})
 			),
 			metadata: z.object({ teamId: z.string().optional() }).optional(),

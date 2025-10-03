@@ -133,7 +133,7 @@
 				},
 				"osmynt.teamKeyMode": {
 					"type": "boolean",
-					"default": false,
+					"default": true,
 					"description": "Use a single symmetric team key instead of per-recipient key wrapping."
 				},
 				"osmynt.teamKeyNamespace": {
