@@ -177,11 +177,11 @@ export async function tryDecryptSnippet(context: vscode.ExtensionContext, j: any
 			}
 		} catch {}
 
-		//SECOND TRY (FALLBACK): team-key mode, but don't abort on failure
+		//SECOND TRY (FALLBACK): team-key mode, but only for team snippets (require teamId)
 		try {
 			const config = vscode.workspace.getConfiguration("osmynt");
 			const teamKeyMode = config.get<boolean>("teamKeyMode") ?? false;
-			if (teamKeyMode) {
+			if (teamKeyMode && (j?.metadata?.teamId as string | undefined)) {
 				const teamKeyNamespace = config.get<string>("teamKeyNamespace") ?? "default";
 				const teamKeyStorageKey = `osmynt.teamKey.${teamKeyNamespace}`;
 				const teamKeyRawB64 = await context.secrets.get(teamKeyStorageKey);

@@ -118,20 +118,31 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 						"Snippet";
 					const authorName = (payload?.payload?.authorName as string | undefined) || j?.authorName;
 					const firstRecipientName = payload?.payload?.firstRecipientName as string | undefined;
-					if (canDecrypt) {
+					const authorId = (payload?.payload?.authorId as string | undefined) || j?.authorId;
+					let currentUserId: string | undefined;
+					try {
+						const meRes = await fetch(`${base}/protected/teams/me`, {
+							headers: { Authorization: `Bearer ${access}` },
+						});
+						const me = await meRes.json();
+						currentUserId = me?.user?.id as string | undefined;
+					} catch {}
+					if (canDecrypt && authorId !== currentUserId) {
 						// Receiver toast
 						vscode.window.showInformationMessage(
 							`A NEW SNIPPET ${title} ARRIVED FROM ${authorName ?? "someone"}`
 						);
-					} else {
+						treeProvider.refresh();
+					} else if (currentUserId && authorId === currentUserId) {
 						// Sender toast
 						vscode.window.showInformationMessage(
 							`SNIPPET ${title} SHARED TO ${firstRecipientName ?? payload?.payload?.teamName ?? "team"}`
 						);
+						treeProvider.refresh();
 					}
 				}
 				// Refresh both sides
-				treeProvider?.refresh();
+				treeProvider.refresh();
 			} catch {}
 		})
 		.subscribe();
