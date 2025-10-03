@@ -24,11 +24,12 @@
 	},
 	"type": "module",
 	"scripts": {
+		"prepare-env": "NODE_ENV=development bun --env-file=../../.env run",
 		"dev": "echo 'Open this directory in VSCode and then run your extension with F5 or `Run and Debug > Run Extension`!'",
-		"build": "bun run ./scripts/build-with-esbuild.ts",
-		"watch": "bun run ./scripts/watch-with-esbuild.ts",
-		"vsce-package": "bun run vsce package --no-dependencies",
-		"package": "bun run build && bun run vsce-package",
+		"build": "bun run prepare-env ./scripts/build-with-esbuild.ts",
+		"watch": "bun run prepare-env ./scripts/watch-with-esbuild.ts",
+		"vsce-package": "bun run prepare-env vsce package --no-dependencies",
+		"package": "bun run prepare-env build && bun run vsce-package",
 		"clean": "rm -r ./dist"
 	},
 	"publisher": "Osmynt",
@@ -132,7 +133,7 @@
 				},
 				"osmynt.teamKeyMode": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "Use a single symmetric team key instead of per-recipient key wrapping."
 				},
 				"osmynt.teamKeyNamespace": {

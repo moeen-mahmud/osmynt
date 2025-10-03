@@ -10,6 +10,7 @@ const SIGN_KEYPAIR_JWK_KEY = "osmynt.signKeypair.jwk";
 export async function activate(context: vscode.ExtensionContext) {
 	const tree = new OsmyntTreeProvider(context);
 	context.subscriptions.push(vscode.window.registerTreeDataProvider("osmyntView", tree));
+	treeProvider = tree;
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand("osmynt.login", async () => {
@@ -74,6 +75,7 @@ export async function activate(context: vscode.ExtensionContext) {
 export function deactivate() {}
 let supabaseClient: SupabaseClient | null = null;
 let realtimeChannel: RealtimeChannel | null = null;
+let treeProvider: OsmyntTreeProvider | null = null;
 
 async function connectRealtime(context: vscode.ExtensionContext) {
 	const cfg = vscode.workspace.getConfiguration("osmynt");
@@ -88,9 +90,7 @@ async function connectRealtime(context: vscode.ExtensionContext) {
 	realtimeChannel = channel
 		.on("broadcast", { event: "snippet:created" }, async payload => {
 			vscode.window.showInformationMessage(`New snippet: ${payload?.payload?.title ?? "Untitled"}`);
-			try {
-				await vscode.commands.executeCommand("osmynt.refreshTeam");
-			} catch {}
+			treeProvider?.refresh();
 		})
 		.subscribe();
 }
@@ -459,7 +459,7 @@ async function shareSelectedCode(
 	const wrappedKeys: any[] = [];
 
 	if (teamKeyMode) {
-		// Team key mode: KEK for team; wrap CEK once; deliver to everyone sharing same team key
+		// Team key mode: KEK for team; encrypt CEK once; deliver to everyone sharing same team key
 		const teamKeyStorageKey = `osmynt.teamKey.${teamKeyNamespace}`;
 		let teamKeyRawB64 = await context.secrets.get(teamKeyStorageKey);
 		if (!teamKeyRawB64) {
@@ -467,9 +467,9 @@ async function shareSelectedCode(
 			await context.secrets.store(teamKeyStorageKey, teamKeyRawB64);
 		}
 		const teamKeyRaw = Buffer.from(teamKeyRawB64, "base64");
-		const teamKey = await subtle.importKey("raw", teamKeyRaw, { name: "AES-GCM", length: 256 }, true, ["wrapKey"]);
+		const teamKey = await subtle.importKey("raw", teamKeyRaw, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);
 		const wrapIv = nodeCrypto.randomBytes(12);
-		const wrapped = await subtle.wrapKey("raw", cek, teamKey, { name: "AES-GCM", iv: wrapIv });
+		const wrapped = await subtle.encrypt({ name: "AES-GCM", iv: wrapIv }, teamKey, cekRaw);
 		const wrappedCekB64u = b64url(new Uint8Array(wrapped as ArrayBuffer));
 		for (const r of recipients) {
 			wrappedKeys.push({
@@ -481,7 +481,7 @@ async function shareSelectedCode(
 			});
 		}
 	} else {
-		// Per-recipient wrap using ephemeral ECDH
+		// Per-recipient: encrypt CEK per recipient using ephemeral ECDH KEK
 		const eph = (await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, [
 			"deriveKey",
 			"deriveBits",
@@ -500,10 +500,10 @@ async function shareSelectedCode(
 				eph.privateKey,
 				{ name: "AES-GCM", length: 256 },
 				false,
-				["wrapKey"]
+				["encrypt"]
 			);
 			const wrapIv2 = nodeCrypto.randomBytes(12);
-			const wrapped = await subtle.wrapKey("raw", cek, kek, { name: "AES-GCM", iv: wrapIv2 });
+			const wrapped = await subtle.encrypt({ name: "AES-GCM", iv: wrapIv2 }, kek, cekRaw);
 			const wrappedCekB64u = b64url(new Uint8Array(wrapped as ArrayBuffer));
 			wrappedKeys.push({
 				recipientUserId: r.userId,
@@ -587,23 +587,18 @@ async function tryDecryptSnippet(context: vscode.ExtensionContext, j: any): Prom
 			const teamKeyRawB64 = await context.secrets.get(teamKeyStorageKey);
 			if (teamKeyRawB64) {
 				const teamKeyRaw = Buffer.from(teamKeyRawB64, "base64");
-				const teamKey = await subtle.importKey("raw", teamKeyRaw, { name: "AES-GCM", length: 256 }, true, [
-					"unwrapKey",
+				const teamKey = await subtle.importKey("raw", teamKeyRaw, { name: "AES-GCM", length: 256 }, false, [
+					"decrypt",
 				]);
 				// Find any wrappedKey entry (same wrapped for all)
 				const wk = (j.wrappedKeys ?? [])[0];
 				if (wk?.wrappedCekB64u && wk?.wrapIvB64u) {
 					const wrappedBytes = b64uToBytes(wk.wrappedCekB64u);
 					const wrapIv = b64uToBytes(wk.wrapIvB64u);
-					const cek = await subtle.unwrapKey(
-						"raw",
-						wrappedBytes,
-						teamKey,
-						{ name: "AES-GCM", iv: wrapIv },
-						{ name: "AES-GCM", length: 256 },
-						false,
-						["decrypt"]
-					);
+					const cekRaw = await subtle.decrypt({ name: "AES-GCM", iv: wrapIv }, teamKey, wrappedBytes);
+					const cek = await subtle.importKey("raw", cekRaw, { name: "AES-GCM", length: 256 }, false, [
+						"decrypt",
+					]);
 					const iv = b64uToBytes(j.ivB64u);
 					const ciphertext = b64uToBytes(j.ciphertextB64u);
 					const plaintext = await subtle.decrypt({ name: "AES-GCM", iv }, cek, ciphertext);
@@ -638,19 +633,12 @@ async function tryDecryptSnippet(context: vscode.ExtensionContext, j: any): Prom
 					priv,
 					{ name: "AES-GCM", length: 256 },
 					false,
-					["unwrapKey"]
+					["decrypt"]
 				);
 				const wrappedBytes = b64uToBytes(wk.wrappedCekB64u);
 				const wrapIv = b64uToBytes(wk.wrapIvB64u);
-				const cek = await subtle.unwrapKey(
-					"raw",
-					wrappedBytes,
-					kek,
-					{ name: "AES-GCM", iv: wrapIv },
-					{ name: "AES-GCM", length: 256 },
-					false,
-					["decrypt"]
-				);
+				const cekRaw = await subtle.decrypt({ name: "AES-GCM", iv: wrapIv }, kek, wrappedBytes);
+				const cek = await subtle.importKey("raw", cekRaw, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
 				const iv = b64uToBytes(j.ivB64u);
 				const ciphertext = b64uToBytes(j.ciphertextB64u);
 				const plaintext = await subtle.decrypt({ name: "AES-GCM", iv }, cek, ciphertext);
