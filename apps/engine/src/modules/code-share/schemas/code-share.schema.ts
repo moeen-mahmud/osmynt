@@ -13,7 +13,10 @@ export const codeShareSchema = z.object({
 			wrapIvB64u: z.string(),
 		})
 	),
-	metadata: z.object({ teamId: z.string().optional(), title: z.string().min(1) }).optional(),
+	metadata: z
+		.object({ teamId: z.string().optional(), title: z.string().min(1) })
+		.loose()
+		.optional(),
 });
 
 export const codeSharePayloadSchema = z.object({

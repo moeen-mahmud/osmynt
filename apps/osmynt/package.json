@@ -84,6 +84,31 @@
 				"command": "osmynt.refreshTeam",
 				"title": "Refresh Team",
 				"category": "Osmynt"
+			},
+			{
+				"command": "osmynt.snippet.copy",
+				"title": "Copy Snippet",
+				"category": "Osmynt"
+			},
+			{
+				"command": "osmynt.snippet.openToSide",
+				"title": "Open Snippet to Side",
+				"category": "Osmynt"
+			},
+			{
+				"command": "osmynt.snippet.insertAtCursor",
+				"title": "Insert Snippet at Cursor",
+				"category": "Osmynt"
+			},
+			{
+				"command": "osmynt.filterRecentsByMember",
+				"title": "Filter Recents by This Member",
+				"category": "Osmynt"
+			},
+			{
+				"command": "osmynt.clearRecentsFilter",
+				"title": "Clear Recents Filter",
+				"category": "Osmynt"
 			}
 		],
 		"viewsContainers": {
@@ -110,6 +135,33 @@
 					"command": "osmynt.shareCode",
 					"group": "navigation",
 					"when": "editor.hasSelection"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "osmynt.snippet.copy",
+					"when": "view == osmyntView && viewItem == snippetItem",
+					"group": "inline@1"
+				},
+				{
+					"command": "osmynt.snippet.openToSide",
+					"when": "view == osmyntView && viewItem == snippetItem",
+					"group": "inline@2"
+				},
+				{
+					"command": "osmynt.snippet.insertAtCursor",
+					"when": "view == osmyntView && viewItem == snippetItem",
+					"group": "inline@3"
+				},
+				{
+					"command": "osmynt.filterRecentsByMember",
+					"when": "view == osmyntView && viewItem == memberItem",
+					"group": "navigation@1"
+				},
+				{
+					"command": "osmynt.clearRecentsFilter",
+					"when": "view == osmyntView && viewItem == teamItem",
+					"group": "navigation@2"
 				}
 			]
 		},

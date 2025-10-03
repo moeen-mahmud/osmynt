@@ -14,7 +14,43 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand("osmynt.inviteMember", () => handleInviteMember(context)),
 		vscode.commands.registerCommand("osmynt.acceptInvitation", () => handleAcceptInvitation(context)),
 		vscode.commands.registerCommand("osmynt.refreshTeam", () => handleRefreshTeam()),
-		vscode.commands.registerCommand("osmynt.viewSnippet", (id?: string) => handleViewSnippet(context, id))
+		vscode.commands.registerCommand("osmynt.viewSnippet", (id?: string) => handleViewSnippet(context, id)),
+		vscode.commands.registerCommand("osmynt.snippet.copy", async (item?: any) => {
+			if (!item?.data?.id) return;
+			const { base, access } = await getBaseAndAccess(context);
+			const res = await fetch(`${base}/protected/code-share/${encodeURIComponent(item.data.id)}`, {
+				headers: { Authorization: `Bearer ${access}` },
+			});
+			const j = await res.json();
+			const text = await tryDecryptSnippet(context, j);
+			if (text) await vscode.env.clipboard.writeText(text);
+			vscode.window.showInformationMessage("Snippet copied to clipboard");
+		}),
+		vscode.commands.registerCommand("osmynt.snippet.openToSide", async (item?: any) => {
+			await vscode.commands.executeCommand("osmynt.viewSnippet", item?.data?.id);
+			await vscode.commands.executeCommand("workbench.action.moveEditorToNextGroup");
+		}),
+		vscode.commands.registerCommand("osmynt.snippet.insertAtCursor", async (item?: any) => {
+			if (!item?.data?.id) return;
+			const { base, access } = await getBaseAndAccess(context);
+			const res = await fetch(`${base}/protected/code-share/${encodeURIComponent(item.data.id)}`, {
+				headers: { Authorization: `Bearer ${access}` },
+			});
+			const j = await res.json();
+			const text = await tryDecryptSnippet(context, j);
+			const editor = vscode.window.activeTextEditor;
+			if (text && editor) editor.edit(b => b.insert(editor.selection.active, text));
+		}),
+		vscode.commands.registerCommand("osmynt.filterRecentsByMember", async (item?: any) => {
+			if (!item?.data?.id || !item?.data?.teamId) return;
+			await context.globalState.update(`osmynt.filter.${item.data.teamId}`, item.data.id);
+			treeProvider?.refresh();
+		}),
+		vscode.commands.registerCommand("osmynt.clearRecentsFilter", async (item?: any) => {
+			if (!item?.data?.id) return;
+			await context.globalState.update(`osmynt.filter.${item.data.id}`, undefined);
+			treeProvider?.refresh();
+		})
 	);
 
 	const access = await context.secrets.get(ACCESS_SECRET_KEY);
@@ -78,6 +114,10 @@ async function handleShareCode(context: vscode.ExtensionContext) {
 		return;
 	}
 	const selected = editor.document.getText(editor.selection);
+	const includeContext = await vscode.window.showQuickPick(
+		[{ label: "Include file name and extension", picked: true }, { label: "Don't include" }],
+		{ canPickMany: false, placeHolder: "Include file context in snippet metadata?" }
+	);
 	const title = await vscode.window.showInputBox({ prompt: "Snippet title (required)" });
 	if (!title || title.trim().length === 0) {
 		vscode.window.showWarningMessage("Snippet title is required.");
@@ -86,7 +126,13 @@ async function handleShareCode(context: vscode.ExtensionContext) {
 	const target = await pickShareTarget(context);
 	try {
 		await ensureDeviceKeys(context);
-		await shareSelectedCode(context, selected, title.trim(), target);
+		const editorFile = editor.document.uri.fsPath || "";
+		const metadataExtra: any = {};
+		if (includeContext?.label?.startsWith("Include")) {
+			metadataExtra.filePath = editorFile;
+			metadataExtra.fileExt = (editorFile.split(".").pop() || "").toLowerCase();
+		}
+		await shareSelectedCode(context, selected, title.trim(), target, metadataExtra);
 		vscode.window.showInformationMessage("Osmynt: Snippet shared securely");
 	} catch (e) {
 		vscode.window.showErrorMessage(`Share failed: ${e}`);
@@ -209,6 +255,8 @@ class OsmyntItem extends vscode.TreeItem {
 		super(label, collapsible);
 		this.kind = kind;
 		this.data = data;
+		if (kind === "team") this.contextValue = "teamItem";
+		if (kind === "member") this.contextValue = "memberItem";
 	}
 }
 
@@ -243,6 +291,7 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			if (element.kind === "team") {
 				const teamId = element.data?.id as string;
 				const members = this.cachedMembersByTeam[teamId] ?? [];
+				const unread = await this.getUnreadCount(teamId);
 				const membersRoot = new OsmyntItem(
 					"membersRoot",
 					`Members (${members.length})`,
@@ -251,7 +300,7 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 				);
 				const recentRoot = new OsmyntItem(
 					"recentRoot",
-					"Recent Snippets",
+					unread > 0 ? `Recent Snippets (${unread} new)` : "Recent Snippets",
 					vscode.TreeItemCollapsibleState.Collapsed,
 					{ teamId }
 				);
@@ -290,7 +339,8 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			// Children of recent root
 			if (element.kind === "recentRoot") {
 				const teamId = element.data?.teamId as string;
-				const authorId = element.data?.authorId as string | undefined;
+				const authorId =
+					(element.data?.authorId as string | undefined) || (await this.getTeamAuthorFilter(teamId));
 				await this.ensureRecent(teamId, authorId);
 				const recents = (this.cachedRecentByTeam[teamId] ?? []).filter(
 					s => !authorId || s.authorId === authorId
@@ -300,6 +350,7 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					const by = s.authorName ? ` by ${s.authorName}` : "";
 					const label = `${baseLabel}${by}`;
 					const item = new OsmyntItem("action", label, vscode.TreeItemCollapsibleState.None, s);
+					item.contextValue = "snippetItem";
 					item.command = { command: "osmynt.viewSnippet", title: "View Snippet", arguments: [s.id] };
 					item.description = new Date(s.createdAt).toLocaleString();
 					return item;
@@ -351,6 +402,43 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 		});
 		const j = await res.json();
 		this.cachedRecentByTeam[teamId] = Array.isArray(j.items) ? j.items : [];
+		// update last seen and unread
+		const latest = this.cachedRecentByTeam[teamId][0]?.createdAt as string | undefined;
+		if (latest) {
+			await this.setLastSeen(teamId, latest);
+		}
+	}
+
+	private async getUnreadCount(teamId: string): Promise<number> {
+		const lastSeen = await this.getLastSeen(teamId);
+		const recents = this.cachedRecentByTeam[teamId] ?? [];
+		if (!lastSeen) return recents.length;
+		return recents.filter((r: any) => new Date(r.createdAt) > new Date(lastSeen)).length;
+	}
+
+	private async getLastSeen(teamId: string): Promise<string | undefined> {
+		try {
+			return (await vscode.commands.executeCommand("getContext", `osmynt.lastSeen.${teamId}`)) as
+				| string
+				| undefined;
+		} catch {
+			return undefined;
+		}
+	}
+
+	private async setLastSeen(teamId: string, iso: string) {
+		try {
+			await vscode.commands.executeCommand("setContext", `osmynt.lastSeen.${teamId}`, iso);
+		} catch {}
+	}
+
+	private async getTeamAuthorFilter(teamId: string): Promise<string | undefined> {
+		try {
+			const key = `osmynt.filter.${teamId}`;
+			return (await vscode.commands.executeCommand("getContext", key)) as string | undefined;
+		} catch {
+			return undefined;
+		}
 	}
 
 	refresh() {
@@ -468,7 +556,8 @@ async function shareSelectedCode(
 	context: vscode.ExtensionContext,
 	code: string,
 	title: string | undefined,
-	target: ShareTarget
+	target: ShareTarget,
+	extraMetadata?: Record<string, any>
 ) {
 	const config = vscode.workspace.getConfiguration("osmynt");
 	const base = (config.get<string>("engineBaseUrl") ?? "http://localhost:3000/osmynt-api-engine").replace(/\/$/, "");
@@ -619,7 +708,7 @@ async function shareSelectedCode(
 			ciphertextB64u: b64url(new Uint8Array(ciphertext as ArrayBuffer)),
 			ivB64u: b64url(new Uint8Array(iv)),
 			wrappedKeys,
-			metadata: { teamId: currentTeamId, title },
+			metadata: { teamId: currentTeamId, title, ...extraMetadata },
 		}),
 	});
 	if (!res.ok) throw new Error(`Share failed (${res.status})`);
