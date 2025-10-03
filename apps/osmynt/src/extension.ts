@@ -246,38 +246,19 @@ async function handleViewSnippet(context: vscode.ExtensionContext, id?: string) 
 async function connectRealtime(_context: vscode.ExtensionContext) {
 	if (realtimeChannel) return; // already connected
 	const cfg = vscode.workspace.getConfiguration("osmynt");
-	let url = "";
-	let anon = "";
-	// Prefer server-provided config; fallback to local
-	try {
-		const { base, access } = await getBaseAndAccess(_context);
-		const res = await fetch(`${base}/protected/code-share/realtime-config`, {
-			headers: { Authorization: `Bearer ${access}` },
-		});
-		const j = await res.json();
-		if (j?.url && j?.anonKey) {
-			url = j.url;
-			anon = j.anonKey;
-		}
-	} catch {}
-	if (!url || !anon) {
-		url = cfg.get<string>("supabaseUrl") || url;
-		anon = cfg.get<string>("supabaseAnonKey") || anon;
-	}
-	if (!url || !anon) {
+	const url = cfg.get<string>("supabaseUrl");
+	const serviceRoleKey = cfg.get<string>("supabaseServiceRoleKey");
+	if (!url || !serviceRoleKey) {
 		vscode.window.showWarningMessage("Error connecting to realtime. Please check your configuration.");
 		return;
 	}
-	supabaseClient = createClient(url, anon, { realtime: { params: { eventsPerSecond: 3 } } });
+	supabaseClient = createClient(url, serviceRoleKey, { realtime: { params: { eventsPerSecond: 3 } } });
 	const channel = supabaseClient.channel("osmynt-recent-snippets");
 	realtimeChannel = channel
 		.on("broadcast", { event: "snippet:created" }, async _payload => {
 			try {
-				// Only refresh if user is logged in and the view is active context
-				const loggedIn = await vscode.commands.executeCommand("getContext", "osmynt.isLoggedIn");
-				if (loggedIn) {
-					treeProvider?.refresh();
-				}
+				vscode.window.showInformationMessage(`Snippet ${_payload.payload.title} received!`);
+				treeProvider?.refresh();
 			} catch {}
 		})
 		.subscribe();
@@ -353,7 +334,7 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					vscode.TreeItemCollapsibleState.Collapsed,
 					{ teamId }
 				);
-				// const actionsRoot = new OsmyntItem("actionsRoot", "Actions", vscode.TreeItemCollapsibleState.Collapsed);
+
 				return [
 					membersRoot,
 					recentRoot,

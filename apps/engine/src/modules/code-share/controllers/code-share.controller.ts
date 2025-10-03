@@ -26,14 +26,15 @@ export class CodeShareController {
 		});
 		// broadcast via supabase realtime (if configured in env)
 		try {
-			const { supabase } = await import("@/config/supabase.config");
-			await supabase.channel("osmynt-recent-snippets").send({
+			const { getBroadcastChannel } = await import("@/config/supabase.config");
+			const channel = await getBroadcastChannel();
+			await channel.send({
 				type: "broadcast",
 				event: "snippet:created",
 				payload: { id: created.id, title: (parsed.data.metadata as any)?.title },
-			} as any);
-		} catch {
-			logger.error("Failed to broadcast snippet:created");
+			});
+		} catch (error) {
+			logger.error("Failed to broadcast snippet:created", { error });
 		}
 		logger.info("Shared", { id: created.id });
 		return c.json({ id: created.id }, 200);

@@ -188,9 +188,9 @@
 					"default": "https://tylxgkeecqxgaasmtitr.supabase.co",
 					"description": "Supabase project URL for realtime subscriptions (optional)"
 				},
-				"osmynt.supabaseAnonKey": {
+				"osmynt.supabaseServiceRoleKey": {
 					"type": "string",
-					"default": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5bHhna2VlY3F4Z2Fhc210aXRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMjMzNDgsImV4cCI6MjA3NDc5OTM0OH0.nhFCGI3dWAq18nrBWl-fFvP-WZsaiEVWHnxxgGom8xk",
+					"default": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5bHhna2VlY3F4Z2Fhc210aXRyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1OTIyMzM0OCwiZXhwIjoyMDc0Nzk5MzQ4fQ.SZHzZ4eIT-7Il5EfLVKSpqbHq8q8a057h2ZPu_hljuw",
 					"description": "Supabase anon key for realtime (optional)"
 				},
 				"osmynt.teamKeyMode": {
