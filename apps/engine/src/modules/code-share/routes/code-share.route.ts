@@ -145,10 +145,27 @@ export const route_listDmWith = createRoute({
 	},
 });
 
+export const route_realtimeConfig = createRoute({
+	tags: ["CodeShare"],
+	operationId: "codeShareRealtimeConfig",
+	method: "get",
+	path: "/realtime-config",
+	responses: {
+		200: {
+			description: "Realtime config (public anon)",
+			content: {
+				"application/json": { schema: z.object({ url: z.string(), anonKey: z.string(), channel: z.string() }) },
+			},
+		},
+		401: { description: "Unauthorized" },
+	},
+});
+
 export type CodeShareRoutes = {
 	codeShareShare: typeof route_share;
 	codeShareListTeam: typeof route_listTeam;
 	codeShareGetById: typeof route_getById;
 	codeShareListTeamByAuthor: typeof route_listTeamByAuthor;
 	codeShareListDmWith: typeof route_listDmWith;
+	codeShareRealtimeConfig: typeof route_realtimeConfig;
 };

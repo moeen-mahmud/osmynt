@@ -190,7 +190,10 @@ async function handleAcceptInvitation(context: vscode.ExtensionContext) {
 }
 
 async function handleRefreshTeam() {
-	await vscode.commands.executeCommand("workbench.view.extension.osmynt");
+	try {
+		await vscode.commands.executeCommand("workbench.view.extension.osmynt");
+		treeProvider?.refresh();
+	} catch {}
 }
 
 async function handleViewSnippet(context: vscode.ExtensionContext, id?: string) {
@@ -243,8 +246,24 @@ async function handleViewSnippet(context: vscode.ExtensionContext, id?: string) 
 async function connectRealtime(_context: vscode.ExtensionContext) {
 	if (realtimeChannel) return; // already connected
 	const cfg = vscode.workspace.getConfiguration("osmynt");
-	const url = cfg.get<string>("supabaseUrl") || "";
-	const anon = cfg.get<string>("supabaseAnonKey") || "";
+	let url = "";
+	let anon = "";
+	// Prefer server-provided config; fallback to local
+	try {
+		const { base, access } = await getBaseAndAccess(_context);
+		const res = await fetch(`${base}/protected/code-share/realtime-config`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const j = await res.json();
+		if (j?.url && j?.anonKey) {
+			url = j.url;
+			anon = j.anonKey;
+		}
+	} catch {}
+	if (!url || !anon) {
+		url = cfg.get<string>("supabaseUrl") || url;
+		anon = cfg.get<string>("supabaseAnonKey") || anon;
+	}
 	if (!url || !anon) {
 		vscode.window.showWarningMessage("Error connecting to realtime. Please check your configuration.");
 		return;
@@ -275,7 +294,7 @@ async function disconnectRealtime(_context: vscode.ExtensionContext) {
 	supabaseClient = null;
 }
 
-type OsmyntNodeKind = "team" | "membersRoot" | "member" | "actionsRoot" | "recentRoot" | "action";
+type OsmyntNodeKind = "team" | "membersRoot" | "member" | "recentRoot" | "action";
 
 class OsmyntItem extends vscode.TreeItem {
 	kind: OsmyntNodeKind;
@@ -334,8 +353,12 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					vscode.TreeItemCollapsibleState.Collapsed,
 					{ teamId }
 				);
-				const actionsRoot = new OsmyntItem("actionsRoot", "Actions", vscode.TreeItemCollapsibleState.Collapsed);
-				return [membersRoot, recentRoot, actionsRoot];
+				// const actionsRoot = new OsmyntItem("actionsRoot", "Actions", vscode.TreeItemCollapsibleState.Collapsed);
+				return [
+					membersRoot,
+					recentRoot,
+					// actionsRoot
+				];
 			}
 
 			// Children of members root
@@ -410,12 +433,12 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 				});
 			}
 
-			// Children of actions root
-			if (element.kind === "actionsRoot") {
-				const refresh = new OsmyntItem("action", "Refresh Team", vscode.TreeItemCollapsibleState.None);
-				refresh.command = { command: "osmynt.refreshTeam", title: "Refresh Team" };
-				return [refresh];
-			}
+			// // Children of actions root
+			// if (element.kind === "actionsRoot") {
+			// 	const refresh = new OsmyntItem("action", "$(refresh)", vscode.TreeItemCollapsibleState.None);
+			// 	refresh.command = { command: "osmynt.refreshTeam", title: "$(refresh)" };
+			// 	return [refresh];
+			// }
 
 			return [];
 		} catch {

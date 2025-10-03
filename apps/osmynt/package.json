@@ -83,6 +83,7 @@
 			{
 				"command": "osmynt.refreshTeam",
 				"title": "Refresh Team",
+				"icon": "$(refresh)",
 				"category": "Osmynt"
 			},
 			{
@@ -125,7 +126,9 @@
 				{
 					"id": "osmyntView",
 					"name": "Osmynt",
-					"contextualTitle": "Osmynt"
+					"contextualTitle": "Osmynt",
+					"visibility": "visible",
+					"when": "true"
 				}
 			]
 		},
@@ -135,6 +138,13 @@
 					"command": "osmynt.shareCode",
 					"group": "navigation",
 					"when": "editor.hasSelection"
+				}
+			],
+			"view/title": [
+				{
+					"command": "osmynt.refreshTeam",
+					"when": "view == osmyntView",
+					"group": "navigation@-1"
 				}
 			],
 			"view/item/context": [

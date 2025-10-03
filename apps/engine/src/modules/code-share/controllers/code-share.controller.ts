@@ -105,4 +105,11 @@ export class CodeShareController {
 		logger.info("Listed DMs with user", { otherUserId });
 		return c.json({ items }, 200);
 	}
+
+	static async realtimeConfig(c: Context) {
+		const { ENV } = await import("@/config/env.config");
+		const url = ENV.SUPABASE.URL ?? "";
+		const anonKey = ENV.SUPABASE.ANON_KEY ?? "";
+		return c.json({ url, anonKey, channel: "osmynt-recent-snippets" }, 200);
+	}
 }
