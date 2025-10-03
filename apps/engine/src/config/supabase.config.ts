@@ -6,13 +6,14 @@ if (!ENV.isConfigValid()) {
 	process.exit(1);
 }
 
-export const supabase = createClient(ENV.SUPABASE.URL!, ENV.SUPABASE.SERVICE_ROLE_KEY!, {
+export const supabase = createClient(ENV.SUPABASE.URL!, ENV.SUPABASE.ANON_KEY!, {
 	auth: {
 		autoRefreshToken: false,
 		persistSession: false,
 	},
 	realtime: {
 		params: {
+			self: true,
 			eventsPerSecond: 3,
 		},
 	},

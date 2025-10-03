@@ -247,12 +247,12 @@ async function connectRealtime(_context: vscode.ExtensionContext) {
 	if (realtimeChannel) return; // already connected
 	const cfg = vscode.workspace.getConfiguration("osmynt");
 	const url = cfg.get<string>("supabaseUrl");
-	const serviceRoleKey = cfg.get<string>("supabaseServiceRoleKey");
-	if (!url || !serviceRoleKey) {
+	const anonKey = cfg.get<string>("supabaseAnonKey");
+	if (!url || !anonKey) {
 		vscode.window.showWarningMessage("Error connecting to realtime. Please check your configuration.");
 		return;
 	}
-	supabaseClient = createClient(url, serviceRoleKey, { realtime: { params: { eventsPerSecond: 3 } } });
+	supabaseClient = createClient(url, anonKey, { realtime: { params: { eventsPerSecond: 3 } } });
 	const channel = supabaseClient.channel("osmynt-recent-snippets");
 	realtimeChannel = channel
 		.on("broadcast", { event: "snippet:created" }, async _payload => {
