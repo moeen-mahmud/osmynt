@@ -78,4 +78,19 @@ export class CodeShareController {
 		logger.info("Got snippet by id", { id, item });
 		return c.json({ ver: 1, alg: CODE_SHARE_ALGORITHM, ...item, createdAt: item.createdAt.toISOString() }, 200);
 	}
+
+	static async listTeamByAuthor(c: Context) {
+		const user = c.get("user") as { id: string } | undefined;
+		if (!user) {
+			logger.error("Unauthorized");
+			return c.json({ error: "Unauthorized" }, 401);
+		}
+		const teamId = c.req.param("teamId");
+		const authorId = c.req.param("userId");
+		const isMember = await prisma.teamMember.findFirst({ where: { teamId, userId: user.id } });
+		if (!isMember) return c.json({ error: "Forbidden" }, 403);
+		const items = await CodeShareService.listTeamByAuthor(teamId, authorId);
+		logger.info("Listed team recent by author", { teamId, authorId });
+		return c.json({ items }, 200);
+	}
 }

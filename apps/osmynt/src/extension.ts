@@ -30,14 +30,6 @@ export async function activate(context: vscode.ExtensionContext) {
 				await connectRealtime(context);
 			}
 		} catch {}
-		try {
-			const interval = setInterval(() => {
-				try {
-					treeProvider?.refresh();
-				} catch {}
-			}, 10000);
-			context.subscriptions.push({ dispose: () => clearInterval(interval) });
-		} catch {}
 	}
 }
 
@@ -185,9 +177,14 @@ async function connectRealtime(_context: vscode.ExtensionContext) {
 	supabaseClient = createClient(url, anon, { realtime: { params: { eventsPerSecond: 3 } } });
 	const channel = supabaseClient.channel("osmynt-recent-snippets");
 	realtimeChannel = channel
-		.on("broadcast", { event: "snippet:created" }, async payload => {
-			vscode.window.showInformationMessage(`New snippet: ${payload?.payload?.title ?? "Untitled"}`);
-			treeProvider?.refresh();
+		.on("broadcast", { event: "snippet:created" }, async _payload => {
+			try {
+				// Only refresh if user is logged in and the view is active context
+				const loggedIn = await vscode.commands.executeCommand("getContext", "osmynt.isLoggedIn");
+				if (loggedIn) {
+					treeProvider?.refresh();
+				}
+			} catch {}
 		})
 		.subscribe();
 }
@@ -267,17 +264,37 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 				const teamId = element.data?.teamId as string;
 				const list = this.cachedMembersByTeam[teamId] ?? [];
 				return list.map(m => {
-					const item = new OsmyntItem("member", m.name || m.email, vscode.TreeItemCollapsibleState.None, m);
+					const item = new OsmyntItem(
+						"member",
+						m.name || m.email,
+						vscode.TreeItemCollapsibleState.Collapsed,
+						{ ...m, teamId }
+					);
 					item.description = m.email;
 					return item;
 				});
+			}
+			// Children of member node → show recents for that member
+			if (element.kind === "member") {
+				const teamId = element.data?.teamId as string;
+				const authorId = element.data?.id as string;
+				const node = new OsmyntItem(
+					"recentRoot",
+					`Recents for ${element.label}`,
+					vscode.TreeItemCollapsibleState.Collapsed,
+					{ teamId, authorId }
+				);
+				return [node];
 			}
 
 			// Children of recent root
 			if (element.kind === "recentRoot") {
 				const teamId = element.data?.teamId as string;
-				await this.ensureRecent(teamId);
-				const recents = this.cachedRecentByTeam[teamId] ?? [];
+				const authorId = element.data?.authorId as string | undefined;
+				await this.ensureRecent(teamId, authorId);
+				const recents = (this.cachedRecentByTeam[teamId] ?? []).filter(
+					s => !authorId || s.authorId === authorId
+				);
 				return recents.map(s => {
 					const baseLabel = s.metadata?.title ? `${s.metadata.title}` : `Snippet ${s.id.slice(0, 6)}`;
 					const by = s.authorName ? ` by ${s.authorName}` : "";
@@ -298,7 +315,7 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 
 			return [];
 		} catch {
-			return [new OsmyntItem("action", "Sign in to view team", vscode.TreeItemCollapsibleState.None)];
+			return [];
 		}
 	}
 
@@ -320,13 +337,16 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 		this.cachedMembersByTeam = j.membersByTeam ?? {};
 	}
 
-	private async ensureRecent(teamId: string) {
+	private async ensureRecent(teamId: string, authorId?: string) {
 		const { base, access } = await getBaseAndAccess(this.context).catch(() => ({ base: "", access: "" }));
 		if (!base || !access || !teamId) {
 			this.cachedRecentByTeam[teamId] = [];
 			return;
 		}
-		const res = await fetch(`${base}/protected/code-share/team/list?teamId=${encodeURIComponent(teamId)}`, {
+		const url = authorId
+			? `${base}/protected/code-share/team/${encodeURIComponent(teamId)}/by-author/${encodeURIComponent(authorId)}`
+			: `${base}/protected/code-share/team/list?teamId=${encodeURIComponent(teamId)}`;
+		const res = await fetch(url, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
 		const j = await res.json();

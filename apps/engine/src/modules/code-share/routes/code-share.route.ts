@@ -120,8 +120,22 @@ export const route_getById = createRoute({
 	},
 });
 
+export const route_listTeamByAuthor = createRoute({
+	tags: ["CodeShare"],
+	operationId: "codeShareListTeamByAuthor",
+	method: "get",
+	// IMPORTANT: this route module is mounted at Routes.codeShare.base, so this path must be RELATIVE
+	path: "/team/:teamId/by-author/:userId",
+	responses: {
+		200: { description: "List team ciphertexts by author" },
+		401: { description: "Unauthorized" },
+		403: { description: "Forbidden" },
+	},
+});
+
 export type CodeShareRoutes = {
 	codeShareShare: typeof route_share;
 	codeShareListTeam: typeof route_listTeam;
 	codeShareGetById: typeof route_getById;
+	codeShareListTeamByAuthor: typeof route_listTeamByAuthor;
 };

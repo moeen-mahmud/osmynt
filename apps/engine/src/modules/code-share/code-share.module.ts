@@ -6,6 +6,7 @@ import {
 	route_getById,
 	route_listTeam,
 	route_share,
+	route_listTeamByAuthor,
 	type CodeShareRoutes,
 } from "@/modules/code-share/routes/code-share.route";
 
@@ -15,5 +16,6 @@ CodeShareAPIModule.use("*", jwtMiddleware);
 CodeShareAPIModule.openapi(route_share, CodeShareController.share);
 CodeShareAPIModule.openapi(route_listTeam, CodeShareController.listTeam);
 CodeShareAPIModule.openapi(route_getById, CodeShareController.getById);
+CodeShareAPIModule.openapi(route_listTeamByAuthor, CodeShareController.listTeamByAuthor);
 
 export { CodeShareAPIModule };
