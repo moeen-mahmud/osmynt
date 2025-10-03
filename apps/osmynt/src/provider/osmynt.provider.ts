@@ -1,0 +1,263 @@
+import * as vscode from "vscode";
+import type { OsmyntNodeKind } from "@/constants/constants";
+import { getBaseAndAccess } from "@/services/osmynt.services";
+
+class OsmyntItem extends vscode.TreeItem {
+	kind: OsmyntNodeKind;
+	data?: any;
+	constructor(
+		kind: OsmyntNodeKind,
+		label: string,
+		collapsible: vscode.TreeItemCollapsibleState,
+		data?: any,
+		icon?: string
+	) {
+		super(label, collapsible);
+		this.kind = kind;
+		this.data = data;
+		if (icon) this.iconPath = new vscode.ThemeIcon(icon);
+		if (kind === "team") this.contextValue = "teamItem";
+		if (kind === "member") this.contextValue = "memberItem";
+	}
+}
+
+export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
+	private _onDidChangeTreeData: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+	readonly onDidChangeTreeData: vscode.Event<void> = this._onDidChangeTreeData.event;
+
+	private cachedTeams: any[] = [];
+	private cachedMembersByTeam: Record<string, any[]> = {};
+	private cachedRecentByTeam: Record<string, any[]> = {};
+	private cachedDmByUserId: Record<string, any[]> = {};
+
+	constructor(private readonly context: vscode.ExtensionContext) {}
+
+	getTreeItem(element: OsmyntItem): vscode.TreeItem {
+		return element;
+	}
+
+	async getChildren(element?: OsmyntItem): Promise<OsmyntItem[]> {
+		try {
+			// Root
+			if (!element) {
+				await this.ensureTeams();
+				if (!Array.isArray(this.cachedTeams) || this.cachedTeams.length === 0) {
+					return [
+						new OsmyntItem(
+							"action",
+							"Get started with Osmynt, sign in with your GitHub account",
+							vscode.TreeItemCollapsibleState.None,
+							undefined,
+							"github"
+						),
+					];
+				}
+				return this.cachedTeams.map(
+					t =>
+						new OsmyntItem(
+							"team",
+							`Team: ${t.name}`,
+							vscode.TreeItemCollapsibleState.Expanded,
+							t,
+							"briefcase"
+						)
+				);
+			}
+
+			// Children of team
+			if (element.kind === "team") {
+				const teamId = element.data?.id as string;
+				const members = this.cachedMembersByTeam[teamId] ?? [];
+				const unread = await this.getUnreadCount(teamId);
+				const membersRoot = new OsmyntItem(
+					"membersRoot",
+					`Members (${members.length})`,
+					vscode.TreeItemCollapsibleState.Collapsed,
+					{ teamId },
+					"organization"
+				);
+				const recentRoot = new OsmyntItem(
+					"recentRoot",
+					unread > 0 ? `Recent Snippets (${unread} new)` : "Recent Snippets",
+					vscode.TreeItemCollapsibleState.Collapsed,
+					{ teamId },
+					"symbol-snippet"
+				);
+
+				return [membersRoot, recentRoot];
+			}
+
+			// Children of members root
+			if (element.kind === "membersRoot") {
+				const teamId = element.data?.teamId as string;
+				const list = this.cachedMembersByTeam[teamId] ?? [];
+				return list.map(m => {
+					const item = new OsmyntItem(
+						"member",
+						m.name || m.email,
+						vscode.TreeItemCollapsibleState.Collapsed,
+						{ ...m, teamId },
+						"person"
+					);
+					item.description = m.email;
+					return item;
+				});
+			}
+			// Children of member node → show DM recents with that member
+			if (element.kind === "member") {
+				const teamId = element.data?.teamId as string;
+				const authorId = element.data?.id as string;
+				const node = new OsmyntItem(
+					"recentRoot",
+					`Recents for ${element.label}`,
+					vscode.TreeItemCollapsibleState.Collapsed,
+					{ teamId, authorId, dmUserId: authorId },
+					"symbol-snippet"
+				);
+				return [node];
+			}
+
+			// Children of recent root
+			if (element.kind === "recentRoot") {
+				const dmUserId = element.data?.dmUserId as string | undefined;
+				if (dmUserId) {
+					await this.ensureDm(dmUserId);
+					const dms = this.cachedDmByUserId[dmUserId] ?? [];
+					return dms.map(s => {
+						const baseLabel = s.metadata?.title ? `${s.metadata.title}` : `Snippet ${s.id.slice(0, 6)}`;
+						const by = s.authorName ? ` by ${s.authorName}` : "";
+						const badges: string[] = [];
+						if (s.metadata?.fileExt) badges.push(s.metadata.fileExt);
+						if (s.metadata?.project) badges.push(s.metadata.project);
+						const badgeStr = badges.length ? ` [${badges.join(" · ")}]` : "";
+						const label = `${baseLabel}${by}${badgeStr}`;
+						const item = new OsmyntItem("action", label, vscode.TreeItemCollapsibleState.None, s);
+						item.contextValue = "snippetItem";
+						item.command = { command: "osmynt.viewSnippet", title: "View Snippet", arguments: [s.id] };
+						item.description = new Date(s.createdAt).toLocaleString();
+						item.iconPath = new vscode.ThemeIcon("code");
+						return item;
+					});
+				}
+				const teamId = element.data?.teamId as string;
+				const authorId =
+					(element.data?.authorId as string | undefined) || (await this.getTeamAuthorFilter(teamId));
+				await this.ensureRecent(teamId, authorId);
+				const recents = (this.cachedRecentByTeam[teamId] ?? []).filter(
+					s => !authorId || s.authorId === authorId
+				);
+				return recents.map(s => {
+					const baseLabel = s.metadata?.title ? `${s.metadata.title}` : `Snippet ${s.id.slice(0, 6)}`;
+					const by = s.authorName ? ` by ${s.authorName}` : "";
+					const badges: string[] = [];
+					if (s.metadata?.fileExt) badges.push(s.metadata.fileExt);
+					if (s.metadata?.project) badges.push(s.metadata.project);
+					const badgeStr = badges.length ? ` [${badges.join(" · ")}]` : "";
+					const label = `${baseLabel}${by}${badgeStr}`;
+					const item = new OsmyntItem("action", label, vscode.TreeItemCollapsibleState.None, s);
+					item.contextValue = "snippetItem";
+					item.command = { command: "osmynt.viewSnippet", title: "View Snippet", arguments: [s.id] };
+					item.description = new Date(s.createdAt).toLocaleString();
+					item.iconPath = new vscode.ThemeIcon("code");
+					return item;
+				});
+			}
+
+			return [];
+		} catch {
+			return [];
+		}
+	}
+
+	async ensureTeams() {
+		const { base, access } = await getBaseAndAccess(this.context).catch(() => ({ base: "", access: "" }));
+		if (!base || !access) {
+			this.cachedTeams = [];
+			this.cachedMembersByTeam = {};
+			return;
+		}
+		const res = await fetch(`${base}/protected/teams/me`, { headers: { Authorization: `Bearer ${access}` } });
+		const j = await res.json();
+		if (!res.ok || !Array.isArray(j?.teams)) {
+			this.cachedTeams = [];
+			this.cachedMembersByTeam = {};
+			return;
+		}
+		this.cachedTeams = j.teams ?? [];
+		this.cachedMembersByTeam = j.membersByTeam ?? {};
+	}
+
+	private async ensureRecent(teamId: string, authorId?: string) {
+		const { base, access } = await getBaseAndAccess(this.context).catch(() => ({ base: "", access: "" }));
+		if (!base || !access || !teamId) {
+			this.cachedRecentByTeam[teamId] = [];
+			return;
+		}
+		const url = authorId
+			? `${base}/protected/code-share/team/${encodeURIComponent(teamId)}/by-author/${encodeURIComponent(authorId)}`
+			: `${base}/protected/code-share/team/list?teamId=${encodeURIComponent(teamId)}`;
+		const res = await fetch(url, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const j = await res.json();
+		this.cachedRecentByTeam[teamId] = Array.isArray(j.items) ? j.items : [];
+		// update last seen and unread
+		const latest = this.cachedRecentByTeam[teamId][0]?.createdAt as string | undefined;
+		if (latest) {
+			await this.setLastSeen(teamId, latest);
+		}
+	}
+
+	private async ensureDm(otherUserId: string) {
+		const { base, access } = await getBaseAndAccess(this.context).catch(() => ({ base: "", access: "" }));
+		if (!base || !access || !otherUserId) {
+			this.cachedDmByUserId[otherUserId] = [];
+			return;
+		}
+		const res = await fetch(`${base}/protected/code-share/dm/with/${encodeURIComponent(otherUserId)}`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const j = await res.json();
+		this.cachedDmByUserId[otherUserId] = Array.isArray(j.items) ? j.items : [];
+	}
+
+	private async getUnreadCount(teamId: string): Promise<number> {
+		const lastSeen = await this.getLastSeen(teamId);
+		const recents = this.cachedRecentByTeam[teamId] ?? [];
+		if (!lastSeen) return recents.length;
+		return recents.filter((r: any) => new Date(r.createdAt) > new Date(lastSeen)).length;
+	}
+
+	private async getLastSeen(teamId: string): Promise<string | undefined> {
+		try {
+			return (await vscode.commands.executeCommand("getContext", `osmynt.lastSeen.${teamId}`)) as
+				| string
+				| undefined;
+		} catch {
+			return undefined;
+		}
+	}
+
+	private async setLastSeen(teamId: string, iso: string) {
+		try {
+			await vscode.commands.executeCommand("setContext", `osmynt.lastSeen.${teamId}`, iso);
+		} catch {}
+	}
+
+	private async getTeamAuthorFilter(teamId: string): Promise<string | undefined> {
+		try {
+			return this.context.globalState.get<string>(`osmynt.filter.${teamId}`) ?? undefined;
+		} catch {
+			return undefined;
+		}
+	}
+
+	refresh() {
+		// clear cache and notify
+		this.cachedTeams = [];
+		this.cachedMembersByTeam = {};
+		this.cachedRecentByTeam = {};
+		this.cachedDmByUserId = {};
+		this._onDidChangeTreeData.fire();
+	}
+}
