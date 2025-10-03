@@ -12,7 +12,9 @@
 			"!build/**/*",
 			"!out/**/*",
 			"!temp/**/*",
-			"!tmp"
+			"!tmp",
+			"!mocks/**/*",
+			"!src/*.test.ts"
 		]
 	}
 }
