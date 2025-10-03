@@ -44,11 +44,14 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand("osmynt.filterRecentsByMember", async (item?: any) => {
 			if (!item?.data?.id || !item?.data?.teamId) return;
 			await context.globalState.update(`osmynt.filter.${item.data.teamId}`, item.data.id);
+			await vscode.commands.executeCommand("setContext", `osmynt.filter.${item.data.teamId}`, item.data.id);
 			treeProvider?.refresh();
 		}),
 		vscode.commands.registerCommand("osmynt.clearRecentsFilter", async (item?: any) => {
-			if (!item?.data?.id) return;
-			await context.globalState.update(`osmynt.filter.${item.data.id}`, undefined);
+			const teamId = item?.data?.id || item?.data?.teamId;
+			if (!teamId) return;
+			await context.globalState.update(`osmynt.filter.${teamId}`, undefined);
+			await vscode.commands.executeCommand("setContext", `osmynt.filter.${teamId}`, undefined);
 			treeProvider?.refresh();
 		})
 	);
@@ -434,8 +437,7 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 
 	private async getTeamAuthorFilter(teamId: string): Promise<string | undefined> {
 		try {
-			const key = `osmynt.filter.${teamId}`;
-			return (await vscode.commands.executeCommand("getContext", key)) as string | undefined;
+			return this.context.globalState.get<string>(`osmynt.filter.${teamId}`) ?? undefined;
 		} catch {
 			return undefined;
 		}
