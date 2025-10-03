@@ -1,0 +1,1 @@
+export const CODE_SHARE_ALGORITHM = "ECDH-P256+A256GCM";

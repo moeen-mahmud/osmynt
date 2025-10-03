@@ -10,21 +10,25 @@ export const route_share = createRoute({
 		body: {
 			content: {
 				"application/json": {
-					schema: z.object({
-						ciphertextB64u: z.string(),
-						ivB64u: z.string(),
-						aad: z.string().optional(),
-						wrappedKeys: z.array(
-							z.object({
-								recipientUserId: z.string(),
-								recipientDeviceId: z.string(),
-								senderEphemeralPublicKeyJwk: z.any(),
-								wrappedCekB64u: z.string(),
-								wrapIvB64u: z.string(),
-							})
-						),
-						metadata: z.object({ teamId: z.string().optional(), title: z.string().optional() }).optional(),
-					}),
+					schema: z
+						.object({
+							ciphertextB64u: z.string(),
+							ivB64u: z.string(),
+							aad: z.string().optional(),
+							wrappedKeys: z.array(
+								z.object({
+									recipientUserId: z.string(),
+									recipientDeviceId: z.string(),
+									senderEphemeralPublicKeyJwk: z.any(),
+									wrappedCekB64u: z.string(),
+									wrapIvB64u: z.string(),
+								})
+							),
+							metadata: z
+								.object({ teamId: z.string().optional(), title: z.string().optional() })
+								.optional(),
+						})
+						.openapi("CodeShareSchema"),
 				},
 			},
 		},
@@ -32,15 +36,13 @@ export const route_share = createRoute({
 	responses: {
 		200: {
 			description: "Shared",
-			// content: { "application/json": { schema: z.object({ id: z.string() }) } }
+			content: { "application/json": { schema: z.object({ id: z.string() }) } },
 		},
 		400: {
 			description: "Bad Request",
-			content: { "application/json": { schema: z.object({ error: z.string() }) } },
 		},
 		401: {
 			description: "Unauthorized",
-			content: { "application/json": { schema: z.object({ error: z.string() }) } },
 		},
 	},
 });
@@ -53,24 +55,25 @@ export const route_listTeam = createRoute({
 	responses: {
 		200: {
 			description: "List team ciphertexts",
-			// content: {
-			// 	"application/json": {
-			// 		schema: z.object({
-			// 			items: z.array(
-			// 				z.object({
-			// 					id: z.string(),
-			// 					createdAt: z.string(),
-			// 					authorId: z.string(),
-			// 					metadata: z.any().optional(),
-			// 				})
-			// 			),
-			// 		}),
-			// 	},
-			// },
+			content: {
+				"application/json": {
+					schema: z
+						.object({
+							items: z.array(
+								z.object({
+									id: z.string(),
+									createdAt: z.string(),
+									authorId: z.string(),
+									metadata: z.any().optional(),
+								})
+							),
+						})
+						.openapi("ListTeamRecentSchema"),
+				},
+			},
 		},
 		401: {
 			description: "Unauthorized",
-			content: { "application/json": { schema: z.object({ error: z.string() }) } },
 		},
 	},
 });
@@ -83,35 +86,38 @@ export const route_getById = createRoute({
 	responses: {
 		200: {
 			description: "Get item",
-			// content: {
-			//     "application/json": {
-			//         schema: z.object({
-			//             id: z.string(),
-			//             authorId: z.string(),
-			//             createdAt: z.string(),
-			//             ciphertextB64u: z.string(),
-			//             ivB64u: z.string(),
-			//             aad: z.string().nullable().optional(),
-			//             wrappedKeys: z.array(
-			//                 z.object({
-			//                     recipientUserId: z.string(),
-			//                     recipientDeviceId: z.string(),
-			//                     senderEphemeralPublicKeyJwk: z.any(),
-			//                     wrappedCekB64u: z.string(),
-			//                 })
-			//             ),
-			//             metadata: z.any().optional(),
-			//         }),
-			//     },
-			// },
+			content: {
+				"application/json": {
+					schema: z
+						.object({
+							ver: z.number().default(1),
+							alg: z.string().default("ECDH-P256+A256GCM"),
+							id: z.string(),
+							authorId: z.string(),
+							createdAt: z.string(),
+							ciphertextB64u: z.string(),
+							ivB64u: z.string(),
+							aad: z.string().nullable().optional(),
+							wrappedKeys: z.array(
+								z.object({
+									recipientUserId: z.string(),
+									recipientDeviceId: z.string(),
+									senderEphemeralPublicKeyJwk: z.any(),
+									wrappedCekB64u: z.string(),
+									wrapIvB64u: z.string(),
+								})
+							),
+							metadata: z.any().optional(),
+						})
+						.openapi("GetByIdSchema"),
+				},
+			},
 		},
 		404: {
 			description: "Not Found",
-			// content: { "application/json": { schema: z.object({ error: z.string() }) } }
 		},
 		401: {
 			description: "Unauthorized",
-			// content: { "application/json": { schema: z.object({ error: z.string() }) } },
 		},
 	},
 });

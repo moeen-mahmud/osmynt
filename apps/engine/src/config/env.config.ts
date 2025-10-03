@@ -16,6 +16,8 @@ export const ENV = {
 		TLS: (Bun.env.SUPABASE_REDIS_TLS ?? "true").toLowerCase() !== "false",
 	},
 
+	CORS_ORIGIN: Bun.env.CORS_ORIGIN,
+
 	FEATURE_FLAGS: {
 		SAVE_HANDSHAKES_TO_STORAGE: (Bun.env.SAVE_HANDSHAKES_TO_STORAGE ?? "true").toLowerCase() !== "false",
 	},

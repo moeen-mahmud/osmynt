@@ -1,38 +1,28 @@
 import type { Context } from "hono";
-import { z } from "zod";
 import prisma from "@/config/database.config";
+import { CodeShareService } from "@/modules/code-share/services/code-share.service";
+import { logger } from "@osmynt-core/library";
+import { codeShareSchema } from "@/modules/code-share/schemas/code-share.schema";
+import { CODE_SHARE_ALGORITHM } from "@/modules/code-share/constants/code-share.constant";
 
 export class CodeShareController {
 	static async share(c: Context) {
 		const user = c.get("user") as { id: string } | undefined;
-		if (!user) return c.json({ error: "Unauthorized" }, 401);
+		if (!user) {
+			logger.error("Unauthorized");
+			return c.json({ error: "Unauthorized" }, 401);
+		}
 		const body = await c.req.json().catch(() => ({}));
-		const schema = z.object({
-			ciphertextB64u: z.string(),
-			ivB64u: z.string(),
-			aad: z.string().optional(),
-			wrappedKeys: z.array(
-				z.object({
-					recipientUserId: z.string(),
-					recipientDeviceId: z.string(),
-					senderEphemeralPublicKeyJwk: z.any(),
-					wrappedCekB64u: z.string(),
-					wrapIvB64u: z.string(),
-				})
-			),
-			metadata: z.object({ teamId: z.string().optional() }).optional(),
-		});
+		const schema = codeShareSchema;
 		const parsed = schema.safeParse(body);
 		if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
-		const created = await prisma.codeShare.create({
-			data: {
-				authorId: user.id,
-				ciphertextB64u: parsed.data.ciphertextB64u,
-				ivB64u: parsed.data.ivB64u,
-				aad: parsed.data.aad ?? null,
-				wrappedKeys: parsed.data.wrappedKeys as unknown as object,
-				metadata: parsed.data.metadata as unknown as object,
-			},
+		const created = await CodeShareService.share({
+			authorId: user.id,
+			ciphertextB64u: parsed.data.ciphertextB64u,
+			ivB64u: parsed.data.ivB64u,
+			aad: parsed.data.aad ?? undefined,
+			wrappedKeys: parsed.data.wrappedKeys,
+			metadata: parsed.data.metadata,
 		});
 		// broadcast via supabase realtime (if configured in env)
 		try {
@@ -42,43 +32,43 @@ export class CodeShareController {
 				event: "snippet:created",
 				payload: { id: created.id, title: (parsed.data.metadata as any)?.title },
 			} as any);
-		} catch {}
-		return c.json({ id: created.id });
+		} catch {
+			logger.error("Failed to broadcast snippet:created");
+		}
+		logger.info("Shared", { id: created.id });
+		return c.json({ id: created.id }, 200);
 	}
 
 	static async listTeam(c: Context) {
 		const user = c.get("user") as { id: string } | undefined;
-		if (!user) return c.json({ error: "Unauthorized" }, 401);
+		if (!user) {
+			logger.error("Unauthorized");
+			return c.json({ error: "Unauthorized" }, 401);
+		}
 		// infer team by membership; list recent items
 		const membership = await prisma.teamMember.findFirst({ where: { userId: user.id } });
-		if (!membership) return c.json({ items: [] });
-		const items = await prisma.codeShare.findMany({
-			where: { metadata: { path: ["teamId"], equals: membership.teamId } as any },
-			orderBy: { createdAt: "desc" },
-			take: 50,
-			select: { id: true, createdAt: true, authorId: true, metadata: true },
-		});
-		return c.json({ items: items.map(i => ({ ...i, createdAt: i.createdAt.toISOString() })) });
+		if (!membership) {
+			logger.error("No membership found");
+			return c.json({ items: [] }, 200);
+		}
+		const items = await CodeShareService.listTeamRecent(membership.teamId);
+		logger.info("Listed team recent snippets", { items });
+		return c.json({ items }, 200);
 	}
 
 	static async getById(c: Context) {
 		const user = c.get("user") as { id: string } | undefined;
-		if (!user) return c.json({ error: "Unauthorized" });
+		if (!user) {
+			logger.error("Unauthorized");
+			return c.json({ error: "Unauthorized" }, 401);
+		}
 		const id = c.req.param("id");
-		const item = await prisma.codeShare.findUnique({
-			where: { id },
-			select: {
-				id: true,
-				authorId: true,
-				createdAt: true,
-				ciphertextB64u: true,
-				ivB64u: true,
-				aad: true,
-				wrappedKeys: true,
-				metadata: true,
-			},
-		});
-		if (!item) return c.json({ error: "Not Found" });
-		return c.json({ ...item, createdAt: item.createdAt.toISOString() });
+		const item = await CodeShareService.getById(id);
+		if (!item) {
+			logger.error("Not Found");
+			return c.json({ error: "Not Found" }, 404);
+		}
+		logger.info("Got snippet by id", { id, item });
+		return c.json({ ver: 1, alg: CODE_SHARE_ALGORITHM, ...item, createdAt: item.createdAt.toISOString() }, 200);
 	}
 }

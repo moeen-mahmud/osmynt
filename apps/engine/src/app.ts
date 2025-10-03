@@ -6,6 +6,7 @@ import { poweredBy } from "hono/powered-by";
 import { logger } from "hono/logger";
 import { healthCheckMiddleware } from "@/middlewares/health-check.middleware";
 import { cors } from "hono/cors";
+import { ENV } from "@/config/env.config";
 
 import type { Server } from "bun";
 import { AuthAPIModule } from "@/modules/auth/auth.module";
@@ -32,7 +33,7 @@ app.use(healthCheckMiddleware);
 app.use(
 	"*",
 	cors({
-		origin: "*",
+		origin: ENV.CORS_ORIGIN || "*",
 		allowHeaders: ["Content-Type"],
 		credentials: true,
 	})
@@ -69,7 +70,7 @@ app.route(Routes.teams.base, TeamsAPIModule);
 
 // main server
 export default {
-	port: 3000,
+	port: ENV.PORT,
 	fetch(req: Request, server: Server) {
 		return app.fetch(req, { ip: server.requestIP(req), server });
 	},

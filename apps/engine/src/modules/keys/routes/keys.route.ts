@@ -75,20 +75,6 @@ export const route_keysTeamDefault = createRoute({
 	responses: {
 		200: {
 			description: "Default team members device keys",
-			// content: {
-			// 	"application/json": {
-			// 		schema: z.object({
-			// 			recipients: z.array(
-			// 				z.object({
-			// 					userId: z.string(),
-			// 					deviceId: z.string(),
-			// 					encryptionPublicKeyJwk: z.any(),
-			// 					signingPublicKeyJwk: z.any().optional(),
-			// 				})
-			// 			),
-			// 		}),
-			// 	},
-			// },
 		},
 	},
 });
