@@ -52,7 +52,7 @@ export async function handleLogout(
 	tree.refresh();
 }
 
-export async function handleShareCode(context: vscode.ExtensionContext) {
+export async function handleShareCode(context: vscode.ExtensionContext, treeProvider: OsmyntTreeProvider) {
 	const editor = vscode.window.activeTextEditor;
 	if (!editor || editor.selection.isEmpty) {
 		vscode.window.showWarningMessage("Select some code to share.");
@@ -78,6 +78,7 @@ export async function handleShareCode(context: vscode.ExtensionContext) {
 			metadataExtra.fileExt = (editorFile.split(".").pop() || "").toLowerCase();
 		}
 		await shareSelectedCode(context, selected, title.trim(), target, metadataExtra);
+		treeProvider.refresh();
 		vscode.window.showInformationMessage("Osmynt: Snippet shared securely");
 	} catch (e) {
 		vscode.window.showErrorMessage(`Share failed: ${e}`);
@@ -105,7 +106,7 @@ export async function handleInviteMember(context: vscode.ExtensionContext) {
 	}
 }
 
-export async function handleAcceptInvitation(context: vscode.ExtensionContext) {
+export async function handleAcceptInvitation(context: vscode.ExtensionContext, treeProvider: OsmyntTreeProvider) {
 	try {
 		const raw = await vscode.window.showInputBox({ prompt: "Enter invitation token or URL" });
 		if (!raw) return;
@@ -120,7 +121,7 @@ export async function handleAcceptInvitation(context: vscode.ExtensionContext) {
 		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
 		vscode.window.showInformationMessage("Joined team successfully");
 		// refresh the team view
-		(await import("vscode")).commands.executeCommand("workbench.view.extension.osmynt");
+		treeProvider?.refresh();
 		setTimeout(() => {
 			// force refresh by toggling view
 			vscode.commands.executeCommand("workbench.action.closePanel");

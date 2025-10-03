@@ -28,10 +28,37 @@ export class CodeShareController {
 		try {
 			const { getBroadcastChannel } = await import("@/config/supabase.config");
 			const channel = await getBroadcastChannel();
+			const author = await prisma.user.findUnique({ where: { id: user.id }, select: { name: true } });
+			const meta: any = parsed.data.metadata ?? {};
+			const recipientUserIds = Array.from(
+				new Set((parsed.data.wrappedKeys || []).map((w: any) => w?.recipientUserId).filter(Boolean))
+			) as string[];
+			let firstRecipientName: string | undefined;
+			if (!meta.teamId && recipientUserIds.length > 0) {
+				const first = await prisma.user.findUnique({
+					where: { id: recipientUserIds[0] },
+					select: { name: true },
+				});
+				firstRecipientName = first?.name ?? undefined;
+			}
+			let teamName: string | undefined;
+			if (meta.teamId) {
+				const team = await prisma.team.findUnique({ where: { id: meta.teamId }, select: { name: true } });
+				teamName = team?.name ?? undefined;
+			}
 			await channel.send({
 				type: "broadcast",
 				event: "snippet:created",
-				payload: { id: created.id, title: (parsed.data.metadata as any)?.title },
+				payload: {
+					id: created.id,
+					title: meta?.title,
+					authorId: user.id,
+					authorName: author?.name,
+					recipientUserIds,
+					teamId: meta?.teamId,
+					teamName,
+					firstRecipientName,
+				},
 			});
 		} catch (error) {
 			logger.error("Failed to broadcast snippet:created", { error });

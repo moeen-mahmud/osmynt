@@ -107,9 +107,10 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			if (element.kind === "member") {
 				const teamId = element.data?.teamId as string;
 				const authorId = element.data?.id as string;
+				const labelText = `Recents from ${element.label}`;
 				const node = new OsmyntItem(
 					"recentRoot",
-					`Recents for ${element.label}`,
+					labelText,
 					vscode.TreeItemCollapsibleState.Collapsed,
 					{ teamId, authorId, dmUserId: authorId },
 					"symbol-snippet"
@@ -123,7 +124,9 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 				if (dmUserId) {
 					await this.ensureDm(dmUserId);
 					const dms = this.cachedDmByUserId[dmUserId] ?? [];
-					return dms.map(s => {
+					// Show only messages authored by the selected member for "Recents from {User}"
+					const incoming = dms.filter((s: any) => s.authorId === dmUserId);
+					return incoming.map(s => {
 						const baseLabel = s.metadata?.title ? `${s.metadata.title}` : `Snippet ${s.id.slice(0, 6)}`;
 						const by = s.authorName ? ` by ${s.authorName}` : "";
 						const badges: string[] = [];

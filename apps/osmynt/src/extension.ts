@@ -14,8 +14,6 @@ import {
 import { getBaseAndAccess } from "@/services/osmynt.services";
 import { createClient, type RealtimeChannel, type SupabaseClient } from "@supabase/supabase-js";
 
-let treeProvider: OsmyntTreeProvider | null = null;
-
 export async function activate(context: vscode.ExtensionContext) {
 	const tree = new OsmyntTreeProvider(context);
 	context.subscriptions.push(vscode.window.registerTreeDataProvider("osmyntView", tree));
@@ -24,9 +22,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand("osmynt.login", () => handleLogin(context, tree, connectRealtime)),
 		vscode.commands.registerCommand("osmynt.logout", () => handleLogout(context, tree, disconnectRealtime)),
-		vscode.commands.registerCommand("osmynt.shareCode", () => handleShareCode(context)),
+		vscode.commands.registerCommand("osmynt.shareCode", () => handleShareCode(context, tree)),
 		vscode.commands.registerCommand("osmynt.inviteMember", () => handleInviteMember(context)),
-		vscode.commands.registerCommand("osmynt.acceptInvitation", () => handleAcceptInvitation(context)),
+		vscode.commands.registerCommand("osmynt.acceptInvitation", () => handleAcceptInvitation(context, tree)),
 		vscode.commands.registerCommand("osmynt.refreshTeam", () => handleRefreshTeam(tree)),
 		vscode.commands.registerCommand("osmynt.viewSnippet", (id?: string) => handleViewSnippet(context, id)),
 		vscode.commands.registerCommand("osmynt.snippet.copy", async (item?: any) => {
@@ -88,6 +86,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {}
 
+let treeProvider: OsmyntTreeProvider | null = null;
 let realtimeChannel: RealtimeChannel | null = null;
 let supabaseClient: SupabaseClient | null = null;
 
@@ -103,9 +102,35 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 	supabaseClient = createClient(url, anonKey, { realtime: { params: { eventsPerSecond: 3 } } });
 	const channel = supabaseClient.channel("osmynt-recent-snippets");
 	realtimeChannel = channel
-		.on("broadcast", { event: "snippet:created" }, async _payload => {
+		.on("broadcast", { event: "snippet:created" }, async payload => {
 			try {
-				vscode.window.showInformationMessage(`Snippet ${_payload.payload.title} received!`);
+				const { base, access } = await getBaseAndAccess(_context);
+				const id = payload?.payload?.id as string | undefined;
+				if (id) {
+					const res = await fetch(`${base}/protected/code-share/${encodeURIComponent(id)}`, {
+						headers: { Authorization: `Bearer ${access}` },
+					});
+					const j = await res.json();
+					const canDecrypt = (await tryDecryptSnippet(_context, j)) !== null;
+					const title =
+						(payload?.payload?.title as string | undefined) ||
+						(j?.metadata?.title as string | undefined) ||
+						"Snippet";
+					const authorName = (payload?.payload?.authorName as string | undefined) || j?.authorName;
+					const firstRecipientName = payload?.payload?.firstRecipientName as string | undefined;
+					if (canDecrypt) {
+						// Receiver toast
+						vscode.window.showInformationMessage(
+							`A NEW SNIPPET ${title} ARRIVED FROM ${authorName ?? "someone"}`
+						);
+					} else {
+						// Sender toast
+						vscode.window.showInformationMessage(
+							`SNIPPET ${title} SHARED TO ${firstRecipientName ?? payload?.payload?.teamName ?? "team"}`
+						);
+					}
+				}
+				// Refresh both sides
 				treeProvider?.refresh();
 			} catch {}
 		})

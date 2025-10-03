@@ -219,9 +219,11 @@ export async function pickShareTarget(context: vscode.ExtensionContext): Promise
 	const j = await res.json();
 	const teams: Array<{ id: string; name: string }> = Array.isArray(j?.teams) ? j.teams : [];
 	const membersByTeam: Record<string, any[]> = j?.membersByTeam ?? {};
+	const currentUserId: string | undefined = j?.user?.id as string | undefined;
 	const uniqueMembers: Record<string, { label: string; description: string; userId: string }> = {};
 	for (const tid of Object.keys(membersByTeam)) {
 		for (const m of membersByTeam[tid] ?? []) {
+			if (m.id === currentUserId) continue; // remove self from DM options
 			if (!uniqueMembers[m.id])
 				uniqueMembers[m.id] = { label: m.name || m.email, description: m.email, userId: m.id };
 		}

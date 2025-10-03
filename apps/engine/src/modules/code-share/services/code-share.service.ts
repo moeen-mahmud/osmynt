@@ -58,7 +58,11 @@ export class CodeShareService {
 			const isDm = !(i.metadata as any)?.teamId;
 			const hasMe = wk.some(e => e?.recipientUserId === currentUserId);
 			const hasOther = wk.some(e => e?.recipientUserId === otherUserId);
-			return isDm && hasMe && hasOther;
+			const authorIsParticipant = i.authorId === currentUserId || i.authorId === otherUserId;
+			// DM if no teamId and BOTH participants are recipients or author->recipient direction matches
+			const betweenBoth = hasMe && hasOther;
+			const authorToOther = (i.authorId === currentUserId && hasOther) || (i.authorId === otherUserId && hasMe);
+			return isDm && authorIsParticipant && (betweenBoth || authorToOther);
 		});
 		return filtered.map(i => ({
 			id: i.id,
