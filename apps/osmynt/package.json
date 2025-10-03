@@ -48,37 +48,44 @@
 			{
 				"command": "osmynt.login",
 				"title": "Login",
-				"category": "Osmynt"
+				"category": "Osmynt",
+				"icon": "$(github)"
 			},
 			{
 				"command": "osmynt.logout",
 				"title": "Logout",
-				"category": "Osmynt"
+				"category": "Osmynt",
+				"icon": "$(github)"
 			},
 			{
 				"command": "osmynt.refreshEntry",
 				"title": "Refresh",
-				"category": "Osmynt"
+				"category": "Osmynt",
+				"icon": "$(refresh)"
 			},
 			{
 				"command": "osmynt.shareCode",
 				"title": "Share Selected Code",
-				"category": "Osmynt"
+				"category": "Osmynt",
+				"icon": "$(share)"
 			},
 			{
 				"command": "osmynt.inviteMember",
 				"title": "Invite Member",
-				"category": "Osmynt"
+				"category": "Osmynt",
+				"icon": "$(plus)"
 			},
 			{
 				"command": "osmynt.acceptInvitation",
 				"title": "Accept Invitation",
-				"category": "Osmynt"
+				"category": "Osmynt",
+				"icon": "$(check)"
 			},
 			{
 				"command": "osmynt.viewSnippet",
 				"title": "View Snippet",
-				"category": "Osmynt"
+				"category": "Osmynt",
+				"icon": "$(code)"
 			},
 			{
 				"command": "osmynt.refreshTeam",
@@ -89,27 +96,32 @@
 			{
 				"command": "osmynt.snippet.copy",
 				"title": "Copy Snippet",
-				"category": "Osmynt"
+				"category": "Osmynt",
+				"icon": "$(copy)"
 			},
 			{
 				"command": "osmynt.snippet.openToSide",
 				"title": "Open Snippet to Side",
-				"category": "Osmynt"
+				"category": "Osmynt",
+				"icon": "$(file-code)"
 			},
 			{
 				"command": "osmynt.snippet.insertAtCursor",
 				"title": "Insert Snippet at Cursor",
-				"category": "Osmynt"
+				"category": "Osmynt",
+				"icon": "$(insert)"
 			},
 			{
 				"command": "osmynt.filterRecentsByMember",
 				"title": "Filter Recents by This Member",
-				"category": "Osmynt"
+				"category": "Osmynt",
+				"icon": "$(filter)"
 			},
 			{
 				"command": "osmynt.clearRecentsFilter",
 				"title": "Clear Recents Filter",
-				"category": "Osmynt"
+				"category": "Osmynt",
+				"icon": "$(clear-all)"
 			}
 		],
 		"viewsContainers": {

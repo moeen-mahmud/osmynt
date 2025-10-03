@@ -1,6 +1,12 @@
 import * as vscode from "vscode";
 import { createClient, type RealtimeChannel, type SupabaseClient } from "@supabase/supabase-js";
-import { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY, DEVICE_ID_KEY, ENC_KEYPAIR_JWK_KEY } from "@/constants/constants";
+import {
+	ACCESS_SECRET_KEY,
+	REFRESH_SECRET_KEY,
+	DEVICE_ID_KEY,
+	ENC_KEYPAIR_JWK_KEY,
+	type OsmyntNodeKind,
+} from "@/constants/constants";
 
 export async function activate(context: vscode.ExtensionContext) {
 	const tree = new OsmyntTreeProvider(context);
@@ -275,15 +281,20 @@ async function disconnectRealtime(_context: vscode.ExtensionContext) {
 	supabaseClient = null;
 }
 
-type OsmyntNodeKind = "team" | "membersRoot" | "member" | "recentRoot" | "action";
-
 class OsmyntItem extends vscode.TreeItem {
 	kind: OsmyntNodeKind;
 	data?: any;
-	constructor(kind: OsmyntNodeKind, label: string, collapsible: vscode.TreeItemCollapsibleState, data?: any) {
+	constructor(
+		kind: OsmyntNodeKind,
+		label: string,
+		collapsible: vscode.TreeItemCollapsibleState,
+		data?: any,
+		icon?: string
+	) {
 		super(label, collapsible);
 		this.kind = kind;
 		this.data = data;
+		if (icon) this.iconPath = new vscode.ThemeIcon(icon);
 		if (kind === "team") this.contextValue = "teamItem";
 		if (kind === "member") this.contextValue = "memberItem";
 	}
@@ -310,10 +321,25 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			if (!element) {
 				await this.ensureTeams();
 				if (!Array.isArray(this.cachedTeams) || this.cachedTeams.length === 0) {
-					return [new OsmyntItem("action", "Sign in to view team", vscode.TreeItemCollapsibleState.None)];
+					return [
+						new OsmyntItem(
+							"action",
+							"Get started with Osmynt, sign in with your GitHub account",
+							vscode.TreeItemCollapsibleState.None,
+							undefined,
+							"github"
+						),
+					];
 				}
 				return this.cachedTeams.map(
-					t => new OsmyntItem("team", `Team: ${t.name}`, vscode.TreeItemCollapsibleState.Expanded, t)
+					t =>
+						new OsmyntItem(
+							"team",
+							`Team: ${t.name}`,
+							vscode.TreeItemCollapsibleState.Expanded,
+							t,
+							"briefcase"
+						)
 				);
 			}
 
@@ -326,20 +352,18 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					"membersRoot",
 					`Members (${members.length})`,
 					vscode.TreeItemCollapsibleState.Collapsed,
-					{ teamId }
+					{ teamId },
+					"organization"
 				);
 				const recentRoot = new OsmyntItem(
 					"recentRoot",
 					unread > 0 ? `Recent Snippets (${unread} new)` : "Recent Snippets",
 					vscode.TreeItemCollapsibleState.Collapsed,
-					{ teamId }
+					{ teamId },
+					"symbol-snippet"
 				);
 
-				return [
-					membersRoot,
-					recentRoot,
-					// actionsRoot
-				];
+				return [membersRoot, recentRoot];
 			}
 
 			// Children of members root
@@ -351,7 +375,8 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 						"member",
 						m.name || m.email,
 						vscode.TreeItemCollapsibleState.Collapsed,
-						{ ...m, teamId }
+						{ ...m, teamId },
+						"person"
 					);
 					item.description = m.email;
 					return item;
@@ -365,7 +390,8 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					"recentRoot",
 					`Recents for ${element.label}`,
 					vscode.TreeItemCollapsibleState.Collapsed,
-					{ teamId, authorId, dmUserId: authorId }
+					{ teamId, authorId, dmUserId: authorId },
+					"symbol-snippet"
 				);
 				return [node];
 			}
@@ -388,6 +414,7 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 						item.contextValue = "snippetItem";
 						item.command = { command: "osmynt.viewSnippet", title: "View Snippet", arguments: [s.id] };
 						item.description = new Date(s.createdAt).toLocaleString();
+						item.iconPath = new vscode.ThemeIcon("code");
 						return item;
 					});
 				}
@@ -410,16 +437,10 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					item.contextValue = "snippetItem";
 					item.command = { command: "osmynt.viewSnippet", title: "View Snippet", arguments: [s.id] };
 					item.description = new Date(s.createdAt).toLocaleString();
+					item.iconPath = new vscode.ThemeIcon("code");
 					return item;
 				});
 			}
-
-			// // Children of actions root
-			// if (element.kind === "actionsRoot") {
-			// 	const refresh = new OsmyntItem("action", "$(refresh)", vscode.TreeItemCollapsibleState.None);
-			// 	refresh.command = { command: "osmynt.refreshTeam", title: "$(refresh)" };
-			// 	return [refresh];
-			// }
 
 			return [];
 		} catch {
