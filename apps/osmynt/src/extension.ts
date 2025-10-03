@@ -1,11 +1,6 @@
 import * as vscode from "vscode";
 import { createClient, type RealtimeChannel, type SupabaseClient } from "@supabase/supabase-js";
-
-const ACCESS_SECRET_KEY = "osmynt.accessToken";
-const REFRESH_SECRET_KEY = "osmynt.refreshToken";
-const DEVICE_ID_KEY = "osmynt.deviceId";
-const ENC_KEYPAIR_JWK_KEY = "osmynt.encKeypair.jwk";
-const SIGN_KEYPAIR_JWK_KEY = "osmynt.signKeypair.jwk";
+import { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY, DEVICE_ID_KEY, ENC_KEYPAIR_JWK_KEY } from "@/constants/constants";
 
 export async function activate(context: vscode.ExtensionContext) {
 	const tree = new OsmyntTreeProvider(context);
@@ -13,68 +8,23 @@ export async function activate(context: vscode.ExtensionContext) {
 	treeProvider = tree;
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("osmynt.login", async () => {
-			try {
-				const session = await vscode.authentication.getSession("github", ["read:user", "user:email"], {
-					createIfNone: true,
-				});
-				if (!session) {
-					vscode.window.showErrorMessage("GitHub authentication failed.");
-					return;
-				}
-				await nativeSecureLogin(context, session.accessToken);
-				try {
-					await connectRealtime(context);
-				} catch {}
-				tree.refresh();
-			} catch (e) {
-				vscode.window.showErrorMessage(`Login failed: ${e}`);
-			}
-		})
-	);
-
-	context.subscriptions.push(
-		vscode.commands.registerCommand("osmynt.logout", async () => {
-			await context.secrets.delete(ACCESS_SECRET_KEY);
-			await context.secrets.delete(REFRESH_SECRET_KEY);
-			await vscode.commands.executeCommand("setContext", "osmynt.isLoggedIn", false);
-			vscode.window.showInformationMessage("Logged out of Osmynt.");
-
-			// disconnect realtime if available
-			try {
-				await disconnectRealtime(context);
-			} catch {}
-			tree.refresh();
-		})
-	);
-
-	context.subscriptions.push(
-		vscode.commands.registerCommand("osmynt.shareCode", async () => {
-			const editor = vscode.window.activeTextEditor;
-			if (!editor || editor.selection.isEmpty) {
-				vscode.window.showWarningMessage("Select some code to share.");
-				return;
-			}
-			const selected = editor.document.getText(editor.selection);
-			const title = await vscode.window.showInputBox({ prompt: "Snippet title (optional)" });
-			const target = await pickShareTarget(context);
-			try {
-				await ensureDeviceKeys(context);
-				await shareSelectedCode(context, selected, title, target);
-				vscode.window.showInformationMessage("Osmynt: Snippet shared securely");
-			} catch (e) {
-				vscode.window.showErrorMessage(`Share failed: ${e}`);
-			}
-		})
+		vscode.commands.registerCommand("osmynt.login", () => handleLogin(context, tree)),
+		vscode.commands.registerCommand("osmynt.logout", () => handleLogout(context, tree)),
+		vscode.commands.registerCommand("osmynt.shareCode", () => handleShareCode(context)),
+		vscode.commands.registerCommand("osmynt.inviteMember", () => handleInviteMember(context)),
+		vscode.commands.registerCommand("osmynt.acceptInvitation", () => handleAcceptInvitation(context)),
+		vscode.commands.registerCommand("osmynt.refreshTeam", () => handleRefreshTeam()),
+		vscode.commands.registerCommand("osmynt.viewSnippet", (id?: string) => handleViewSnippet(context, id))
 	);
 
 	const access = await context.secrets.get(ACCESS_SECRET_KEY);
 	await vscode.commands.executeCommand("setContext", "osmynt.isLoggedIn", Boolean(access));
-	// Ensure this device has registered encryption keys if already logged in
 	if (access) {
 		try {
 			await ensureDeviceKeys(context);
-		} catch {}
+		} catch {
+			// vscode.window.showErrorMessage("Failed to ensure device keys");
+		}
 	}
 }
 
@@ -83,7 +33,130 @@ let supabaseClient: SupabaseClient | null = null;
 let realtimeChannel: RealtimeChannel | null = null;
 let treeProvider: OsmyntTreeProvider | null = null;
 
-async function connectRealtime(context: vscode.ExtensionContext) {
+// Command handlers
+async function handleLogin(context: vscode.ExtensionContext, tree: OsmyntTreeProvider) {
+	try {
+		const session = await vscode.authentication.getSession("github", ["read:user", "user:email"], {
+			createIfNone: true,
+		});
+		if (!session) {
+			vscode.window.showErrorMessage("GitHub authentication failed.");
+			return;
+		}
+		await nativeSecureLogin(context, session.accessToken);
+		try {
+			await connectRealtime(context);
+		} catch {
+			// vscode.window.showErrorMessage("Failed to connect to realtime");
+		}
+		tree.refresh();
+	} catch (e) {
+		vscode.window.showErrorMessage(`Login failed: ${e}`);
+	}
+}
+
+async function handleLogout(context: vscode.ExtensionContext, tree: OsmyntTreeProvider) {
+	await context.secrets.delete(ACCESS_SECRET_KEY);
+	await context.secrets.delete(REFRESH_SECRET_KEY);
+	await vscode.commands.executeCommand("setContext", "osmynt.isLoggedIn", false);
+	vscode.window.showInformationMessage("Logged out of Osmynt.");
+	try {
+		await disconnectRealtime(context);
+	} catch {}
+	tree.refresh();
+}
+
+async function handleShareCode(context: vscode.ExtensionContext) {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor || editor.selection.isEmpty) {
+		vscode.window.showWarningMessage("Select some code to share.");
+		return;
+	}
+	const selected = editor.document.getText(editor.selection);
+	const title = await vscode.window.showInputBox({ prompt: "Snippet title (optional)" });
+	const target = await pickShareTarget(context);
+	try {
+		await ensureDeviceKeys(context);
+		await shareSelectedCode(context, selected, title, target);
+		vscode.window.showInformationMessage("Osmynt: Snippet shared securely");
+	} catch (e) {
+		vscode.window.showErrorMessage(`Share failed: ${e}`);
+	}
+}
+
+async function handleInviteMember(context: vscode.ExtensionContext) {
+	try {
+		const teamId = await promptTeamId(context);
+		if (!teamId) {
+			vscode.window.showWarningMessage("No team ID provided");
+			return;
+		}
+		const { base, access } = await getBaseAndAccess(context);
+		const res = await fetch(`${base}/protected/teams/${encodeURIComponent(teamId)}/invite`, {
+			method: "POST",
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const j = await res.json();
+		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
+		await vscode.env.clipboard.writeText(j.token);
+		vscode.window.showInformationMessage("Invitation token copied to clipboard");
+	} catch (e) {
+		vscode.window.showErrorMessage(`Invite failed: ${e}`);
+	}
+}
+
+async function handleAcceptInvitation(context: vscode.ExtensionContext) {
+	try {
+		const raw = await vscode.window.showInputBox({ prompt: "Enter invitation token or URL" });
+		if (!raw) return;
+		const token = extractInviteToken(raw);
+		if (!token) return;
+		const { base, access } = await getBaseAndAccess(context);
+		const res = await fetch(`${base}/protected/teams/invite/${encodeURIComponent(token)}`, {
+			method: "POST",
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const j = await res.json();
+		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
+		vscode.window.showInformationMessage("Joined team successfully");
+		// refresh the team view
+		(await import("vscode")).commands.executeCommand("workbench.view.extension.osmynt");
+		setTimeout(() => {
+			// force refresh by toggling view
+			vscode.commands.executeCommand("workbench.action.closePanel");
+			vscode.commands.executeCommand("workbench.view.extension.osmynt");
+		}, 150);
+	} catch (e) {
+		vscode.window.showErrorMessage(`Accept failed: ${e}`);
+	}
+}
+
+async function handleRefreshTeam() {
+	await vscode.commands.executeCommand("workbench.view.extension.osmynt");
+}
+
+async function handleViewSnippet(context: vscode.ExtensionContext, id?: string) {
+	try {
+		const { base, access } = await getBaseAndAccess(context);
+		const snippetId = id ?? (await vscode.window.showInputBox({ prompt: "Enter snippet id" }));
+		if (!snippetId) return;
+		const res = await fetch(`${base}/protected/code-share/${encodeURIComponent(snippetId)}`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const j = await res.json();
+		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
+		const text = await tryDecryptSnippet(context, j);
+		const doc = await vscode.workspace.openTextDocument({
+			language: "plaintext",
+			content: text ?? "[Encrypted snippet opened. Decrypt failed or not addressed to this device.]",
+		});
+		await vscode.window.showTextDocument(doc, { preview: false });
+	} catch (e) {
+		vscode.window.showErrorMessage(`Open failed: ${e}`);
+	}
+}
+
+async function connectRealtime(_context: vscode.ExtensionContext) {
 	const cfg = vscode.workspace.getConfiguration("osmynt");
 	const url = cfg.get<string>("supabaseUrl") || "";
 	const anon = cfg.get<string>("supabaseAnonKey") || "";
@@ -101,7 +174,7 @@ async function connectRealtime(context: vscode.ExtensionContext) {
 		.subscribe();
 }
 
-async function disconnectRealtime(context: vscode.ExtensionContext) {
+async function disconnectRealtime(_context: vscode.ExtensionContext) {
 	try {
 		await realtimeChannel?.unsubscribe();
 	} catch {}
@@ -260,88 +333,6 @@ async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessT
 		body: JSON.stringify({ provider: "github", accessToken: githubAccessToken, handshake: { clientPublicKeyJwk } }),
 	});
 
-	context.subscriptions.push(
-		vscode.commands.registerCommand("osmynt.inviteMember", async () => {
-			try {
-				const teamId = await promptTeamId(context);
-				if (!teamId) {
-					vscode.window.showWarningMessage("No team ID provided");
-					return;
-				}
-				const { base, access } = await getBaseAndAccess(context);
-				const res = await fetch(`${base}/protected/teams/${encodeURIComponent(teamId)}/invite`, {
-					method: "POST",
-					headers: { Authorization: `Bearer ${access}` },
-				});
-				const j = await res.json();
-				if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
-				await vscode.env.clipboard.writeText(j.token);
-				vscode.window.showInformationMessage("Invitation token copied to clipboard");
-			} catch (e) {
-				vscode.window.showErrorMessage(`Invite failed: ${e}`);
-			}
-		})
-	);
-
-	context.subscriptions.push(
-		vscode.commands.registerCommand("osmynt.acceptInvitation", async () => {
-			try {
-				const raw = await vscode.window.showInputBox({ prompt: "Enter invitation token or URL" });
-				if (!raw) return;
-				const token = extractInviteToken(raw);
-				if (!token) return;
-				const { base, access } = await getBaseAndAccess(context);
-				const res = await fetch(`${base}/protected/teams/invite/${encodeURIComponent(token)}`, {
-					method: "POST",
-					headers: { Authorization: `Bearer ${access}` },
-				});
-				const j = await res.json();
-				if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
-				vscode.window.showInformationMessage("Joined team successfully");
-				// refresh the team view
-				(await import("vscode")).commands.executeCommand("workbench.view.extension.osmynt");
-				setTimeout(() => {
-					// force refresh by toggling view
-					vscode.commands.executeCommand("workbench.action.closePanel");
-					vscode.commands.executeCommand("workbench.view.extension.osmynt");
-				}, 150);
-			} catch (e) {
-				vscode.window.showErrorMessage(`Accept failed: ${e}`);
-			}
-		})
-	);
-
-	context.subscriptions.push(
-		vscode.commands.registerCommand("osmynt.refreshTeam", async () => {
-			// trigger tree data reload
-			await vscode.commands.executeCommand("workbench.view.extension.osmynt");
-		})
-	);
-
-	context.subscriptions.push(
-		vscode.commands.registerCommand("osmynt.viewSnippet", async (id?: string) => {
-			try {
-				const { base, access } = await getBaseAndAccess(context);
-				const snippetId = id ?? (await vscode.window.showInputBox({ prompt: "Enter snippet id" }));
-				if (!snippetId) return;
-				const res = await fetch(`${base}/protected/code-share/${encodeURIComponent(snippetId)}`, {
-					headers: { Authorization: `Bearer ${access}` },
-				});
-				const j = await res.json();
-				if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
-				// Attempt decrypt (per-recipient ECDH or team key)
-				const text = await tryDecryptSnippet(context, j);
-				vscode.window.showInformationMessage(JSON.stringify(text, null, 2));
-				const doc = await vscode.workspace.openTextDocument({
-					language: "plaintext",
-					content: text ?? "[Encrypted snippet opened. Decrypt failed or not addressed to this device.]",
-				});
-				await vscode.window.showTextDocument(doc, { preview: false });
-			} catch (e) {
-				vscode.window.showErrorMessage(`Open failed: ${e}`);
-			}
-		})
-	);
 	if (!res.ok) {
 		vscode.window.showErrorMessage(`Engine login failed (${res.status})`);
 		throw new Error(`Engine login failed (${res.status})`);
@@ -376,7 +367,6 @@ async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessT
 	await context.secrets.store(REFRESH_SECRET_KEY, tokens.refresh);
 	await vscode.commands.executeCommand("setContext", "osmynt.isLoggedIn", true);
 	vscode.window.showInformationMessage("Osmynt: Logged in");
-	// Register device keys immediately after login so others can share to this device
 	try {
 		await ensureDeviceKeys(context);
 	} catch {}
@@ -405,7 +395,6 @@ async function ensureDeviceKeys(context: vscode.ExtensionContext) {
 		await context.secrets.store(ENC_KEYPAIR_JWK_KEY, encKeypairJwk);
 		await registerDeviceKey(context, deviceId, pub);
 	} else {
-		// Ensure server has our device key registered (idempotent upsert)
 		try {
 			const parsed = JSON.parse(encKeypairJwk);
 			if (parsed?.publicKeyJwk) {
@@ -447,18 +436,13 @@ async function shareSelectedCode(
 	const subtle: any = (globalThis as any).crypto?.subtle ?? (nodeCrypto as any).webcrypto?.subtle;
 	if (!subtle) throw new Error("WebCrypto Subtle API not available");
 
-	// Load our device key
 	const encKeypair = JSON.parse((await context.secrets.get(ENC_KEYPAIR_JWK_KEY)) || "{}");
 	if (!encKeypair?.privateKeyJwk || !encKeypair?.publicKeyJwk) throw new Error("Missing device keys");
-	const myPriv: any = await subtle.importKey(
-		"jwk",
-		encKeypair.privateKeyJwk,
-		{ name: "ECDH", namedCurve: "P-256" },
-		true,
-		["deriveKey", "deriveBits"]
-	);
+	await subtle.importKey("jwk", encKeypair.privateKeyJwk, { name: "ECDH", namedCurve: "P-256" }, true, [
+		"deriveKey",
+		"deriveBits",
+	]);
 
-	// Fetch recipients
 	const recipientsRes = await fetch(`${base}/protected/keys/team/default`, {
 		headers: { Authorization: `Bearer ${access}` },
 	});
@@ -478,7 +462,6 @@ async function shareSelectedCode(
 	const wrappedKeys: any[] = [];
 
 	if (teamKeyMode) {
-		// Team key mode: KEK for team; encrypt CEK once; deliver to everyone sharing same team key
 		const teamKeyStorageKey = `osmynt.teamKey.${teamKeyNamespace}`;
 		let teamKeyRawB64 = await context.secrets.get(teamKeyStorageKey);
 		if (!teamKeyRawB64) {
@@ -500,7 +483,6 @@ async function shareSelectedCode(
 			});
 		}
 
-		// Also include per-recipient ECDH-wrapped CEK so recipients without team key can decrypt
 		const eph = (await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, [
 			"deriveKey",
 			"deriveBits",
@@ -533,7 +515,6 @@ async function shareSelectedCode(
 			});
 		}
 	} else {
-		// Per-recipient: encrypt CEK per recipient using ephemeral ECDH KEK
 		const eph = (await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, [
 			"deriveKey",
 			"deriveBits",
@@ -567,7 +548,6 @@ async function shareSelectedCode(
 		}
 	}
 
-	// Resolve current team id so recent list matches
 	const currentTeamId = await promptTeamId(context);
 
 	const res = await fetch(`${base}/protected/code-share/share`, {
@@ -630,7 +610,7 @@ async function tryDecryptSnippet(context: vscode.ExtensionContext, j: any): Prom
 		const subtle: any = (globalThis as any).crypto?.subtle ?? (nodeCrypto as any).webcrypto?.subtle;
 		if (!subtle) return null;
 
-		// 1) Try per-recipient unwrap first so we don't fail early on team-key mismatch
+		//FIRST TRY: Try per-recipient unwrap first so we don't fail early on team-key mismatch
 		try {
 			const encKeypair = JSON.parse((await context.secrets.get(ENC_KEYPAIR_JWK_KEY)) || "{}");
 			if (encKeypair?.privateKeyJwk) {
@@ -669,13 +649,13 @@ async function tryDecryptSnippet(context: vscode.ExtensionContext, j: any): Prom
 						const plaintext = await subtle.decrypt({ name: "AES-GCM", iv }, cek, ciphertext);
 						return Buffer.from(new Uint8Array(plaintext)).toString("utf-8");
 					} catch {
-						// try next entry
+						// try next entry (unwrapping failed)
 					}
 				}
 			}
 		} catch {}
 
-		// 2) Fallback: team-key mode, but don't abort on failure
+		//SECOND TRY (FALLBACK): team-key mode, but don't abort on failure
 		try {
 			const config = vscode.workspace.getConfiguration("osmynt");
 			const teamKeyMode = config.get<boolean>("teamKeyMode") ?? false;
