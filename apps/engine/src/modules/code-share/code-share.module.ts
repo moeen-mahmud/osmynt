@@ -7,6 +7,7 @@ import {
 	route_listTeam,
 	route_share,
 	route_listTeamByAuthor,
+	route_listDmWith,
 	type CodeShareRoutes,
 } from "@/modules/code-share/routes/code-share.route";
 
@@ -17,5 +18,6 @@ CodeShareAPIModule.openapi(route_share, CodeShareController.share);
 CodeShareAPIModule.openapi(route_listTeam, CodeShareController.listTeam);
 CodeShareAPIModule.openapi(route_getById, CodeShareController.getById);
 CodeShareAPIModule.openapi(route_listTeamByAuthor, CodeShareController.listTeamByAuthor);
+CodeShareAPIModule.openapi(route_listDmWith, CodeShareController.listDmWith);
 
 export { CodeShareAPIModule };

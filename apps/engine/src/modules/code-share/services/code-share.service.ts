@@ -20,13 +20,51 @@ export class CodeShareService {
 			where: { metadata: { path: ["teamId"], equals: teamId } as any },
 			orderBy: { createdAt: "desc" },
 			take,
-			select: { id: true, createdAt: true, authorId: true, metadata: true, Author: { select: { name: true } } },
+			select: {
+				id: true,
+				createdAt: true,
+				authorId: true,
+				metadata: true,
+				wrappedKeys: true,
+				Author: { select: { name: true } },
+			},
 		});
 		return items.map(i => ({
 			id: i.id,
 			createdAt: i.createdAt.toISOString(),
 			authorId: i.authorId,
 			authorName: i.Author?.name ?? "",
+			metadata: i.metadata,
+			wrappedKeys: i.wrappedKeys,
+		}));
+	}
+	static async listDmWith(currentUserId: string, otherUserId: string, take = 50) {
+		const items = await prisma.codeShare.findMany({
+			// Fetch recent items; filtering for DM semantics is done in application code for portability
+			orderBy: { createdAt: "desc" },
+			take,
+			select: {
+				id: true,
+				createdAt: true,
+				authorId: true,
+				metadata: true,
+				wrappedKeys: true,
+				Author: { select: { name: true } },
+			},
+		});
+		// Filter in application because JSON array search portable across DBs is limited
+		const filtered = items.filter(i => {
+			const wk = (i.wrappedKeys as unknown as Array<any>) || [];
+			const isDm = !(i.metadata as any)?.teamId;
+			const hasMe = wk.some(e => e?.recipientUserId === currentUserId);
+			const hasOther = wk.some(e => e?.recipientUserId === otherUserId);
+			return isDm && hasMe && hasOther;
+		});
+		return filtered.map(i => ({
+			id: i.id,
+			createdAt: i.createdAt.toISOString(),
+			authorId: i.authorId,
+			authorName: (i as any).Author?.name ?? "",
 			metadata: i.metadata,
 		}));
 	}

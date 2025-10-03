@@ -133,9 +133,22 @@ export const route_listTeamByAuthor = createRoute({
 	},
 });
 
+export const route_listDmWith = createRoute({
+	tags: ["CodeShare"],
+	operationId: "codeShareListDmWith",
+	method: "get",
+	path: "/dm/with/:userId",
+	responses: {
+		200: { description: "List direct messages with a user" },
+		401: { description: "Unauthorized" },
+		403: { description: "Forbidden" },
+	},
+});
+
 export type CodeShareRoutes = {
 	codeShareShare: typeof route_share;
 	codeShareListTeam: typeof route_listTeam;
 	codeShareGetById: typeof route_getById;
 	codeShareListTeamByAuthor: typeof route_listTeamByAuthor;
+	codeShareListDmWith: typeof route_listDmWith;
 };

@@ -93,4 +93,16 @@ export class CodeShareController {
 		logger.info("Listed team recent by author", { teamId, authorId });
 		return c.json({ items }, 200);
 	}
+
+	static async listDmWith(c: Context) {
+		const user = c.get("user") as { id: string } | undefined;
+		if (!user) {
+			logger.error("Unauthorized");
+			return c.json({ error: "Unauthorized" }, 401);
+		}
+		const otherUserId = c.req.param("userId");
+		const items = await CodeShareService.listDmWith(user.id, otherUserId);
+		logger.info("Listed DMs with user", { otherUserId });
+		return c.json({ items }, 200);
+	}
 }

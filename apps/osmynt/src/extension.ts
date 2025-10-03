@@ -204,8 +204,34 @@ async function handleViewSnippet(context: vscode.ExtensionContext, id?: string) 
 		const j = await res.json();
 		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
 		const text = await tryDecryptSnippet(context, j);
+		const fileExt = (j?.metadata?.fileExt as string | undefined)?.toLowerCase();
+		const languageByExt: Record<string, string> = {
+			js: "javascript",
+			ts: "typescript",
+			jsx: "javascriptreact",
+			tsx: "typescriptreact",
+			py: "python",
+			go: "go",
+			java: "java",
+			kt: "kotlin",
+			cs: "csharp",
+			cpp: "cpp",
+			c: "c",
+			rb: "ruby",
+			php: "php",
+			rs: "rust",
+			scss: "scss",
+			css: "css",
+			html: "html",
+			json: "json",
+			yml: "yaml",
+			yaml: "yaml",
+			sh: "shellscript",
+			md: "markdown",
+		};
+		const language = (fileExt && languageByExt[fileExt]) || "plaintext";
 		const doc = await vscode.workspace.openTextDocument({
-			language: "plaintext",
+			language,
 			content: text ?? "[Encrypted snippet opened. Decrypt failed or not addressed to this device.]",
 		});
 		await vscode.window.showTextDocument(doc, { preview: false });
@@ -270,6 +296,7 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 	private cachedTeams: any[] = [];
 	private cachedMembersByTeam: Record<string, any[]> = {};
 	private cachedRecentByTeam: Record<string, any[]> = {};
+	private cachedDmByUserId: Record<string, any[]> = {};
 
 	constructor(private readonly context: vscode.ExtensionContext) {}
 
@@ -326,7 +353,7 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					return item;
 				});
 			}
-			// Children of member node → show recents for that member
+			// Children of member node → show DM recents with that member
 			if (element.kind === "member") {
 				const teamId = element.data?.teamId as string;
 				const authorId = element.data?.id as string;
@@ -334,13 +361,32 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					"recentRoot",
 					`Recents for ${element.label}`,
 					vscode.TreeItemCollapsibleState.Collapsed,
-					{ teamId, authorId }
+					{ teamId, authorId, dmUserId: authorId }
 				);
 				return [node];
 			}
 
 			// Children of recent root
 			if (element.kind === "recentRoot") {
+				const dmUserId = element.data?.dmUserId as string | undefined;
+				if (dmUserId) {
+					await this.ensureDm(dmUserId);
+					const dms = this.cachedDmByUserId[dmUserId] ?? [];
+					return dms.map(s => {
+						const baseLabel = s.metadata?.title ? `${s.metadata.title}` : `Snippet ${s.id.slice(0, 6)}`;
+						const by = s.authorName ? ` by ${s.authorName}` : "";
+						const badges: string[] = [];
+						if (s.metadata?.fileExt) badges.push(s.metadata.fileExt);
+						if (s.metadata?.project) badges.push(s.metadata.project);
+						const badgeStr = badges.length ? ` [${badges.join(" · ")}]` : "";
+						const label = `${baseLabel}${by}${badgeStr}`;
+						const item = new OsmyntItem("action", label, vscode.TreeItemCollapsibleState.None, s);
+						item.contextValue = "snippetItem";
+						item.command = { command: "osmynt.viewSnippet", title: "View Snippet", arguments: [s.id] };
+						item.description = new Date(s.createdAt).toLocaleString();
+						return item;
+					});
+				}
 				const teamId = element.data?.teamId as string;
 				const authorId =
 					(element.data?.authorId as string | undefined) || (await this.getTeamAuthorFilter(teamId));
@@ -351,7 +397,11 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 				return recents.map(s => {
 					const baseLabel = s.metadata?.title ? `${s.metadata.title}` : `Snippet ${s.id.slice(0, 6)}`;
 					const by = s.authorName ? ` by ${s.authorName}` : "";
-					const label = `${baseLabel}${by}`;
+					const badges: string[] = [];
+					if (s.metadata?.fileExt) badges.push(s.metadata.fileExt);
+					if (s.metadata?.project) badges.push(s.metadata.project);
+					const badgeStr = badges.length ? ` [${badges.join(" · ")}]` : "";
+					const label = `${baseLabel}${by}${badgeStr}`;
 					const item = new OsmyntItem("action", label, vscode.TreeItemCollapsibleState.None, s);
 					item.contextValue = "snippetItem";
 					item.command = { command: "osmynt.viewSnippet", title: "View Snippet", arguments: [s.id] };
@@ -412,6 +462,19 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 		}
 	}
 
+	private async ensureDm(otherUserId: string) {
+		const { base, access } = await getBaseAndAccess(this.context).catch(() => ({ base: "", access: "" }));
+		if (!base || !access || !otherUserId) {
+			this.cachedDmByUserId[otherUserId] = [];
+			return;
+		}
+		const res = await fetch(`${base}/protected/code-share/dm/with/${encodeURIComponent(otherUserId)}`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const j = await res.json();
+		this.cachedDmByUserId[otherUserId] = Array.isArray(j.items) ? j.items : [];
+	}
+
 	private async getUnreadCount(teamId: string): Promise<number> {
 		const lastSeen = await this.getLastSeen(teamId);
 		const recents = this.cachedRecentByTeam[teamId] ?? [];
@@ -448,6 +511,7 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 		this.cachedTeams = [];
 		this.cachedMembersByTeam = {};
 		this.cachedRecentByTeam = {};
+		this.cachedDmByUserId = {};
 		this._onDidChangeTreeData.fire();
 	}
 }
@@ -751,7 +815,10 @@ async function promptTeamId(context: vscode.ExtensionContext): Promise<string | 
 		const { base, access } = await getBaseAndAccess(context);
 		const res = await fetch(`${base}/protected/teams/me`, { headers: { Authorization: `Bearer ${access}` } });
 		const j = await res.json();
-		return j?.team?.id as string | undefined;
+		// Prefer owned team; fallback to first team
+		const teams: Array<{ id: string; ownerId: string }> = Array.isArray(j?.teams) ? j.teams : [];
+		const meOwned = teams.find(t => t.ownerId && j?.user?.id && t.ownerId === j.user.id)?.id;
+		return (meOwned || teams[0]?.id) as string | undefined;
 	} catch {
 		return undefined;
 	}

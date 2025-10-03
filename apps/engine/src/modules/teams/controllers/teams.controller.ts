@@ -11,7 +11,14 @@ export class TeamsController {
 			return c.json({ error: "Unauthorized" }, 401);
 		}
 		// Return all teams for this user (owned and memberships)
-		const memberships = await prisma.teamMember.findMany({ where: { userId: user.id } });
+		let memberships = await prisma.teamMember.findMany({ where: { userId: user.id } });
+		if (memberships.length === 0) {
+			const me = await prisma.user.findUnique({ where: { id: user.id } });
+			const teamName = `${me?.name || me?.email?.split("@")[0] || "My"}'s Team`;
+			const team = await prisma.team.create({ data: { name: teamName, ownerId: user.id, slug: nanoid(10) } });
+			await prisma.teamMember.create({ data: { teamId: team.id, userId: user.id, role: "OWNER" } });
+			memberships = await prisma.teamMember.findMany({ where: { userId: user.id } });
+		}
 		const teamIds = memberships.map(m => m.teamId);
 		const teams = await prisma.team.findMany({ where: { id: { in: teamIds } } });
 		const membersByTeam: Record<string, Array<{ id: string; name: string; email: string; avatarUrl: string }>> = {};
@@ -26,6 +33,7 @@ export class TeamsController {
 		}
 		logger.info("Listed teams and members", { teamCount: teams.length });
 		return c.json({
+			user: { id: user.id },
 			teams: teams.map(t => ({ id: t.id, name: t.name, slug: t.slug, ownerId: t.ownerId })),
 			membersByTeam,
 		});
