@@ -25,6 +25,19 @@ export async function activate(context: vscode.ExtensionContext) {
 		} catch {
 			// vscode.window.showErrorMessage("Failed to ensure device keys");
 		}
+		try {
+			if (!realtimeChannel) {
+				await connectRealtime(context);
+			}
+		} catch {}
+		try {
+			const interval = setInterval(() => {
+				try {
+					treeProvider?.refresh();
+				} catch {}
+			}, 10000);
+			context.subscriptions.push({ dispose: () => clearInterval(interval) });
+		} catch {}
 	}
 }
 
@@ -73,11 +86,15 @@ async function handleShareCode(context: vscode.ExtensionContext) {
 		return;
 	}
 	const selected = editor.document.getText(editor.selection);
-	const title = await vscode.window.showInputBox({ prompt: "Snippet title (optional)" });
+	const title = await vscode.window.showInputBox({ prompt: "Snippet title (required)" });
+	if (!title || title.trim().length === 0) {
+		vscode.window.showWarningMessage("Snippet title is required.");
+		return;
+	}
 	const target = await pickShareTarget(context);
 	try {
 		await ensureDeviceKeys(context);
-		await shareSelectedCode(context, selected, title, target);
+		await shareSelectedCode(context, selected, title.trim(), target);
 		vscode.window.showInformationMessage("Osmynt: Snippet shared securely");
 	} catch (e) {
 		vscode.window.showErrorMessage(`Share failed: ${e}`);
@@ -157,6 +174,7 @@ async function handleViewSnippet(context: vscode.ExtensionContext, id?: string) 
 }
 
 async function connectRealtime(_context: vscode.ExtensionContext) {
+	if (realtimeChannel) return; // already connected
 	const cfg = vscode.workspace.getConfiguration("osmynt");
 	const url = cfg.get<string>("supabaseUrl") || "";
 	const anon = cfg.get<string>("supabaseAnonKey") || "";
@@ -201,9 +219,9 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 	private _onDidChangeTreeData: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
 	readonly onDidChangeTreeData: vscode.Event<void> = this._onDidChangeTreeData.event;
 
-	private cachedTeam: any | null = null;
-	private cachedMembers: any[] = [];
-	private cachedRecent: any[] = [];
+	private cachedTeams: any[] = [];
+	private cachedMembersByTeam: Record<string, any[]> = {};
+	private cachedRecentByTeam: Record<string, any[]> = {};
 
 	constructor(private readonly context: vscode.ExtensionContext) {}
 
@@ -215,30 +233,30 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 		try {
 			// Root
 			if (!element) {
-				await this.ensureTeam();
-				if (!this.cachedTeam) {
+				await this.ensureTeams();
+				if (!Array.isArray(this.cachedTeams) || this.cachedTeams.length === 0) {
 					return [new OsmyntItem("action", "Sign in to view team", vscode.TreeItemCollapsibleState.None)];
 				}
-				const team = new OsmyntItem(
-					"team",
-					`Team: ${this.cachedTeam.name}`,
-					vscode.TreeItemCollapsibleState.Expanded,
-					this.cachedTeam
+				return this.cachedTeams.map(
+					t => new OsmyntItem("team", `Team: ${t.name}`, vscode.TreeItemCollapsibleState.Expanded, t)
 				);
-				return [team];
 			}
 
 			// Children of team
 			if (element.kind === "team") {
+				const teamId = element.data?.id as string;
+				const members = this.cachedMembersByTeam[teamId] ?? [];
 				const membersRoot = new OsmyntItem(
 					"membersRoot",
-					`Members (${this.cachedMembers.length})`,
-					vscode.TreeItemCollapsibleState.Collapsed
+					`Members (${members.length})`,
+					vscode.TreeItemCollapsibleState.Collapsed,
+					{ teamId }
 				);
 				const recentRoot = new OsmyntItem(
 					"recentRoot",
 					"Recent Snippets",
-					vscode.TreeItemCollapsibleState.Collapsed
+					vscode.TreeItemCollapsibleState.Collapsed,
+					{ teamId }
 				);
 				const actionsRoot = new OsmyntItem("actionsRoot", "Actions", vscode.TreeItemCollapsibleState.Collapsed);
 				return [membersRoot, recentRoot, actionsRoot];
@@ -246,7 +264,9 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 
 			// Children of members root
 			if (element.kind === "membersRoot") {
-				return this.cachedMembers.map(m => {
+				const teamId = element.data?.teamId as string;
+				const list = this.cachedMembersByTeam[teamId] ?? [];
+				return list.map(m => {
 					const item = new OsmyntItem("member", m.name || m.email, vscode.TreeItemCollapsibleState.None, m);
 					item.description = m.email;
 					return item;
@@ -255,9 +275,13 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 
 			// Children of recent root
 			if (element.kind === "recentRoot") {
-				await this.ensureRecent();
-				return this.cachedRecent.map(s => {
-					const label = s.metadata?.title ? `${s.metadata.title}` : `Snippet ${s.id.slice(0, 6)}`;
+				const teamId = element.data?.teamId as string;
+				await this.ensureRecent(teamId);
+				const recents = this.cachedRecentByTeam[teamId] ?? [];
+				return recents.map(s => {
+					const baseLabel = s.metadata?.title ? `${s.metadata.title}` : `Snippet ${s.id.slice(0, 6)}`;
+					const by = s.authorName ? ` by ${s.authorName}` : "";
+					const label = `${baseLabel}${by}`;
 					const item = new OsmyntItem("action", label, vscode.TreeItemCollapsibleState.None, s);
 					item.command = { command: "osmynt.viewSnippet", title: "View Snippet", arguments: [s.id] };
 					item.description = new Date(s.createdAt).toLocaleString();
@@ -278,41 +302,42 @@ class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 		}
 	}
 
-	async ensureTeam() {
+	async ensureTeams() {
 		const { base, access } = await getBaseAndAccess(this.context).catch(() => ({ base: "", access: "" }));
 		if (!base || !access) {
-			this.cachedTeam = null;
-			this.cachedMembers = [];
+			this.cachedTeams = [];
+			this.cachedMembersByTeam = {};
 			return;
 		}
 		const res = await fetch(`${base}/protected/teams/me`, { headers: { Authorization: `Bearer ${access}` } });
 		const j = await res.json();
-		if (!res.ok || !j?.team) {
-			this.cachedTeam = null;
-			this.cachedMembers = [];
+		if (!res.ok || !Array.isArray(j?.teams)) {
+			this.cachedTeams = [];
+			this.cachedMembersByTeam = {};
 			return;
 		}
-		this.cachedTeam = j.team;
-		this.cachedMembers = Array.isArray(j.members) ? j.members : [];
+		this.cachedTeams = j.teams ?? [];
+		this.cachedMembersByTeam = j.membersByTeam ?? {};
 	}
 
-	private async ensureRecent() {
+	private async ensureRecent(teamId: string) {
 		const { base, access } = await getBaseAndAccess(this.context).catch(() => ({ base: "", access: "" }));
-		if (!base || !access) {
-			this.cachedRecent = [];
+		if (!base || !access || !teamId) {
+			this.cachedRecentByTeam[teamId] = [];
 			return;
 		}
-		const res = await fetch(`${base}/protected/code-share/team/list`, {
+		const res = await fetch(`${base}/protected/code-share/team/list?teamId=${encodeURIComponent(teamId)}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
 		const j = await res.json();
-		this.cachedRecent = Array.isArray(j.items) ? j.items : [];
+		this.cachedRecentByTeam[teamId] = Array.isArray(j.items) ? j.items : [];
 	}
 
 	refresh() {
 		// clear cache and notify
-		this.cachedTeam = null;
-		this.cachedMembers = [];
+		this.cachedTeams = [];
+		this.cachedMembersByTeam = {};
+		this.cachedRecentByTeam = {};
 		this._onDidChangeTreeData.fire();
 	}
 }
@@ -417,7 +442,7 @@ async function registerDeviceKey(context: vscode.ExtensionContext, deviceId: str
 	});
 }
 
-type ShareTarget = { kind: "team" } | { kind: "user"; userId: string };
+type ShareTarget = { kind: "team"; teamId?: string } | { kind: "user"; userId: string };
 
 async function shareSelectedCode(
 	context: vscode.ExtensionContext,
@@ -443,13 +468,30 @@ async function shareSelectedCode(
 		"deriveBits",
 	]);
 
-	const recipientsRes = await fetch(`${base}/protected/keys/team/default`, {
-		headers: { Authorization: `Bearer ${access}` },
-	});
-	let { recipients } = await recipientsRes.json();
-	if (!Array.isArray(recipients)) recipients = [];
-	if (target.kind === "user") {
-		recipients = recipients.filter((r: any) => r.userId === target.userId);
+	let recipients: any[] = [];
+	if (target.kind === "team") {
+		const teamId = target.teamId ?? (await promptTeamId(context));
+		if (!teamId) throw new Error("No team selected");
+		const recipientsRes = await fetch(`${base}/protected/keys/team/${encodeURIComponent(teamId)}`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const j = await recipientsRes.json();
+		recipients = Array.isArray(j?.recipients) ? j.recipients : [];
+	} else {
+		// Aggregate recipients across all teams then filter by userId
+		const tmRes = await fetch(`${base}/protected/teams/me`, { headers: { Authorization: `Bearer ${access}` } });
+		const tm = await tmRes.json();
+		const teams: Array<{ id: string }> = Array.isArray(tm?.teams) ? tm.teams : [];
+		let all: any[] = [];
+		for (const t of teams) {
+			const rRes = await fetch(`${base}/protected/keys/team/${encodeURIComponent(t.id)}`, {
+				headers: { Authorization: `Bearer ${access}` },
+			});
+			const rj = await rRes.json();
+			const arr = Array.isArray(rj?.recipients) ? rj.recipients : [];
+			all = all.concat(arr);
+		}
+		recipients = all.filter((r: any) => r.userId === (target as any).userId);
 	}
 	if (recipients.length === 0) throw new Error("No recipients");
 
@@ -548,7 +590,7 @@ async function shareSelectedCode(
 		}
 	}
 
-	const currentTeamId = await promptTeamId(context);
+	const currentTeamId = target.kind === "team" ? (target.teamId ?? (await promptTeamId(context))) : undefined;
 
 	const res = await fetch(`${base}/protected/code-share/share`, {
 		method: "POST",
@@ -700,21 +742,31 @@ async function pickShareTarget(context: vscode.ExtensionContext): Promise<ShareT
 	const { base, access } = await getBaseAndAccess(context);
 	const res = await fetch(`${base}/protected/teams/me`, { headers: { Authorization: `Bearer ${access}` } });
 	const j = await res.json();
-	const members: Array<{ label: string; description: string; userId: string }> = (j?.members ?? []).map((m: any) => ({
-		label: m.name || m.email,
-		description: m.email,
-		userId: m.id,
-	}));
-	const items: (vscode.QuickPickItem & { _kind?: "team" | "user"; userId?: string })[] = [
-		{ label: "Share with Team", description: j?.team?.name || "", _kind: "team" as "team" },
-		...members.map(m => ({
+	const teams: Array<{ id: string; name: string }> = Array.isArray(j?.teams) ? j.teams : [];
+	const membersByTeam: Record<string, any[]> = j?.membersByTeam ?? {};
+	const uniqueMembers: Record<string, { label: string; description: string; userId: string }> = {};
+	for (const tid of Object.keys(membersByTeam)) {
+		for (const m of membersByTeam[tid] ?? []) {
+			if (!uniqueMembers[m.id])
+				uniqueMembers[m.id] = { label: m.name || m.email, description: m.email, userId: m.id };
+		}
+	}
+	const items: (vscode.QuickPickItem & { _kind?: "team" | "user"; userId?: string; teamId?: string })[] = [
+		...teams.map(t => ({
+			label: `Share with Team: ${t.name}`,
+			description: t.id,
+			_kind: "team" as "team",
+			teamId: t.id,
+		})),
+		...Object.values(uniqueMembers).map(m => ({
 			label: `Share with ${m.label}`,
 			description: m.description,
 			_kind: "user" as "user",
 			userId: m.userId,
 		})),
 	];
-	const choice = await vscode.window.showQuickPick(items, { placeHolder: "Select share target" });
-	if (!choice || choice._kind === "team") return { kind: "team" };
+	const choice = await vscode.window.showQuickPick(items, { placeHolder: "Select team or user to share" });
+	if (!choice) return { kind: "team" };
+	if (choice._kind === "team") return { kind: "team", teamId: (choice as any).teamId } as any;
 	return { kind: "user", userId: choice.userId! } as ShareTarget;
 }

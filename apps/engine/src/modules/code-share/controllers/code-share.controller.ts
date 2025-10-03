@@ -45,12 +45,19 @@ export class CodeShareController {
 			logger.error("Unauthorized");
 			return c.json({ error: "Unauthorized" }, 401);
 		}
-		// infer team by membership; list recent items
-		const membership = await prisma.teamMember.findFirst({ where: { userId: user.id } });
-		if (!membership) {
-			logger.error("No membership found");
-			return c.json({ items: [] }, 200);
+		// Optional teamId query to scope recents
+		const q = new URL(c.req.url).searchParams;
+		const teamId = q.get("teamId");
+		if (teamId) {
+			const isMember = await prisma.teamMember.findFirst({ where: { userId: user.id, teamId } });
+			if (!isMember) return c.json({ error: "Forbidden" }, 403);
+			const items = await CodeShareService.listTeamRecent(teamId);
+			logger.info("Listed team recent snippets", { items });
+			return c.json({ items }, 200);
 		}
+		// fallback: if no teamId specified, pick first membership
+		const membership = await prisma.teamMember.findFirst({ where: { userId: user.id } });
+		if (!membership) return c.json({ items: [] }, 200);
 		const items = await CodeShareService.listTeamRecent(membership.teamId);
 		logger.info("Listed team recent snippets", { items });
 		return c.json({ items }, 200);

@@ -20,9 +20,15 @@ export class CodeShareService {
 			where: { metadata: { path: ["teamId"], equals: teamId } as any },
 			orderBy: { createdAt: "desc" },
 			take,
-			select: { id: true, createdAt: true, authorId: true, metadata: true },
+			select: { id: true, createdAt: true, authorId: true, metadata: true, Author: { select: { name: true } } },
 		});
-		return items.map(i => ({ ...i, createdAt: i.createdAt.toISOString() }));
+		return items.map(i => ({
+			id: i.id,
+			createdAt: i.createdAt.toISOString(),
+			authorId: i.authorId,
+			authorName: i.Author?.name ?? "",
+			metadata: i.metadata,
+		}));
 	}
 
 	static async getById(id: string) {

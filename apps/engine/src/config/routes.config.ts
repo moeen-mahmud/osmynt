@@ -45,6 +45,7 @@ export const Routes = {
 		register: "/register",
 		me: "/me",
 		teamDefault: "/team/default",
+		teamById: "/team/:teamId",
 	},
 
 	// code share

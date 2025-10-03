@@ -56,4 +56,20 @@ export class KeysController {
 		logger.info("Listed recipients", { userId: user.id });
 		return c.json({ recipients }, 200);
 	}
+
+	static async teamById(c: Context) {
+		const user = c.get("user") as { id: string } | undefined;
+		if (!user) {
+			logger.error("Unauthorized");
+			return c.json({ error: "Unauthorized" }, 401);
+		}
+		const teamId = c.req.param("teamId");
+		const membership = await prisma.teamMember.findFirst({ where: { teamId, userId: user.id } });
+		if (!membership) {
+			return c.json({ error: "Forbidden" }, 403);
+		}
+		const recipients = await KeysService.listTeamRecipients(teamId);
+		logger.info("Listed recipients by team", { teamId });
+		return c.json({ recipients }, 200);
+	}
 }

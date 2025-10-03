@@ -6,6 +6,7 @@ import {
 	route_keysMe,
 	route_keysRegister,
 	route_keysTeamDefault,
+	route_keysTeamById,
 	type KeysRoutes,
 } from "@/modules/keys/routes/keys.route";
 
@@ -15,5 +16,6 @@ KeysAPIModule.use("*", jwtMiddleware);
 KeysAPIModule.openapi(route_keysRegister, KeysController.register);
 KeysAPIModule.openapi(route_keysMe, KeysController.me);
 KeysAPIModule.openapi(route_keysTeamDefault, KeysController.teamDefault);
+KeysAPIModule.openapi(route_keysTeamById, KeysController.teamById);
 
 export { KeysAPIModule };

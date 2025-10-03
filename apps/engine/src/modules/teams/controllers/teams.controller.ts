@@ -10,24 +10,24 @@ export class TeamsController {
 			logger.error("Unauthorized");
 			return c.json({ error: "Unauthorized" }, 401);
 		}
-		const membership = await prisma.teamMember.findFirst({ where: { userId: user.id }, include: { Team: true } });
-		if (!membership) {
-			logger.error("No membership found");
-			return c.json({ team: null, members: [] });
-		}
-		const members = await prisma.teamMember.findMany({
-			where: { teamId: membership.teamId },
-			include: { User: true },
-		});
-		logger.info("Listed team members", { teamId: membership.teamId });
-		return c.json({
-			team: membership.Team,
-			members: members.map(m => ({
+		// Return all teams for this user (owned and memberships)
+		const memberships = await prisma.teamMember.findMany({ where: { userId: user.id } });
+		const teamIds = memberships.map(m => m.teamId);
+		const teams = await prisma.team.findMany({ where: { id: { in: teamIds } } });
+		const membersByTeam: Record<string, Array<{ id: string; name: string; email: string; avatarUrl: string }>> = {};
+		for (const t of teams) {
+			const ms = await prisma.teamMember.findMany({ where: { teamId: t.id }, include: { User: true } });
+			membersByTeam[t.id] = ms.map(m => ({
 				id: m.User.id,
 				name: m.User.name,
 				email: m.User.email,
 				avatarUrl: m.User.avatarUrl,
-			})),
+			}));
+		}
+		logger.info("Listed teams and members", { teamCount: teams.length });
+		return c.json({
+			teams: teams.map(t => ({ id: t.id, name: t.name, slug: t.slug, ownerId: t.ownerId })),
+			membersByTeam,
 		});
 	}
 

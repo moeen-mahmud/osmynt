@@ -79,8 +79,23 @@ export const route_keysTeamDefault = createRoute({
 	},
 });
 
+export const route_keysTeamById = createRoute({
+	tags: ["Keys"],
+	operationId: "keysTeamById",
+	method: "get",
+	path: `${Routes.keys.teamById}`,
+	responses: {
+		200: {
+			description: "Team members device keys by teamId",
+		},
+		401: { description: "Unauthorized" },
+		403: { description: "Forbidden" },
+	},
+});
+
 export type KeysRoutes = {
 	keysRegister: typeof route_keysRegister;
 	keysMe: typeof route_keysMe;
 	keysTeamDefault: typeof route_keysTeamDefault;
+	keysTeamById: typeof route_keysTeamById;
 };

@@ -24,9 +24,7 @@ export const route_share = createRoute({
 									wrapIvB64u: z.string(),
 								})
 							),
-							metadata: z
-								.object({ teamId: z.string().optional(), title: z.string().optional() })
-								.optional(),
+							metadata: z.object({ teamId: z.string().optional(), title: z.string().min(1) }).optional(),
 						})
 						.openapi("CodeShareSchema"),
 				},
