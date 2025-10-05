@@ -76,6 +76,12 @@
 				"icon": "$(plus)"
 			},
 			{
+				"command": "osmynt.removeTeamMember",
+				"title": "Remove Member",
+				"category": "Osmynt",
+				"icon": "$(trash)"
+			},
+			{
 				"command": "osmynt.acceptInvitation",
 				"title": "Accept Invitation",
 				"category": "Osmynt",
@@ -176,6 +182,11 @@
 					"group": "inline@3"
 				},
 				{
+					"command": "osmynt.removeTeamMember",
+					"when": "view == osmyntView && viewItem == memberItemOwner",
+					"group": "inline@9"
+				},
+				{
 					"command": "osmynt.filterRecentsByMember",
 					"when": "view == osmyntView && viewItem == memberItem",
 					"group": "navigation@1"
@@ -218,16 +229,6 @@
 			}
 		}
 	},
-	"activationEvents": [
-		"onView:osmyntView",
-		"onCommand:osmynt.refreshTeam",
-		"onCommand:osmynt.viewSnippet",
-		"onCommand:osmynt.shareCode",
-		"onCommand:osmynt.login",
-		"onCommand:osmynt.logout",
-		"onCommand:osmynt.inviteMember",
-		"onCommand:osmynt.acceptInvitation"
-	],
 	"engines": {
 		"vscode": "^1.94.0"
 	}

@@ -162,3 +162,38 @@ export async function handleViewSnippet(context: vscode.ExtensionContext, id?: s
 		vscode.window.showErrorMessage(`Open failed: ${e}`);
 	}
 }
+
+export async function handleRemoveTeamMember(
+	context: vscode.ExtensionContext,
+	treeProvider: OsmyntTreeProvider,
+	item?: { data: { teamId: string; id: string }; label: string }
+) {
+	try {
+		const teamId = item?.data?.teamId as string | undefined;
+		const userId = item?.data?.id as string | undefined;
+		if (!teamId || !userId) return;
+		const confirm = await vscode.window.showWarningMessage(
+			`Remove ${item?.label ?? "this member"} from team?`,
+			{ modal: true },
+			"Remove"
+		);
+		if (confirm !== "Remove") return;
+		const { base, access } = await getBaseAndAccess(context);
+		const res = await fetch(
+			`${base}/protected/teams/${encodeURIComponent(teamId)}/remove-member/${encodeURIComponent(userId)}`,
+			{
+				method: "DELETE",
+				headers: { Authorization: `Bearer ${access}` },
+			}
+		);
+		const j = await res.json().catch(() => ({}));
+		if (!res.ok || !j?.ok) {
+			vscode.window.showErrorMessage(j?.error || "Failed to remove member");
+			return;
+		}
+		vscode.window.showInformationMessage("Member removed");
+		treeProvider.refresh();
+	} catch (e) {
+		vscode.window.showErrorMessage(`Failed to remove member: ${String(e)}`);
+	}
+}

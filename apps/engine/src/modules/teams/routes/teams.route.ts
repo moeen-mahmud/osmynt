@@ -24,6 +24,10 @@ export const route_me = createRoute({
 			description: "Unauthorized",
 			content: { "application/json": { schema: z.object({ error: z.string() }) } },
 		},
+		500: {
+			description: "Internal server error",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
 	},
 });
 
@@ -45,6 +49,10 @@ export const route_invite = createRoute({
 			description: "Unauthorized",
 			content: { "application/json": { schema: z.object({ error: z.string() }) } },
 		},
+		500: {
+			description: "Internal server error",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
 	},
 });
 
@@ -64,6 +72,31 @@ export const route_accept = createRoute({
 		},
 		401: {
 			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+		500: {
+			description: "Internal server error",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+	},
+});
+
+export const route_removeTeamMember = createRoute({
+	tags: ["Teams"],
+	operationId: "teamsRemoveTeamMember",
+	method: "delete",
+	path: Routes.teams.removeTeamMember,
+	responses: {
+		200: {
+			description: "Removed",
+			content: { "application/json": { schema: z.object({ ok: z.boolean() }) } },
+		},
+		401: {
+			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+		500: {
+			description: "Internal server error",
 			content: { "application/json": { schema: z.object({ error: z.string() }) } },
 		},
 	},

@@ -66,6 +66,7 @@ export const Routes = {
 		me: "/me",
 		invite: "/:teamId/invite",
 		accept: "/invite/:inviteToken",
+		removeTeamMember: "/:teamId/remove-member/:userId",
 	},
 
 	codeSnippet: {

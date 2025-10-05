@@ -92,6 +92,8 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			if (element.kind === "membersRoot") {
 				const teamId = element.data?.teamId as string;
 				const list = this.cachedMembersByTeam[teamId] ?? [];
+				const isOwner =
+					(this.cachedTeams.find(t => t.id === teamId)?.ownerId as string | undefined) === this.currentUserId;
 				return list.map(m => {
 					const item = new OsmyntItem(
 						"member",
@@ -103,6 +105,10 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 						"person"
 					);
 					item.description = m.email;
+					// Mark removable only if current user owns this team and target is not self
+					if (isOwner && m.id !== this.currentUserId) {
+						item.contextValue = "memberItemOwner";
+					}
 					return item;
 				});
 			}

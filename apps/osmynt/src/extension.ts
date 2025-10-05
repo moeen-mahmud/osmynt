@@ -10,7 +10,9 @@ import {
 	handleAcceptInvitation,
 	handleRefreshTeam,
 	handleViewSnippet,
+	handleRemoveTeamMember,
 } from "@/commands/osmynt.commands";
+// getBaseAndAccess already imported above
 import { getBaseAndAccess } from "@/services/osmynt.services";
 import { createClient, type RealtimeChannel, type SupabaseClient } from "@supabase/supabase-js";
 
@@ -27,6 +29,9 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand("osmynt.acceptInvitation", () => handleAcceptInvitation(context, tree)),
 		vscode.commands.registerCommand("osmynt.refreshTeam", () => handleRefreshTeam(tree)),
 		vscode.commands.registerCommand("osmynt.viewSnippet", (id?: string) => handleViewSnippet(context, id)),
+		vscode.commands.registerCommand("osmynt.removeTeamMember", async (item?: any) =>
+			handleRemoveTeamMember(context, tree, item)
+		),
 		vscode.commands.registerCommand("osmynt.snippet.copy", async (item?: any) => {
 			if (!item?.data?.id) return;
 			const { base, access } = await getBaseAndAccess(context);
