@@ -1,5 +1,7 @@
 import { Routes } from "@/config/routes.config";
 import { createRoute, z } from "@hono/zod-openapi";
+import { CodeShareListItemSchema } from "@/schemas/models";
+import { CODE_SHARE_ALGORITHM } from "@/modules/code-share/constants/code-share.constant";
 
 export const route_share = createRoute({
 	tags: ["CodeShare"],
@@ -56,16 +58,7 @@ export const route_listTeam = createRoute({
 			content: {
 				"application/json": {
 					schema: z
-						.object({
-							items: z.array(
-								z.object({
-									id: z.string(),
-									createdAt: z.string(),
-									authorId: z.string(),
-									metadata: z.any().optional(),
-								})
-							),
-						})
+						.object({ items: z.array(CodeShareListItemSchema.omit({ authorName: true })) })
 						.openapi("ListTeamRecentSchema"),
 				},
 			},
@@ -86,36 +79,36 @@ export const route_getById = createRoute({
 			description: "Get item",
 			content: {
 				"application/json": {
-					schema: z
-						.object({
-							ver: z.number().default(1),
-							alg: z.string().default("ECDH-P256+A256GCM"),
-							id: z.string(),
-							authorId: z.string(),
-							createdAt: z.string(),
-							ciphertextB64u: z.string(),
-							ivB64u: z.string(),
-							aad: z.string().nullable().optional(),
-							wrappedKeys: z.array(
-								z.object({
-									recipientUserId: z.string(),
-									recipientDeviceId: z.string(),
-									senderEphemeralPublicKeyJwk: z.any(),
-									wrappedCekB64u: z.string(),
-									wrapIvB64u: z.string(),
-								})
-							),
-							metadata: z.any().optional(),
-						})
-						.openapi("GetByIdSchema"),
+					schema: z.object({
+						ver: z.number().default(1),
+						alg: z.string().default(CODE_SHARE_ALGORITHM),
+						id: z.string(),
+						authorId: z.string(),
+						createdAt: z.string(),
+						ciphertextB64u: z.string(),
+						ivB64u: z.string(),
+						aad: z.string().nullable().optional(),
+						wrappedKeys: z.array(
+							z.object({
+								recipientUserId: z.string(),
+								recipientDeviceId: z.string(),
+								senderEphemeralPublicKeyJwk: z.any(),
+								wrappedCekB64u: z.string(),
+								wrapIvB64u: z.string(),
+							})
+						),
+						metadata: z.any().optional(),
+					}),
 				},
 			},
 		},
 		404: {
 			description: "Not Found",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
 		},
 		401: {
 			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
 		},
 	},
 });
@@ -131,22 +124,18 @@ export const route_listTeamByAuthor = createRoute({
 			description: "List team ciphertexts by author",
 			content: {
 				"application/json": {
-					schema: z.object({
-						items: z.array(
-							z.object({
-								id: z.string(),
-								createdAt: z.string(),
-								authorId: z.string(),
-								authorName: z.string().default("").openapi({ example: "Jane Doe" }),
-								metadata: z.any(),
-							})
-						),
-					}),
+					schema: z.object({ items: z.array(CodeShareListItemSchema) }),
 				},
 			},
 		},
-		401: { description: "Unauthorized" },
-		403: { description: "Forbidden" },
+		401: {
+			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+		403: {
+			description: "Forbidden",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
 	},
 });
 
@@ -160,22 +149,18 @@ export const route_listDmWith = createRoute({
 			description: "List direct messages with a user",
 			content: {
 				"application/json": {
-					schema: z.object({
-						items: z.array(
-							z.object({
-								id: z.string(),
-								createdAt: z.string(),
-								authorId: z.string(),
-								authorName: z.string().default("").openapi({ example: "Jane Doe" }),
-								metadata: z.any(),
-							})
-						),
-					}),
+					schema: z.object({ items: z.array(CodeShareListItemSchema) }),
 				},
 			},
 		},
-		401: { description: "Unauthorized" },
-		403: { description: "Forbidden" },
+		401: {
+			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+		403: {
+			description: "Forbidden",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
 	},
 });
 
@@ -191,7 +176,10 @@ export const route_realtimeConfig = createRoute({
 				"application/json": { schema: z.object({ url: z.string(), anonKey: z.string(), channel: z.string() }) },
 			},
 		},
-		401: { description: "Unauthorized" },
+		401: {
+			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
 	},
 });
 

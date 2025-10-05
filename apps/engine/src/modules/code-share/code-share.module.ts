@@ -17,7 +17,7 @@ const CodeShareAPIModule = new OpenAPIHono<Env, CodeShareRoutes>();
 CodeShareAPIModule.use("*", jwtMiddleware);
 CodeShareAPIModule.openapi(route_share, CodeShareController.share);
 CodeShareAPIModule.openapi(route_listTeam, CodeShareController.listTeam);
-CodeShareAPIModule.openapi(route_getById, CodeShareController.getById);
+CodeShareAPIModule.openapi(route_getById, CodeShareController.getById as any); // just for this one :)
 CodeShareAPIModule.openapi(route_listTeamByAuthor, CodeShareController.listTeamByAuthor);
 CodeShareAPIModule.openapi(route_listDmWith, CodeShareController.listDmWith);
 CodeShareAPIModule.openapi(route_realtimeConfig, CodeShareController.realtimeConfig);

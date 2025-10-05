@@ -1,5 +1,6 @@
 import { Routes } from "@/config/routes.config";
 import { createRoute, z } from "@hono/zod-openapi";
+import { TeamSchema, UserPublicSchema } from "@/schemas/models";
 
 export const route_me = createRoute({
 	tags: ["Teams"],
@@ -13,25 +14,8 @@ export const route_me = createRoute({
 				"application/json": {
 					schema: z.object({
 						user: z.object({ id: z.string() }),
-						teams: z.array(
-							z.object({
-								id: z.string(),
-								name: z.string(),
-								slug: z.string(),
-								ownerId: z.string(),
-							})
-						),
-						membersByTeam: z.record(
-							z.string(),
-							z.array(
-								z.object({
-									id: z.string(),
-									name: z.string(),
-									email: z.string(),
-									avatarUrl: z.string(),
-								})
-							)
-						),
+						teams: z.array(TeamSchema.pick({ id: true, name: true, slug: true, ownerId: true })),
+						membersByTeam: z.record(z.string(), z.array(UserPublicSchema)),
 					}),
 				},
 			},

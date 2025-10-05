@@ -1,5 +1,6 @@
 import { Routes } from "@/config/routes.config";
 import { createRoute, z } from "@hono/zod-openapi";
+import { DeviceKeySummarySchema } from "@/schemas/models";
 
 export const route_keysRegister = createRoute({
 	tags: ["Keys"],
@@ -48,15 +49,7 @@ export const route_keysMe = createRoute({
 			description: "My device keys",
 			content: {
 				"application/json": {
-					schema: z.object({
-						devices: z.array(
-							z.object({
-								deviceId: z.string(),
-								encryptionPublicKeyJwk: z.any(),
-								signingPublicKeyJwk: z.any().optional(),
-							})
-						),
-					}),
+					schema: z.object({ devices: z.array(DeviceKeySummarySchema) }),
 				},
 			},
 		},
@@ -90,6 +83,10 @@ export const route_keysTeamDefault = createRoute({
 				},
 			},
 		},
+		401: {
+			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
 	},
 });
 
@@ -116,8 +113,14 @@ export const route_keysTeamById = createRoute({
 				},
 			},
 		},
-		401: { description: "Unauthorized" },
-		403: { description: "Forbidden" },
+		401: {
+			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+		403: {
+			description: "Forbidden",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
 	},
 });
 
