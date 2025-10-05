@@ -212,12 +212,10 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			return;
 		}
 		const url = authorId
-			?
-			// `${base}/protected/code-share/team/${encodeURIComponent(teamId)}/by-author/${encodeURIComponent(authorId)}`
-			`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.listTeamByAuthor(encodeURIComponent(teamId), encodeURIComponent(authorId))}`
-			:
-			// `${base}/protected/code-share/team/list?teamId=${encodeURIComponent(teamId)}`;
-			`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.listTeam}?teamId=${encodeURIComponent(teamId)}`;
+			? // `${base}/protected/code-share/team/${encodeURIComponent(teamId)}/by-author/${encodeURIComponent(authorId)}`
+				`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.listTeamByAuthor(encodeURIComponent(teamId), encodeURIComponent(authorId))}`
+			: // `${base}/protected/code-share/team/list?teamId=${encodeURIComponent(teamId)}`;
+				`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.listTeam}?teamId=${encodeURIComponent(teamId)}`;
 		const res = await fetch(url, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
@@ -240,8 +238,9 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			// `${base}/protected/code-share/dm/with/${encodeURIComponent(otherUserId)}`,
 			`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.dmWith(encodeURIComponent(otherUserId))}`,
 			{
-			headers: { Authorization: `Bearer ${access}` },
-		});
+				headers: { Authorization: `Bearer ${access}` },
+			}
+		);
 		const j = await res.json();
 		this.cachedDmByUserId[otherUserId] = Array.isArray(j.items) ? j.items : [];
 	}

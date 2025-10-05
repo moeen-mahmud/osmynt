@@ -37,9 +37,12 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand("osmynt.snippet.copy", async (item?: any) => {
 			if (!item?.data?.id) return;
 			const { base, access } = await getBaseAndAccess(context);
-			const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.getById(encodeURIComponent(item.data.id))}`, {
-				headers: { Authorization: `Bearer ${access}` },
-			});
+			const res = await fetch(
+				`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.getById(encodeURIComponent(item.data.id))}`,
+				{
+					headers: { Authorization: `Bearer ${access}` },
+				}
+			);
 			const j = await res.json();
 			const text = await tryDecryptSnippet(context, j);
 			if (text) await vscode.env.clipboard.writeText(text);
@@ -52,9 +55,12 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand("osmynt.snippet.insertAtCursor", async (item?: any) => {
 			if (!item?.data?.id) return;
 			const { base, access } = await getBaseAndAccess(context);
-			const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.getById(encodeURIComponent(item.data.id))}`, {
-				headers: { Authorization: `Bearer ${access}` },
-			});
+			const res = await fetch(
+				`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.getById(encodeURIComponent(item.data.id))}`,
+				{
+					headers: { Authorization: `Bearer ${access}` },
+				}
+			);
 			const j = await res.json();
 			const text = await tryDecryptSnippet(context, j);
 			const editor = vscode.window.activeTextEditor;
@@ -113,9 +119,12 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 				const { base, access } = await getBaseAndAccess(_context);
 				const id = payload?.payload?.id as string | undefined;
 				if (id) {
-					const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.getById(encodeURIComponent(id))}`, {
-						headers: { Authorization: `Bearer ${access}` },
-					});
+					const res = await fetch(
+						`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.getById(encodeURIComponent(id))}`,
+						{
+							headers: { Authorization: `Bearer ${access}` },
+						}
+					);
 					const j = await res.json();
 					const canDecrypt = (await tryDecryptSnippet(_context, j)) !== null;
 					const title =
@@ -128,7 +137,7 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 					let currentUserId: string | undefined;
 
 					try {
-					const meRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
+						const meRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 							headers: { Authorization: `Bearer ${access}` },
 						});
 						const me = await meRes.json();

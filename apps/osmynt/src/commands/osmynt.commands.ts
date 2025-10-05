@@ -119,9 +119,10 @@ export async function handleAcceptInvitation(context: vscode.ExtensionContext, t
 			`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.invite(encodeURIComponent(token))}`,
 			// `${base}/protected/teams/invite/${encodeURIComponent(token)}`,
 			{
-			method: "POST",
-			headers: { Authorization: `Bearer ${access}` },
-		});
+				method: "POST",
+				headers: { Authorization: `Bearer ${access}` },
+			}
+		);
 		const j = await res.json();
 		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
 		vscode.window.showInformationMessage("Joined team successfully");
@@ -153,8 +154,9 @@ export async function handleViewSnippet(context: vscode.ExtensionContext, id?: s
 			// `${base}/protected/code-share/${encodeURIComponent(snippetId)}`,
 			`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.getById(encodeURIComponent(snippetId))}`,
 			{
-			headers: { Authorization: `Bearer ${access}` },
-		});
+				headers: { Authorization: `Bearer ${access}` },
+			}
+		);
 		const j = await res.json();
 		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
 		const text = await tryDecryptSnippet(context, j);

@@ -6,17 +6,22 @@ import { ENDPOINTS } from "@/constants/endpoints.constant";
 type ShareTarget = { kind: "team"; teamId?: string } | { kind: "user"; userId: string };
 
 export async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessToken: string) {
-	const base = (ENDPOINTS.engineBaseUrl!).replace(/\/$/, "");
+	const base = ENDPOINTS.engineBaseUrl!.replace(/\/$/, "");
 
 	const nodeCrypto = await import("crypto");
 	const subtle: any = (globalThis as any).crypto?.subtle ?? (nodeCrypto as any).webcrypto?.subtle;
 
 	if (!subtle) throw new Error("WebCrypto Subtle API not available");
 
-	const eph: any = await subtle.generateKey({
-		name: "ECDH", namedCurve: "P-256"
-	}, true, [ "deriveKey", "deriveBits" ]);
-	
+	const eph: any = await subtle.generateKey(
+		{
+			name: "ECDH",
+			namedCurve: "P-256",
+		},
+		true,
+		["deriveKey", "deriveBits"]
+	);
+
 	const clientPublicKeyJwk = await subtle.exportKey("jwk", eph.publicKey);
 
 	const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.auth.loginWithToken}`, {
@@ -98,7 +103,7 @@ export async function ensureDeviceKeys(context: vscode.ExtensionContext) {
 }
 
 export async function registerDeviceKey(context: vscode.ExtensionContext, deviceId: string, publicKeyJwk: any) {
-	const base = (ENDPOINTS.engineBaseUrl!).replace(/\/$/, "");
+	const base = ENDPOINTS.engineBaseUrl!.replace(/\/$/, "");
 	const access = await context.secrets.get(ACCESS_SECRET_KEY);
 	if (!access) throw new Error("Not logged in");
 	await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.register}`, {
@@ -109,7 +114,7 @@ export async function registerDeviceKey(context: vscode.ExtensionContext, device
 }
 
 export async function getBaseAndAccess(context: vscode.ExtensionContext) {
-	const base = (ENDPOINTS.engineBaseUrl!).replace(/\/$/, "");
+	const base = ENDPOINTS.engineBaseUrl!.replace(/\/$/, "");
 	const access = await context.secrets.get(ACCESS_SECRET_KEY);
 	if (!access) throw new Error("Not logged in");
 	return { base, access };
@@ -118,7 +123,9 @@ export async function getBaseAndAccess(context: vscode.ExtensionContext) {
 export async function promptTeamId(context: vscode.ExtensionContext): Promise<string | undefined> {
 	try {
 		const { base, access } = await getBaseAndAccess(context);
-		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, { headers: { Authorization: `Bearer ${access}` } });
+		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
 		const j = await res.json();
 		// Prefer owned team; fallback to first team
 		const teams: Array<{ id: string; ownerId: string }> = Array.isArray(j?.teams) ? j.teams : [];
@@ -218,7 +225,9 @@ export async function tryDecryptSnippet(context: vscode.ExtensionContext, j: any
 
 export async function pickShareTarget(context: vscode.ExtensionContext): Promise<ShareTarget> {
 	const { base, access } = await getBaseAndAccess(context);
-	const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, { headers: { Authorization: `Bearer ${access}` } });
+	const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
+		headers: { Authorization: `Bearer ${access}` },
+	});
 	const j = await res.json();
 	const teams: Array<{ id: string; name: string }> = Array.isArray(j?.teams) ? j.teams : [];
 	const membersByTeam: Record<string, any[]> = j?.membersByTeam ?? {};
@@ -259,7 +268,7 @@ export async function shareSelectedCode(
 	extraMetadata?: Record<string, any>
 ) {
 	const config = vscode.workspace.getConfiguration("osmynt");
-	const base = (ENDPOINTS.engineBaseUrl!).replace(/\/$/, "");
+	const base = ENDPOINTS.engineBaseUrl!.replace(/\/$/, "");
 	const teamKeyMode = config.get<boolean>("teamKeyMode") ?? false;
 	const teamKeyNamespace = config.get<string>("teamKeyNamespace") ?? "default";
 	const access = await context.secrets.get(ACCESS_SECRET_KEY);
@@ -284,13 +293,16 @@ export async function shareSelectedCode(
 			// `${base}/protected/keys/team/${encodeURIComponent(teamId)}`,
 			`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.teamById(encodeURIComponent(teamId))}`,
 			{
-			headers: { Authorization: `Bearer ${access}` },
-		});
+				headers: { Authorization: `Bearer ${access}` },
+			}
+		);
 		const j = await recipientsRes.json();
 		recipients = Array.isArray(j?.recipients) ? j.recipients : [];
 	} else {
 		// Aggregate recipients across all teams then filter by userId
-		const tmRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, { headers: { Authorization: `Bearer ${access}` } });
+		const tmRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
 		const tm = await tmRes.json();
 		const teams: Array<{ id: string }> = Array.isArray(tm?.teams) ? tm.teams : [];
 		let all: any[] = [];
@@ -299,8 +311,9 @@ export async function shareSelectedCode(
 				// `${base}/protected/keys/team/${encodeURIComponent(t.id)}`,
 				`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.teamById(encodeURIComponent(t.id))}`,
 				{
-				headers: { Authorization: `Bearer ${access}` },
-			});
+					headers: { Authorization: `Bearer ${access}` },
+				}
+			);
 			const rj = await rRes.json();
 			const arr = Array.isArray(rj?.recipients) ? rj.recipients : [];
 			all = all.concat(arr);
@@ -410,14 +423,15 @@ export async function shareSelectedCode(
 		// `${base}/protected/code-share/share`,
 		`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.share}`,
 		{
-		method: "POST",
-		headers: { "Content-Type": "application/json", Authorization: `Bearer ${access}` },
-		body: JSON.stringify({
-			ciphertextB64u: b64url(new Uint8Array(ciphertext as ArrayBuffer)),
-			ivB64u: b64url(new Uint8Array(iv)),
-			wrappedKeys,
-			metadata: { teamId: currentTeamId, title, ...extraMetadata },
-		}),
-	});
+			method: "POST",
+			headers: { "Content-Type": "application/json", Authorization: `Bearer ${access}` },
+			body: JSON.stringify({
+				ciphertextB64u: b64url(new Uint8Array(ciphertext as ArrayBuffer)),
+				ivB64u: b64url(new Uint8Array(iv)),
+				wrappedKeys,
+				metadata: { teamId: currentTeamId, title, ...extraMetadata },
+			}),
+		}
+	);
 	if (!res.ok) throw new Error(`Share failed (${res.status})`);
 }
