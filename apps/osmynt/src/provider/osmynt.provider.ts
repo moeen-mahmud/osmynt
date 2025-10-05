@@ -29,6 +29,7 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 	private cachedMembersByTeam: Record<string, any[]> = {};
 	private cachedRecentByTeam: Record<string, any[]> = {};
 	private cachedDmByUserId: Record<string, any[]> = {};
+	private currentUserId: string | undefined;
 
 	constructor(private readonly context: vscode.ExtensionContext) {}
 
@@ -95,7 +96,9 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					const item = new OsmyntItem(
 						"member",
 						m.name || m.email,
-						vscode.TreeItemCollapsibleState.Collapsed,
+						m.id === this.currentUserId
+							? vscode.TreeItemCollapsibleState.None
+							: vscode.TreeItemCollapsibleState.Collapsed,
 						{ ...m, teamId },
 						"person"
 					);
@@ -103,11 +106,11 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					return item;
 				});
 			}
-			// Children of member node → show DM recents with that member
+			// Children of member node → show DM recent with that member
 			if (element.kind === "member") {
 				const teamId = element.data?.teamId as string;
 				const authorId = element.data?.id as string;
-				const labelText = `Recents from ${element.label}`;
+				const labelText = `Recent Snippets from ${element.label}`;
 				const node = new OsmyntItem(
 					"recentRoot",
 					labelText,
@@ -124,7 +127,7 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 				if (dmUserId) {
 					await this.ensureDm(dmUserId);
 					const dms = this.cachedDmByUserId[dmUserId] ?? [];
-					// Show only messages authored by the selected member for "Recents from {User}"
+					// Show only messages authored by the selected member for "Recent from {User}"
 					const incoming = dms.filter((s: any) => s.authorId === dmUserId);
 					return incoming.map(s => {
 						const baseLabel = s.metadata?.title ? `${s.metadata.title}` : `Snippet ${s.id.slice(0, 6)}`;
@@ -188,6 +191,7 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 		}
 		this.cachedTeams = j.teams ?? [];
 		this.cachedMembersByTeam = j.membersByTeam ?? {};
+		this.currentUserId = (j?.user?.id as string | undefined) ?? undefined;
 	}
 
 	private async ensureRecent(teamId: string, authorId?: string) {
