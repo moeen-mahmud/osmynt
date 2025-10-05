@@ -1,7 +1,6 @@
-# Osmynt - Real-Time Snippet Sharing for VS Code
+# Osmynt - Secure, E2EE, Realtime DM for code snippets ⚡
 
 > 🚨 This extension is still in development and closed beta
-> And, the web app is under development and will be available soon 🚨
 
 ## The Problem We're Trying to Solve
 
@@ -14,10 +13,10 @@ This is where **Osmynt** comes in. We addresses these challenges by providing a 
 ## Features
 
 - **Real-Time Code Sharing**: Share your code snippets in real-time with your team members.
-- **Inline Completion**: Get code completion of the received code snippets like the Copilot.
-- **Syntax Highlighting**: Syntax highlighting for the shared code snippets in real-time according to the language.
-- **Versatile Use Cases**: Whether you're pair programming, debugging or maybe doing a trial and error; just share the code or get the code from your team members, make necessary changes and share the code back!!
-- **Code Snippet History**: Get the shared code snippets for a session, even if you're not online!
+- **End-to-End Encryption**: All the code snippets are encrypted end-to-end. No one can read the code snippets except the intended recipients.
+- **Team Collaboration**: Share the code within your team members.
+- **Versatile Use Cases**: Whether you're pair programming, debugging or maybe doing a trial and error; just share the code or get the code from your team members, make necessary changes and share the code back!! You can even use it for sharing environment variables, API keys, etc.
+- **Offline Support**: You can share the code snippets even when you're offline. The code snippets are stored in the local storage of the extension and will be synced when you're online. Additionally, we can view the previous code snippets which you shared or received.
 
 🔥 **AND MUCH MORE POSSIBILITIES. STAY TUNED FOR MORE FEATURES** 🔥
 
@@ -25,23 +24,29 @@ This is where **Osmynt** comes in. We addresses these challenges by providing a 
 
 1. **Install the Extension**: Install the Osmynt extension from the VSCode Marketplace.
 2. **Sign In with GitHub**: Sign in with your GitHub account.
-3. **Invite Team Members**: Invite your team members to join the Osmynt team or ****Join a Team****.
-4. **Start Sharing**: Start sharing your code snippets with your team members in real-time.
+3. **Invite Team Members**: Invite your team members to join your team.
+4. **Join a Team**: Join an existing team.
+5. **Start Sharing**: Start sharing your code snippets with your team members in real-time.
 
 ## Available Commands
 
-| Command                       | Description                    | Category   | Icon        |
-|-------------------------------|--------------------------------|------------|-------------|
-| **Login**                     | Logs into your Osmynt account. | Osmynt  |             |
-| **Logout**                    | Logs out of your Osmynt account. | Osmynt  |             |
-| **Share with Osmynt**      | Shares the selected code snippet. | Osmynt  | $(share)    |
-| **Invite Team Member**        | Sends an invitation to a team member. | Osmynt  | $(add)      |
-| **Join Team**                 | Joins an existing Osmynt team. | Osmynt  | $(plug)     |
-| **Show Snippet**              | Displays a snippet in the Osmynt activity bar. | Osmynt  | $(code)     |
-| **Refresh**                   | Refreshes Osmynt data in the extension. | Osmynt  | $(refresh)  |
-| **Track Inserted Snippet**    | Tracks the snippet you inserted in your editor. | Osmynt  |             |
-| **Show Snippet Details**      | Displays detailed information about a snippet. | Osmynt  |             |
-| **Open Original File**        | Opens the original file associated with a snippet. | Osmynt  |             |
+| Command                                | Description                                    | Category | Icon         |
+| -------------------------------------- | ---------------------------------------------- | -------- | ------------ |
+| **Login**                        | Logs into your Osmynt account.                 | Osmynt   | $(github)    |
+| **Logout**                       | Logs out of your Osmynt account.               | Osmynt   | $(github)    |
+| **Refresh**                      | Refreshes Osmynt data in the extension.        | Osmynt   | $(refresh)   |
+| **Share Selected Code**          | Shares the selected code snippet.              | Osmynt   | $(share)     |
+| **Invite Member**                | Sends an invitation to a team member.          | Osmynt   | $(plus)      |
+| **Join Team**                    | Joins an existing Osmynt team.                 | Osmynt   | $(plug)      |
+| **Remove Member**                | Removes a team member from the team.           | Osmynt   | $(trash)     |
+| **Accept Invitation**            | Accepts an invitation to join a team.          | Osmynt   | $(check)     |
+| **View Snippet**                 | Displays a snippet in the Osmynt activity bar. | Osmynt   | $(code)      |
+| **Refresh Team**                 | Refreshes the team data in the extension.      | Osmynt   | $(refresh)   |
+| **Copy Snippet**                 | Copies the snippet to the clipboard.           | Osmynt   | $(copy)      |
+| **Open Snippet to Side**         | Opens the snippet in the side panel.           | Osmynt   | $(file-code) |
+| **Insert Snippet at Cursor**     | Inserts the snippet at the cursor position.    | Osmynt   | $(insert)    |
+| **Filter Recent by This Member** | Filters the recent snippets by this member.    | Osmynt   | $(filter)    |
+| **Clear Recent Filter**          | Clears the recent filter.                      | Osmynt   |              |
 
 ### How to Use
 
@@ -49,19 +54,9 @@ This is where **Osmynt** comes in. We addresses these challenges by providing a 
 2. Search for the desired command (e.g., "Osmynt: Login").
 3. Execute the command to perform the desired action.
 
-### Icons Reference
-
-- `$(share)` - Share icon
-- `$(add)` - Add icon
-- `$(plug)` - Plug icon
-- `$(code)` - Code icon
-- `$(refresh)` - Refresh icon
-
-> You can only share the snippet codes within your team members only.
+> You can only share the code snippets with your team members only.
 
 ## Feedback
-
-> KNOWN ISSUE: Socket connections are limited now. If facing issue try to refresh using the `Osmynt: Refresh` command. If it doesn't work, try to disconnect and reconnect. Still persisting, please let us know!
 
 Since the extension is in closed beta, please follow the email instruction above. We'll be happy to have you on board. Don't forget to share with your friends and colleagues. The more the merrier 🎉
 
