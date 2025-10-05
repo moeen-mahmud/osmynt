@@ -43,15 +43,16 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			if (!element) {
 				await this.ensureTeams();
 				if (!Array.isArray(this.cachedTeams) || this.cachedTeams.length === 0) {
-					return [
-						new OsmyntItem(
-							"action",
-							"Get started with Osmynt, sign in with your GitHub account",
-							vscode.TreeItemCollapsibleState.None,
-							undefined,
-							"github"
-						),
-					];
+					return [];
+					// const emptyItem = new OsmyntItem(
+					// 	"action",
+					// 	"Log in to get started",
+					// 	vscode.TreeItemCollapsibleState.None,
+					// 	undefined,
+					// 	"github"
+					// );
+					// emptyItem.command = { command: "osmynt.login", title: "Login", arguments: [] };
+					// return [emptyItem];
 				}
 				return this.cachedTeams.map(
 					t =>
@@ -174,7 +175,6 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					return item;
 				});
 			}
-
 			return [];
 		} catch {
 			return [];

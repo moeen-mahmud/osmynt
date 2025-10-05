@@ -10,6 +10,10 @@
 		"email": "moeen.mahmud007@gmail.com",
 		"url": "https://github.com/moeen-mahmud"
 	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/moeen-mahmud/osmynt"
+	},
 	"devDependencies": {
 		"@types/bun": "1.1.13",
 		"@osmynt-core/api": "workspace:*",
@@ -24,12 +28,11 @@
 	},
 	"type": "module",
 	"scripts": {
-		"prepare-env": "NODE_ENV=development bun --env-file=../../.env run",
 		"dev": "echo 'Open this directory in VSCode and then run your extension with F5 or `Run and Debug > Run Extension`!'",
-		"build": "bun run prepare-env ./scripts/build-with-esbuild.ts",
-		"watch": "bun run prepare-env ./scripts/watch-with-esbuild.ts",
-		"vsce-package": "bun run prepare-env vsce package --no-dependencies",
-		"package": "bun run prepare-env build && bun run vsce-package",
+		"build": "bun run ./scripts/build-with-esbuild.ts",
+		"watch": "bun run ./scripts/watch-with-esbuild.ts",
+		"vsce-package": "bun run vsce package --no-dependencies",
+		"package": "bun run build && bun run vsce-package",
 		"clean": "rm -r ./dist"
 	},
 	"publisher": "Osmynt",
@@ -44,6 +47,13 @@
 	],
 	"icon": "resources/osmynt-128x.png",
 	"contributes": {
+		"viewsWelcome": [
+			{
+				"view": "osmyntView",
+				"when": "!osmynt.isLoggedIn",
+				"contents": "Welcome to Osmynt! \n\n[Login](command:osmynt.login) \nSecure, E2EE, Realtime DM for code snippets ⚡ \nFeatures: \n    ◘ **Real-Time Code Sharing**: Share your code snippets in real-time with your team members.\n    ◘ **End-to-End Encryption**: All the code snippets are encrypted end-to-end. No one can read the code snippets except the intended recipients.\n    ◘ **Team Collaboration**: Share the code within your team members.\n    ◘ **Versatile Use Cases**: Whether you're pair programming, debugging or maybe doing a trial and error; just share the code or get the code from your team members, make necessary changes and share the code back!! You can even use it for sharing environment variables, API keys, etc.\n    ◘ **Offline Support**: You can share the code snippets even when you're offline. The code snippets are stored in the local storage of the extension and will be synced when you're online. Additionally, we can view the previous code snippets which you shared or received."
+			}
+		],
 		"commands": [
 			{
 				"command": "osmynt.login",

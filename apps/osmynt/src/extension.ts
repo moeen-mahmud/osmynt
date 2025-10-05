@@ -12,7 +12,7 @@ import {
 	handleViewSnippet,
 	handleRemoveTeamMember,
 } from "@/commands/osmynt.commands";
-// getBaseAndAccess already imported above
+
 import { getBaseAndAccess } from "@/services/osmynt.services";
 import { createClient, type RealtimeChannel, type SupabaseClient } from "@supabase/supabase-js";
 
