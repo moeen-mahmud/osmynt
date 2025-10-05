@@ -7,10 +7,9 @@ import {
 	route_keysRegister,
 	route_keysTeamDefault,
 	route_keysTeamById,
-	type KeysRoutes,
 } from "@/modules/keys/routes/keys.route";
 
-const KeysAPIModule = new OpenAPIHono<Env, KeysRoutes>();
+const KeysAPIModule = new OpenAPIHono<Env>();
 
 KeysAPIModule.use("*", jwtMiddleware);
 KeysAPIModule.openapi(route_keysRegister, KeysController.register);

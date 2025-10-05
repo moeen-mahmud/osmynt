@@ -75,6 +75,20 @@ export const route_keysTeamDefault = createRoute({
 	responses: {
 		200: {
 			description: "Default team members device keys",
+			content: {
+				"application/json": {
+					schema: z.object({
+						recipients: z.array(
+							z.object({
+								userId: z.string(),
+								deviceId: z.string(),
+								encryptionPublicKeyJwk: z.any(),
+								signingPublicKeyJwk: z.any().optional(),
+							})
+						),
+					}),
+				},
+			},
 		},
 	},
 });
@@ -87,6 +101,20 @@ export const route_keysTeamById = createRoute({
 	responses: {
 		200: {
 			description: "Team members device keys by teamId",
+			content: {
+				"application/json": {
+					schema: z.object({
+						recipients: z.array(
+							z.object({
+								userId: z.string(),
+								deviceId: z.string(),
+								encryptionPublicKeyJwk: z.any(),
+								signingPublicKeyJwk: z.any().optional(),
+							})
+						),
+					}),
+				},
+			},
 		},
 		401: { description: "Unauthorized" },
 		403: { description: "Forbidden" },

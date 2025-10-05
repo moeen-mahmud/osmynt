@@ -1,5 +1,5 @@
 import { Routes } from "@/config/routes.config";
-import { createRoute } from "@hono/zod-openapi";
+import { createRoute, z } from "@hono/zod-openapi";
 
 export const route_me = createRoute({
 	tags: ["Teams"],
@@ -9,6 +9,36 @@ export const route_me = createRoute({
 	responses: {
 		200: {
 			description: "Current user's team and members",
+			content: {
+				"application/json": {
+					schema: z.object({
+						user: z.object({ id: z.string() }),
+						teams: z.array(
+							z.object({
+								id: z.string(),
+								name: z.string(),
+								slug: z.string(),
+								ownerId: z.string(),
+							})
+						),
+						membersByTeam: z.record(
+							z.string(),
+							z.array(
+								z.object({
+									id: z.string(),
+									name: z.string(),
+									email: z.string(),
+									avatarUrl: z.string(),
+								})
+							)
+						),
+					}),
+				},
+			},
+		},
+		401: {
+			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
 		},
 	},
 });
@@ -18,7 +48,20 @@ export const route_invite = createRoute({
 	operationId: "teamsInvite",
 	method: "post",
 	path: Routes.teams.invite,
-	responses: { 200: { description: "Invitation created" } },
+	responses: {
+		200: {
+			description: "Invitation created",
+			content: {
+				"application/json": {
+					schema: z.object({ token: z.string() }),
+				},
+			},
+		},
+		401: {
+			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+	},
 });
 
 export const route_accept = createRoute({
@@ -26,7 +69,20 @@ export const route_accept = createRoute({
 	operationId: "teamsAccept",
 	method: "post",
 	path: Routes.teams.accept,
-	responses: { 200: { description: "Joined" } },
+	responses: {
+		200: {
+			description: "Joined",
+			content: { "application/json": { schema: z.object({ ok: z.literal(true) }) } },
+		},
+		400: {
+			description: "Invalid or expired",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+		401: {
+			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+	},
 });
 
 export type TeamsRoutes = {

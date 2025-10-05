@@ -127,7 +127,24 @@ export const route_listTeamByAuthor = createRoute({
 	// IMPORTANT: this route module is mounted at Routes.codeShare.base, so this path must be RELATIVE
 	path: "/team/:teamId/by-author/:userId",
 	responses: {
-		200: { description: "List team ciphertexts by author" },
+		200: {
+			description: "List team ciphertexts by author",
+			content: {
+				"application/json": {
+					schema: z.object({
+						items: z.array(
+							z.object({
+								id: z.string(),
+								createdAt: z.string(),
+								authorId: z.string(),
+								authorName: z.string().default("").openapi({ example: "Jane Doe" }),
+								metadata: z.any(),
+							})
+						),
+					}),
+				},
+			},
+		},
 		401: { description: "Unauthorized" },
 		403: { description: "Forbidden" },
 	},
@@ -139,7 +156,24 @@ export const route_listDmWith = createRoute({
 	method: "get",
 	path: "/dm/with/:userId",
 	responses: {
-		200: { description: "List direct messages with a user" },
+		200: {
+			description: "List direct messages with a user",
+			content: {
+				"application/json": {
+					schema: z.object({
+						items: z.array(
+							z.object({
+								id: z.string(),
+								createdAt: z.string(),
+								authorId: z.string(),
+								authorName: z.string().default("").openapi({ example: "Jane Doe" }),
+								metadata: z.any(),
+							})
+						),
+					}),
+				},
+			},
+		},
 		401: { description: "Unauthorized" },
 		403: { description: "Forbidden" },
 	},

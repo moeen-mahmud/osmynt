@@ -32,11 +32,14 @@ export class TeamsController {
 			}));
 		}
 		logger.info("Listed teams and members", { teamCount: teams.length });
-		return c.json({
-			user: { id: user.id },
-			teams: teams.map(t => ({ id: t.id, name: t.name, slug: t.slug, ownerId: t.ownerId })),
-			membersByTeam,
-		});
+		return c.json(
+			{
+				user: { id: user.id },
+				teams: teams.map(t => ({ id: t.id, name: t.name, slug: t.slug, ownerId: t.ownerId })),
+				membersByTeam,
+			},
+			200
+		);
 	}
 
 	static async invite(c: Context) {
@@ -50,7 +53,7 @@ export class TeamsController {
 		const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24);
 		await prisma.teamInvitation.create({ data: { teamId, inviterId: user.id, token, expiresAt } });
 		logger.info("Created team invitation", { teamId, inviterId: user.id });
-		return c.json({ token });
+		return c.json({ token }, 200);
 	}
 
 	static async accept(c: Context) {
@@ -77,6 +80,6 @@ export class TeamsController {
 		});
 		await prisma.teamInvitation.update({ where: { token: inviteToken }, data: { acceptedAt: new Date() } });
 		logger.info("Accepted team invitation", { inviteToken });
-		return c.json({ ok: true });
+		return c.json({ ok: true }, 200);
 	}
 }
