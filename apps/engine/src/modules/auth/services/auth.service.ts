@@ -118,7 +118,9 @@ export class AuthService {
 	}
 
 	static async storeHandshake(id: string, data: StoredHandshake): Promise<void> {
-		await HandshakeStore.save(id, data, data.expiresAt - Date.now());
+		// Sanitize: never persist serverPrivateKeyJwk even if caller accidentally provided it
+		const { serverPrivateKeyJwk, ...rest } = data as any;
+		await HandshakeStore.save(id, rest as StoredHandshake, data.expiresAt - Date.now());
 		logger.success("Stored handshake successfully", { id });
 	}
 

@@ -2,8 +2,7 @@ import * as vscode from "vscode";
 import { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY, DEVICE_ID_KEY, ENC_KEYPAIR_JWK_KEY } from "@/constants/osmynt.constant";
 import { b64uToBytes, b64url } from "@/utils/osmynt.utils";
 import { ENDPOINTS } from "@/constants/endpoints.constant";
-
-type ShareTarget = { kind: "team"; teamId?: string } | { kind: "user"; userId: string };
+import type { ShareTarget } from "@/types/osmynt.types";
 
 export async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessToken: string) {
 	const base = ENDPOINTS.engineBaseUrl!.replace(/\/$/, "");

@@ -52,7 +52,7 @@ export class AuthController {
 					id: hs.id,
 					clientPublicKeyJwk: hs.clientPublicKeyJwk,
 					serverPublicKeyJwk: server.serverPublicKeyJwk,
-					serverPrivateKeyJwk: server.serverPrivateKeyJwk,
+					// do NOT persist serverPrivateKeyJwk
 					encryptedPayload: encrypted,
 					createdAt: hs.createdAt,
 					expiresAt: hs.expiresAt,
@@ -135,7 +135,7 @@ export class AuthController {
 				id,
 				clientPublicKeyJwk: handshake.clientPublicKeyJwk as unknown as JsonWebKey,
 				serverPublicKeyJwk: server.serverPublicKeyJwk,
-				serverPrivateKeyJwk: server.serverPrivateKeyJwk,
+				// do NOT persist serverPrivateKeyJwk
 				encryptedPayload: encrypted,
 				createdAt: Date.now(),
 				expiresAt: Date.now() + HANDSHAKE_EXPIRY_MS,
