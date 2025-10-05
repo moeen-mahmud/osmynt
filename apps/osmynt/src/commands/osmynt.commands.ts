@@ -1,4 +1,4 @@
-import { ACCESS_SECRET_KEY, LANGUAGE_BY_EXT, REFRESH_SECRET_KEY } from "@/constants/constants";
+import { ACCESS_SECRET_KEY, LANGUAGE_BY_EXT, REFRESH_SECRET_KEY } from "@/constants/osmynt.constant";
 import type { OsmyntTreeProvider } from "@/provider/osmynt.provider";
 import {
 	ensureDeviceKeys,
@@ -11,6 +11,7 @@ import {
 } from "@/services/osmynt.services";
 import { extractInviteToken } from "@/utils/osmynt.utils";
 import * as vscode from "vscode";
+import { ENDPOINTS } from "@/constants/endpoints.constant";
 
 export async function handleLogin(
 	context: vscode.ExtensionContext,
@@ -93,7 +94,8 @@ export async function handleInviteMember(context: vscode.ExtensionContext) {
 			return;
 		}
 		const { base, access } = await getBaseAndAccess(context);
-		const res = await fetch(`${base}/protected/teams/${encodeURIComponent(teamId)}/invite`, {
+		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.invite(encodeURIComponent(teamId))}`, {
+			// `${base}/protected/teams/${encodeURIComponent(teamId)}/invite`,
 			method: "POST",
 			headers: { Authorization: `Bearer ${access}` },
 		});
@@ -113,7 +115,10 @@ export async function handleAcceptInvitation(context: vscode.ExtensionContext, t
 		const token = extractInviteToken(raw);
 		if (!token) return;
 		const { base, access } = await getBaseAndAccess(context);
-		const res = await fetch(`${base}/protected/teams/invite/${encodeURIComponent(token)}`, {
+		const res = await fetch(
+			`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.invite(encodeURIComponent(token))}`,
+			// `${base}/protected/teams/invite/${encodeURIComponent(token)}`,
+			{
 			method: "POST",
 			headers: { Authorization: `Bearer ${access}` },
 		});
@@ -144,7 +149,10 @@ export async function handleViewSnippet(context: vscode.ExtensionContext, id?: s
 		const { base, access } = await getBaseAndAccess(context);
 		const snippetId = id ?? (await vscode.window.showInputBox({ prompt: "Enter snippet id" }));
 		if (!snippetId) return;
-		const res = await fetch(`${base}/protected/code-share/${encodeURIComponent(snippetId)}`, {
+		const res = await fetch(
+			// `${base}/protected/code-share/${encodeURIComponent(snippetId)}`,
+			`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.getById(encodeURIComponent(snippetId))}`,
+			{
 			headers: { Authorization: `Bearer ${access}` },
 		});
 		const j = await res.json();
@@ -180,7 +188,8 @@ export async function handleRemoveTeamMember(
 		if (confirm !== "Remove") return;
 		const { base, access } = await getBaseAndAccess(context);
 		const res = await fetch(
-			`${base}/protected/teams/${encodeURIComponent(teamId)}/remove-member/${encodeURIComponent(userId)}`,
+			// `${base}/protected/teams/${encodeURIComponent(teamId)}/remove-member/${encodeURIComponent(userId)}`,
+			`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.removeTeamMember(encodeURIComponent(teamId), encodeURIComponent(userId))}`,
 			{
 				method: "DELETE",
 				headers: { Authorization: `Bearer ${access}` },

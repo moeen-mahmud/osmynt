@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
-import type { OsmyntNodeKind } from "@/constants/constants";
+import type { OsmyntNodeKind } from "@/types/osmynt.types";
 import { getBaseAndAccess } from "@/services/osmynt.services";
+import { ENDPOINTS } from "@/constants/endpoints.constant";
 
 class OsmyntItem extends vscode.TreeItem {
 	kind: OsmyntNodeKind;
@@ -188,7 +189,11 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			this.cachedMembersByTeam = {};
 			return;
 		}
-		const res = await fetch(`${base}/protected/teams/me`, { headers: { Authorization: `Bearer ${access}` } });
+		const res = await fetch(
+			// `${base}/protected/teams/me`,
+			`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`,
+			{ headers: { Authorization: `Bearer ${access}` } }
+		);
 		const j = await res.json();
 		if (!res.ok || !Array.isArray(j?.teams)) {
 			this.cachedTeams = [];
@@ -207,8 +212,12 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			return;
 		}
 		const url = authorId
-			? `${base}/protected/code-share/team/${encodeURIComponent(teamId)}/by-author/${encodeURIComponent(authorId)}`
-			: `${base}/protected/code-share/team/list?teamId=${encodeURIComponent(teamId)}`;
+			?
+			// `${base}/protected/code-share/team/${encodeURIComponent(teamId)}/by-author/${encodeURIComponent(authorId)}`
+			`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.listTeamByAuthor(encodeURIComponent(teamId), encodeURIComponent(authorId))}`
+			:
+			// `${base}/protected/code-share/team/list?teamId=${encodeURIComponent(teamId)}`;
+			`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.listTeam}?teamId=${encodeURIComponent(teamId)}`;
 		const res = await fetch(url, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
@@ -227,7 +236,10 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			this.cachedDmByUserId[otherUserId] = [];
 			return;
 		}
-		const res = await fetch(`${base}/protected/code-share/dm/with/${encodeURIComponent(otherUserId)}`, {
+		const res = await fetch(
+			// `${base}/protected/code-share/dm/with/${encodeURIComponent(otherUserId)}`,
+			`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.dmWith(encodeURIComponent(otherUserId))}`,
+			{
 			headers: { Authorization: `Bearer ${access}` },
 		});
 		const j = await res.json();

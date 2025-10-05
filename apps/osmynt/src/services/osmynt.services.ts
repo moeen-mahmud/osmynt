@@ -1,20 +1,25 @@
 import * as vscode from "vscode";
-import { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY, DEVICE_ID_KEY, ENC_KEYPAIR_JWK_KEY } from "@/constants/constants";
+import { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY, DEVICE_ID_KEY, ENC_KEYPAIR_JWK_KEY } from "@/constants/osmynt.constant";
 import { b64uToBytes, b64url } from "@/utils/osmynt.utils";
+import { ENDPOINTS } from "@/constants/endpoints.constant";
 
 type ShareTarget = { kind: "team"; teamId?: string } | { kind: "user"; userId: string };
 
 export async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessToken: string) {
-	const config = vscode.workspace.getConfiguration("osmynt");
-	const base = (config.get<string>("engineBaseUrl") ?? "http://localhost:3000/osmynt-api-engine").replace(/\/$/, "");
+	const base = (ENDPOINTS.engineBaseUrl!).replace(/\/$/, "");
 
 	const nodeCrypto = await import("crypto");
 	const subtle: any = (globalThis as any).crypto?.subtle ?? (nodeCrypto as any).webcrypto?.subtle;
+
 	if (!subtle) throw new Error("WebCrypto Subtle API not available");
-	const eph: any = await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey", "deriveBits"]);
+
+	const eph: any = await subtle.generateKey({
+		name: "ECDH", namedCurve: "P-256"
+	}, true, [ "deriveKey", "deriveBits" ]);
+	
 	const clientPublicKeyJwk = await subtle.exportKey("jwk", eph.publicKey);
 
-	const res = await fetch(`${base}/auth/login-with-token`, {
+	const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.auth.loginWithToken}`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ provider: "github", accessToken: githubAccessToken, handshake: { clientPublicKeyJwk } }),
@@ -93,11 +98,10 @@ export async function ensureDeviceKeys(context: vscode.ExtensionContext) {
 }
 
 export async function registerDeviceKey(context: vscode.ExtensionContext, deviceId: string, publicKeyJwk: any) {
-	const config = vscode.workspace.getConfiguration("osmynt");
-	const base = (config.get<string>("engineBaseUrl") ?? "http://localhost:3000/osmynt-api-engine").replace(/\/$/, "");
+	const base = (ENDPOINTS.engineBaseUrl!).replace(/\/$/, "");
 	const access = await context.secrets.get(ACCESS_SECRET_KEY);
 	if (!access) throw new Error("Not logged in");
-	await fetch(`${base}/protected/keys/register`, {
+	await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.register}`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json", Authorization: `Bearer ${access}` },
 		body: JSON.stringify({ deviceId, encryptionPublicKeyJwk: publicKeyJwk, algorithm: "ECDH-P-256" }),
@@ -105,8 +109,7 @@ export async function registerDeviceKey(context: vscode.ExtensionContext, device
 }
 
 export async function getBaseAndAccess(context: vscode.ExtensionContext) {
-	const config = vscode.workspace.getConfiguration("osmynt");
-	const base = (config.get<string>("engineBaseUrl") ?? "http://localhost:3000/osmynt-api-engine").replace(/\/$/, "");
+	const base = (ENDPOINTS.engineBaseUrl!).replace(/\/$/, "");
 	const access = await context.secrets.get(ACCESS_SECRET_KEY);
 	if (!access) throw new Error("Not logged in");
 	return { base, access };
@@ -115,7 +118,7 @@ export async function getBaseAndAccess(context: vscode.ExtensionContext) {
 export async function promptTeamId(context: vscode.ExtensionContext): Promise<string | undefined> {
 	try {
 		const { base, access } = await getBaseAndAccess(context);
-		const res = await fetch(`${base}/protected/teams/me`, { headers: { Authorization: `Bearer ${access}` } });
+		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, { headers: { Authorization: `Bearer ${access}` } });
 		const j = await res.json();
 		// Prefer owned team; fallback to first team
 		const teams: Array<{ id: string; ownerId: string }> = Array.isArray(j?.teams) ? j.teams : [];
@@ -215,7 +218,7 @@ export async function tryDecryptSnippet(context: vscode.ExtensionContext, j: any
 
 export async function pickShareTarget(context: vscode.ExtensionContext): Promise<ShareTarget> {
 	const { base, access } = await getBaseAndAccess(context);
-	const res = await fetch(`${base}/protected/teams/me`, { headers: { Authorization: `Bearer ${access}` } });
+	const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, { headers: { Authorization: `Bearer ${access}` } });
 	const j = await res.json();
 	const teams: Array<{ id: string; name: string }> = Array.isArray(j?.teams) ? j.teams : [];
 	const membersByTeam: Record<string, any[]> = j?.membersByTeam ?? {};
@@ -256,7 +259,7 @@ export async function shareSelectedCode(
 	extraMetadata?: Record<string, any>
 ) {
 	const config = vscode.workspace.getConfiguration("osmynt");
-	const base = (config.get<string>("engineBaseUrl") ?? "http://localhost:3000/osmynt-api-engine").replace(/\/$/, "");
+	const base = (ENDPOINTS.engineBaseUrl!).replace(/\/$/, "");
 	const teamKeyMode = config.get<boolean>("teamKeyMode") ?? false;
 	const teamKeyNamespace = config.get<string>("teamKeyNamespace") ?? "default";
 	const access = await context.secrets.get(ACCESS_SECRET_KEY);
@@ -277,19 +280,25 @@ export async function shareSelectedCode(
 	if (target.kind === "team") {
 		const teamId = target.teamId ?? (await promptTeamId(context));
 		if (!teamId) throw new Error("No team selected");
-		const recipientsRes = await fetch(`${base}/protected/keys/team/${encodeURIComponent(teamId)}`, {
+		const recipientsRes = await fetch(
+			// `${base}/protected/keys/team/${encodeURIComponent(teamId)}`,
+			`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.teamById(encodeURIComponent(teamId))}`,
+			{
 			headers: { Authorization: `Bearer ${access}` },
 		});
 		const j = await recipientsRes.json();
 		recipients = Array.isArray(j?.recipients) ? j.recipients : [];
 	} else {
 		// Aggregate recipients across all teams then filter by userId
-		const tmRes = await fetch(`${base}/protected/teams/me`, { headers: { Authorization: `Bearer ${access}` } });
+		const tmRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, { headers: { Authorization: `Bearer ${access}` } });
 		const tm = await tmRes.json();
 		const teams: Array<{ id: string }> = Array.isArray(tm?.teams) ? tm.teams : [];
 		let all: any[] = [];
 		for (const t of teams) {
-			const rRes = await fetch(`${base}/protected/keys/team/${encodeURIComponent(t.id)}`, {
+			const rRes = await fetch(
+				// `${base}/protected/keys/team/${encodeURIComponent(t.id)}`,
+				`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.teamById(encodeURIComponent(t.id))}`,
+				{
 				headers: { Authorization: `Bearer ${access}` },
 			});
 			const rj = await rRes.json();
@@ -397,7 +406,10 @@ export async function shareSelectedCode(
 
 	const currentTeamId = target.kind === "team" ? (target.teamId ?? (await promptTeamId(context))) : undefined;
 
-	const res = await fetch(`${base}/protected/code-share/share`, {
+	const res = await fetch(
+		// `${base}/protected/code-share/share`,
+		`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.share}`,
+		{
 		method: "POST",
 		headers: { "Content-Type": "application/json", Authorization: `Bearer ${access}` },
 		body: JSON.stringify({

@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
-import { ACCESS_SECRET_KEY } from "@/constants/constants";
+import { ACCESS_SECRET_KEY } from "@/constants/osmynt.constant";
 import { OsmyntTreeProvider } from "@/provider/osmynt.provider";
 import { ensureDeviceKeys, tryDecryptSnippet } from "@/services/osmynt.services";
+import { ENDPOINTS } from "@/constants/endpoints.constant";
 import {
 	handleLogin,
 	handleLogout,
@@ -15,6 +16,7 @@ import {
 
 import { getBaseAndAccess } from "@/services/osmynt.services";
 import { createClient, type RealtimeChannel, type SupabaseClient } from "@supabase/supabase-js";
+import { ENV } from "@/config/env.config";
 
 export async function activate(context: vscode.ExtensionContext) {
 	const tree = new OsmyntTreeProvider(context);
@@ -35,7 +37,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand("osmynt.snippet.copy", async (item?: any) => {
 			if (!item?.data?.id) return;
 			const { base, access } = await getBaseAndAccess(context);
-			const res = await fetch(`${base}/protected/code-share/${encodeURIComponent(item.data.id)}`, {
+			const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.getById(encodeURIComponent(item.data.id))}`, {
 				headers: { Authorization: `Bearer ${access}` },
 			});
 			const j = await res.json();
@@ -50,7 +52,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand("osmynt.snippet.insertAtCursor", async (item?: any) => {
 			if (!item?.data?.id) return;
 			const { base, access } = await getBaseAndAccess(context);
-			const res = await fetch(`${base}/protected/code-share/${encodeURIComponent(item.data.id)}`, {
+			const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.getById(encodeURIComponent(item.data.id))}`, {
 				headers: { Authorization: `Bearer ${access}` },
 			});
 			const j = await res.json();
@@ -97,9 +99,8 @@ let supabaseClient: SupabaseClient | null = null;
 
 export async function connectRealtime(_context: vscode.ExtensionContext, treeProvider: OsmyntTreeProvider) {
 	if (realtimeChannel) return; // already connected
-	const cfg = vscode.workspace.getConfiguration("osmynt");
-	const url = cfg.get<string>("supabaseUrl");
-	const anonKey = cfg.get<string>("supabaseAnonKey");
+	const url = ENV.supabaseUrl;
+	const anonKey = ENV.supabaseAnonKey;
 	if (!url || !anonKey) {
 		vscode.window.showWarningMessage("Error connecting to realtime. Please check your configuration.");
 		return;
@@ -112,7 +113,7 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 				const { base, access } = await getBaseAndAccess(_context);
 				const id = payload?.payload?.id as string | undefined;
 				if (id) {
-					const res = await fetch(`${base}/protected/code-share/${encodeURIComponent(id)}`, {
+					const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.getById(encodeURIComponent(id))}`, {
 						headers: { Authorization: `Bearer ${access}` },
 					});
 					const j = await res.json();
@@ -125,8 +126,9 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 					const firstRecipientName = payload?.payload?.firstRecipientName as string | undefined;
 					const authorId = (payload?.payload?.authorId as string | undefined) || j?.authorId;
 					let currentUserId: string | undefined;
+
 					try {
-						const meRes = await fetch(`${base}/protected/teams/me`, {
+					const meRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 							headers: { Authorization: `Bearer ${access}` },
 						});
 						const me = await meRes.json();

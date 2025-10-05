@@ -1,0 +1,1 @@
+export type OsmyntNodeKind = "team" | "membersRoot" | "member" | "recentRoot" | "action";
