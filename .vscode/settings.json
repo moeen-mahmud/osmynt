@@ -1,0 +1,8 @@
+{
+	"editor.defaultFormatter": "biomejs.biome",
+	"prettier.enable": false,
+	"editor.formatOnPaste": true,
+	"editor.formatOnSave": true,
+	"editor.formatOnType": true,
+	"cSpell.words": ["osmynt"]
+}
