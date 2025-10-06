@@ -1,2 +1,41 @@
-# deps
+# Dependencies
 node_modules/
+bun.lock
+
+# Development files
+.env*
+!.env.example
+.DS_Store
+*.log
+
+# Build artifacts
+dist/
+build/
+
+# Testing
+coverage/
+test/
+tests/
+*.test.*
+*.spec.*
+
+# Documentation
+README.md
+docs/
+*.md
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+
+# Prisma
+/generated/prisma 
