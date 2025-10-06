@@ -1,8 +1,17 @@
 import { logger } from "@osmynt-core/library";
 import prisma from "@/config/database.config";
 import { nanoid } from "nanoid";
+import { TEAMS_AUDIT_LOG_ACTIONS } from "@/modules/teams/constants/teams.constant";
 
 export class TeamsService {
+	static async getTeamInvitation(inviteToken: string) {
+		const invite = await prisma.teamInvitation.findUnique({ where: { token: inviteToken } });
+		if (!invite) {
+			throw new Error("Invitation not found");
+		}
+		return invite;
+	}
+
 	static async getMeTeams(user: { id: string }) {
 		let memberships = await prisma.teamMember.findMany({ where: { userId: user.id } });
 
@@ -25,7 +34,7 @@ export class TeamsService {
 			logger.info("Created default team", { team });
 			await prisma.auditLog.create({
 				data: {
-					action: "TEAM_CREATED_DEFAULT",
+					action: TEAMS_AUDIT_LOG_ACTIONS.TEAM_CREATED_DEFAULT,
 					userId: user.id,
 					metadata: { teamId: team.id },
 				},
@@ -40,7 +49,7 @@ export class TeamsService {
 			});
 			await prisma.auditLog.create({
 				data: {
-					action: "TEAM_MEMBER_CREATED_DEFAULT",
+					action: TEAMS_AUDIT_LOG_ACTIONS.TEAM_MEMBER_CREATED_DEFAULT,
 					userId: user.id,
 					metadata: { teamId: team.id },
 				},
@@ -94,7 +103,7 @@ export class TeamsService {
 		});
 		await prisma.auditLog.create({
 			data: {
-				action: "TEAM_INVITATION_CREATED",
+				action: TEAMS_AUDIT_LOG_ACTIONS.TEAM_INVITATION_CREATED,
 				userId: user.id,
 				metadata: { teamId, inviterId: user.id },
 			},
@@ -102,6 +111,30 @@ export class TeamsService {
 		logger.info("Created team invitation", { teamId, inviterId: user.id });
 
 		return token;
+	}
+
+	static async acceptInvitation(teamId: string, userId: string, inviteToken: string) {
+		await prisma.teamMember.upsert({
+			where: {
+				teamId_userId: {
+					userId: userId,
+					teamId: teamId,
+				},
+			},
+			create: { userId: userId, teamId: teamId, role: "MEMBER" },
+			update: {},
+		});
+		await prisma.auditLog.create({
+			data: {
+				action: TEAMS_AUDIT_LOG_ACTIONS.TEAM_MEMBER_ACCEPTED_INVITATION,
+				userId: userId,
+				metadata: { teamId: teamId },
+			},
+		});
+		await prisma.teamInvitation.update({ where: { token: inviteToken }, data: { acceptedAt: new Date() } });
+		logger.info("Accepted team invitation", { inviteToken });
+
+		return { ok: true };
 	}
 
 	static async removeTeamMember(teamId: string, userId: string) {
@@ -122,7 +155,7 @@ export class TeamsService {
 
 		await prisma.auditLog.create({
 			data: {
-				action: "TEAM_MEMBER_REMOVED",
+				action: TEAMS_AUDIT_LOG_ACTIONS.TEAM_MEMBER_REMOVED,
 				userId: userId,
 				metadata: { teamId },
 			},

@@ -1,5 +1,4 @@
 import type { Context } from "hono";
-import prisma from "@/config/database.config";
 import { logger } from "@osmynt-core/library";
 import { TeamsService } from "@/modules/teams/services/teams.service";
 
@@ -51,39 +50,16 @@ export class TeamsController {
 				return c.json({ error: "Unauthorized" }, 401);
 			}
 			const inviteToken = c.req.param("inviteToken");
-			const invite = await prisma.teamInvitation.findUnique({ where: { token: inviteToken } });
+			const invite = await TeamsService.getTeamInvitation(inviteToken);
 
 			if (!invite || invite.expiresAt < new Date()) {
 				logger.error("Invalid or expired");
 				return c.json({ error: "Invalid or expired" }, 400);
 			}
-			await prisma.teamMember.upsert({
-				where: {
-					teamId_userId: {
-						userId: user.id,
-						teamId: invite.teamId,
-					},
-				},
-				create: { userId: user.id, teamId: invite.teamId, role: "MEMBER" },
-				update: {},
-			});
-			await prisma.auditLog.create({
-				data: {
-					action: "TEAM_MEMBER_ACCEPTED_INVITATION",
-					userId: user.id,
-					metadata: { teamId: invite.teamId },
-				},
-			});
-			await prisma.teamInvitation.update({ where: { token: inviteToken }, data: { acceptedAt: new Date() } });
-			await prisma.auditLog.create({
-				data: {
-					action: "TEAM_INVITATION_ACCEPTED",
-					userId: user.id,
-					metadata: { teamId: invite.teamId },
-				},
-			});
-			logger.info("Accepted team invitation", { inviteToken });
-			return c.json({ ok: true }, 200);
+
+			const response = await TeamsService.acceptInvitation(invite.teamId, user.id, inviteToken);
+
+			return c.json(response, 200);
 		} catch (error) {
 			logger.error("Error accepting team invitation", { error });
 

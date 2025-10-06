@@ -3,8 +3,9 @@ import prisma from "@/config/database.config";
 import { CodeShareService } from "@/modules/code-share/services/code-share.service";
 import { logger } from "@osmynt-core/library";
 import { codeShareSchema } from "@/modules/code-share/schemas/code-share.schema";
-import { CODE_SHARE_ALGORITHM } from "@/modules/code-share/constants/code-share.constant";
-
+import { CODE_SHARE_ALGORITHM, CODE_SHARE_AUDIT_LOG_ACTIONS } from "@/modules/code-share/constants/code-share.constant";
+import { getBroadcastChannel } from "@/config/supabase.config";
+import { ENV } from "@/config/env.config";
 export class CodeShareController {
 	static async share(c: Context) {
 		const user = c.get("user") as { id: string } | undefined;
@@ -24,9 +25,16 @@ export class CodeShareController {
 			wrappedKeys: parsed.data.wrappedKeys,
 			metadata: parsed.data.metadata,
 		});
-		// broadcast via supabase realtime (if configured in env)
+
+		await prisma.auditLog.create({
+			data: {
+				action: CODE_SHARE_AUDIT_LOG_ACTIONS.CODE_SHARE_CREATED,
+				userId: user.id,
+				metadata: { codeShareId: created.id },
+			},
+		});
+
 		try {
-			const { getBroadcastChannel } = await import("@/config/supabase.config");
 			const channel = await getBroadcastChannel();
 			const author = await prisma.user.findUnique({ where: { id: user.id }, select: { name: true } });
 			const meta: any = parsed.data.metadata ?? {};
@@ -73,7 +81,6 @@ export class CodeShareController {
 			logger.error("Unauthorized");
 			return c.json({ error: "Unauthorized" }, 401);
 		}
-		// Optional teamId query to scope recents
 		const q = new URL(c.req.url).searchParams;
 		const teamId = q.get("teamId");
 		if (teamId) {
@@ -83,7 +90,6 @@ export class CodeShareController {
 			logger.info("Listed team recent snippets", { items });
 			return c.json({ items }, 200);
 		}
-		// fallback: if no teamId specified, pick first membership
 		const membership = await prisma.teamMember.findFirst({ where: { userId: user.id } });
 		if (!membership) return c.json({ items: [] }, 200);
 		const items = await CodeShareService.listTeamRecent(membership.teamId);
@@ -135,7 +141,6 @@ export class CodeShareController {
 	}
 
 	static async realtimeConfig(c: Context) {
-		const { ENV } = await import("@/config/env.config");
 		const url = ENV.SUPABASE.URL ?? "";
 		const anonKey = ENV.SUPABASE.ANON_KEY ?? "";
 		return c.json({ url, anonKey, channel: "osmynt-recent-snippets" }, 200);

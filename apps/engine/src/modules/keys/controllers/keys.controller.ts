@@ -3,6 +3,7 @@ import prisma from "@/config/database.config";
 import { KeysService } from "@/modules/keys/services/keys.service";
 import { keysRegisterSchema } from "@/modules/keys/schemas/keys.schema";
 import { logger } from "@osmynt-core/library";
+import { KEYS_AUDIT_LOG_ACTIONS } from "@/modules/keys/constants/keys.constants";
 
 export class KeysController {
 	static async register(c: Context) {
@@ -24,6 +25,13 @@ export class KeysController {
 			encryptionPublicKeyJwk: parsed.data.encryptionPublicKeyJwk,
 			signingPublicKeyJwk: parsed.data.signingPublicKeyJwk,
 			algorithm: parsed.data.algorithm,
+		});
+		await prisma.auditLog.create({
+			data: {
+				action: KEYS_AUDIT_LOG_ACTIONS.DEVICE_KEY_REGISTERED,
+				userId: user.id,
+				metadata: {},
+			},
 		});
 		logger.info("Registered", { userId: user.id });
 		return c.json({ ok: true }, 200);

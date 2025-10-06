@@ -6,6 +6,7 @@ import type { StoredHandshake } from "@/modules/auth/types/auth.types";
 import { HandshakeStore } from "@/modules/auth/services/handshake.store";
 import type { GithubTokenResponse, GithubUser, GithubEmail } from "@/modules/auth/types/auth.types";
 import { logger } from "@osmynt-core/library";
+import { AUTH_AUDIT_LOG_ACTIONS } from "@/modules/auth/constants/auth.constant";
 
 export class AuthService {
 	static fetchGithubToken = async (code: string) => {
@@ -95,7 +96,7 @@ export class AuthService {
 		}
 		await prisma.auditLog.create({
 			data: {
-				action: "USER_CREATED_EXT",
+				action: AUTH_AUDIT_LOG_ACTIONS.USER_CREATED_EXT,
 				userId: created.id,
 				metadata: { teamId },
 			},
