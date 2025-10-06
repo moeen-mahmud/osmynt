@@ -13,7 +13,6 @@ ENV PORT=3000
 
 # Copy root package.json, lockfile, and workspace configs
 COPY package.json .
-COPY bun.lock .
 COPY tsconfig.json .
 
 # Copy the backend package and shared packages
