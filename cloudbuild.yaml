@@ -9,8 +9,24 @@ steps:
       - gcr.io/$PROJECT_ID/osmynt-engine:$COMMIT_SHA
       - .
 
+  - id: Deploy to Cloud Run
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - $_SERVICE
+      - --image=gcr.io/$PROJECT_ID/osmynt-engine:$COMMIT_SHA
+      - --region=$_REGION
+      - --platform=managed
+      - --allow-unauthenticated
+
 images:
   - gcr.io/$PROJECT_ID/osmynt-engine:$COMMIT_SHA
+
+substitutions:
+  _SERVICE: osmynt-engine
+  _REGION: us-central1
 
 options:
   logging: CLOUD_LOGGING_ONLY
