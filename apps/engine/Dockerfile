@@ -25,10 +25,11 @@ RUN bun install
 
 # Generate Prisma client
 RUN cd packages/database && bunx prisma generate
+RUN cd packages/database && bunx prisma migrate deploy
 
 # Copy and make startup script executable
-COPY apps/engine/start.sh /app/start.sh
-RUN chmod +x /app/start.sh
+# COPY apps/engine/start.sh /app/start.sh
+# RUN chmod +x /app/start.sh
 
 # Set working directory to engine
 WORKDIR /app/apps/engine
@@ -37,4 +38,4 @@ WORKDIR /app/apps/engine
 EXPOSE 3000
 
 # Use the startup script as default command
-CMD ["/app/start.sh"]
+CMD ["bun", "run", "src/app.ts"]
