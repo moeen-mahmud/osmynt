@@ -9,6 +9,12 @@ steps:
       - gcr.io/$PROJECT_ID/osmynt-engine:$COMMIT_SHA
       - .
 
+  - id: Push image
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - gcr.io/$PROJECT_ID/osmynt-engine:$COMMIT_SHA
+
   - id: Deploy to Cloud Run
     name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     entrypoint: gcloud
