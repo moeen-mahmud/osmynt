@@ -25,7 +25,7 @@ RUN bun install
 
 # Generate Prisma client
 RUN cd packages/database && bunx prisma generate
-RUN cd packages/database && bunx prisma migrate deploy
+# RUN cd packages/database && bunx prisma migrate deploy
 
 # Copy and make startup script executable
 # COPY apps/engine/start.sh /app/start.sh
