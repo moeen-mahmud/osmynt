@@ -44,7 +44,6 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			if (!element) {
 				await this.ensureTeams();
 				if (!Array.isArray(this.cachedTeams) || this.cachedTeams.length === 0) {
-					return [];
 					// const emptyItem = new OsmyntItem(
 					// 	"action",
 					// 	"Log in to get started",
@@ -54,6 +53,7 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					// );
 					// emptyItem.command = { command: "osmynt.login", title: "Login", arguments: [] };
 					// return [emptyItem];
+					return [];
 				}
 				return this.cachedTeams.map(
 					t =>
@@ -176,9 +176,25 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					return item;
 				});
 			}
+			// const emptyItem = new OsmyntItem(
+			// 	"action",
+			// 	"Log in to get started",
+			// 	vscode.TreeItemCollapsibleState.None,
+			// 	undefined,
+			// 	"github"
+			// );
+			// emptyItem.command = { command: "osmynt.login", title: "Login", arguments: [] };
+			// return [emptyItem];
 			return [];
 		} catch {
-			return [];
+			const emptyItem = new OsmyntItem(
+				"action",
+				"Something went wrong. Please try to login again.",
+				vscode.TreeItemCollapsibleState.None,
+				undefined,
+				"alert"
+			);
+			return [emptyItem];
 		}
 	}
 

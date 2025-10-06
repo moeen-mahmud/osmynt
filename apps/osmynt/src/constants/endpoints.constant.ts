@@ -12,7 +12,8 @@ export const ENDPOINTS = {
 	},
 	teams: {
 		me: "protected/teams/me",
-		invite: (token: string) => `protected/teams/invite/${token}`,
+		inviteCreate: (teamId: string) => `protected/teams/${teamId}/invite`,
+		accept: (token: string) => `protected/teams/invite/${token}`,
 		removeTeamMember: (teamId: string, userId: string) => `protected/teams/${teamId}/remove-member/${userId}`,
 	},
 	codeShare: {

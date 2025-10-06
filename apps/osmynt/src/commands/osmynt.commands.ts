@@ -94,11 +94,14 @@ export async function handleInviteMember(context: vscode.ExtensionContext) {
 			return;
 		}
 		const { base, access } = await getBaseAndAccess(context);
-		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.invite(encodeURIComponent(teamId))}`, {
-			// `${base}/protected/teams/${encodeURIComponent(teamId)}/invite`,
-			method: "POST",
-			headers: { Authorization: `Bearer ${access}` },
-		});
+		const res = await fetch(
+			`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.inviteCreate(encodeURIComponent(teamId))}`,
+			{
+				// `${base}/protected/teams/${encodeURIComponent(teamId)}/invite`,
+				method: "POST",
+				headers: { Authorization: `Bearer ${access}` },
+			}
+		);
 		const j = await res.json();
 		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
 		await vscode.env.clipboard.writeText(j.token);
@@ -116,7 +119,7 @@ export async function handleAcceptInvitation(context: vscode.ExtensionContext, t
 		if (!token) return;
 		const { base, access } = await getBaseAndAccess(context);
 		const res = await fetch(
-			`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.invite(encodeURIComponent(token))}`,
+			`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.accept(encodeURIComponent(token))}`,
 			// `${base}/protected/teams/invite/${encodeURIComponent(token)}`,
 			{
 				method: "POST",
