@@ -1,0 +1,20 @@
+version: "3.9"
+
+networks:
+  core:
+    driver: bridge
+    name: osmynt-core-network
+
+services:
+  ########################################################################
+  # Engine – API backend (Bun + Hono + Prisma)                          #
+  ########################################################################
+  engine:
+    build:
+      context: .
+      dockerfile: apps/engine/Dockerfile
+    container_name: osmynt-engine
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks: [core]

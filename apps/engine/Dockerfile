@@ -1,10 +1,11 @@
-# Use the official Bun image
-FROM oven/bun:1
+# Use Bun base image
+FROM oven/bun:1.2-slim
 
-LABEL runtime="TurboGist Backend"
+LABEL runtime="Osmynt Engine"
 
 # Set working directory
 WORKDIR /app
+
 
 # Set production environment
 ENV NODE_ENV="production"
@@ -12,21 +13,28 @@ ENV PORT=3000
 
 # Copy root package.json, lockfile, and workspace configs
 COPY package.json .
-COPY bun.lockb .
+COPY bun.lock .
 COPY tsconfig.json .
 
 # Copy the backend package and shared packages
-COPY apps/backend ./apps/backend
+COPY apps/engine ./apps/engine
 COPY packages ./packages
 
 # Install dependencies
 RUN bun install
 
-# Set working directory to the backend app
-WORKDIR /app/apps/backend
+# Generate Prisma client
+RUN cd packages/database && bunx prisma generate
 
-# Expose the port your app runs on
+# Copy and make startup script executable
+COPY apps/engine/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+# Set working directory to engine
+WORKDIR /app/apps/engine
+
+# Expose the port
 EXPOSE 3000
 
-# Start the application
-CMD ["bun", "run", "src/app.ts"]
+# Use the startup script as default command
+CMD ["/app/start.sh"]
