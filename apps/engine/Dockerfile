@@ -3,7 +3,7 @@ FROM oven/bun:1.2-slim
 
 LABEL runtime="Osmynt Engine"
 
-# Set working directory
+# Set working directory to root
 WORKDIR /app
 
 
