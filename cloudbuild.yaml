@@ -1,0 +1,17 @@
+steps:
+  - id: Build image
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - apps/engine/Dockerfile
+      - -t
+      - gcr.io/$PROJECT_ID/osmynt-engine:$COMMIT_SHA
+      - .
+
+images:
+  - gcr.io/$PROJECT_ID/osmynt-engine:$COMMIT_SHA
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+

@@ -1,0 +1,40 @@
+# Node
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-store
+
+# Bun
+*.bun
+!bun.lockb
+!bun.lock
+
+# Git
+.git
+.gitignore
+
+# OS/IDE
+.DS_Store
+.idea
+.vscode
+Thumbs.db
+
+# Builds
+dist
+build
+out
+.next
+
+# Tests/coverage
+coverage
+*.spec.*
+*.test.*
+
+# Env
+.env*
+!.env.example
+
+# Prisma generated binaries (regenerated in container)
+packages/database/generated
+
