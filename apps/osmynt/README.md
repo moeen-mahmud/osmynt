@@ -54,7 +54,7 @@ This is where **Osmynt** comes in. We addresses these challenges by providing a 
 2. Search for the desired command (e.g., "Osmynt: Login").
 3. Execute the command to perform the desired action.
 
-> You can only share the code snippets with your team members only.
+> You can only share the code snippets with your team members.
 
 ## Feedback
 

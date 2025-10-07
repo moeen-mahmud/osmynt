@@ -5,7 +5,7 @@ import { ENDPOINTS } from "@/constants/endpoints.constant";
 import type { ShareTarget } from "@/types/osmynt.types";
 
 export async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessToken: string) {
-	const base = ENDPOINTS.engineBaseUrl!.replace(/\/$/, "");
+	const base = ENDPOINTS.engineBaseUrl?.replace(/\/$/, "");
 
 	const nodeCrypto = await import("crypto");
 	const subtle: any = (globalThis as any).crypto?.subtle ?? (nodeCrypto as any).webcrypto?.subtle;
