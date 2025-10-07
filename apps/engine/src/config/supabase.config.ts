@@ -1,47 +1,43 @@
 import { createClient, type RealtimeChannel } from "@supabase/supabase-js";
 import { ENV } from "@/config/env.config";
 
-if (!ENV.isConfigValid()) {
-	console.error("Required environment variables are not properly defined");
-	process.exit(1);
-}
+// Lazily initialize Supabase at runtime; do not exit process on missing envs
+let supabaseClient: ReturnType<typeof createClient> | null = null;
 
-export const supabase = createClient(ENV.SUPABASE.URL!, ENV.SUPABASE.ANON_KEY!, {
-	auth: {
-		autoRefreshToken: false,
-		persistSession: false,
-	},
-	realtime: {
-		params: {
-			self: true,
-			eventsPerSecond: 3,
-		},
-	},
-});
+function ensureSupabase() {
+	if (supabaseClient) return supabaseClient;
+	if (!ENV.SUPABASE.URL || !ENV.SUPABASE.ANON_KEY) {
+		console.warn("Supabase not configured; realtime features disabled");
+		return null;
+	}
+	supabaseClient = createClient(ENV.SUPABASE.URL, ENV.SUPABASE.ANON_KEY, {
+		auth: { autoRefreshToken: false, persistSession: false },
+		realtime: { params: { self: true, eventsPerSecond: 3 } },
+	});
+	return supabaseClient;
+}
 
 // Initialize the broadcast channel for snippets
 let broadcastChannel: RealtimeChannel | null = null;
 
 export async function getBroadcastChannel(): Promise<RealtimeChannel> {
+	const client = ensureSupabase();
+	if (!client) throw new Error("Supabase not configured");
+
 	if (broadcastChannel && broadcastChannel.state === "joined") {
 		return broadcastChannel;
 	}
 
 	// Create channel with self: true so sender also receives broadcasts
-	broadcastChannel = supabase.channel("osmynt-recent-snippets", {
-		config: {
-			broadcast: { self: true },
-		},
+	broadcastChannel = client.channel("osmynt-recent-snippets", {
+		config: { broadcast: { self: true } },
 	});
 
 	// Subscribe to the channel
 	return new Promise((resolve, reject) => {
 		broadcastChannel!.subscribe(status => {
-			if (status === "SUBSCRIBED") {
-				resolve(broadcastChannel!);
-			} else if (status === "CHANNEL_ERROR") {
-				reject(new Error("Failed to subscribe to broadcast channel"));
-			}
+			if (status === "SUBSCRIBED") resolve(broadcastChannel!);
+			else if (status === "CHANNEL_ERROR") reject(new Error("Failed to subscribe to broadcast channel"));
 		});
 	});
 }
