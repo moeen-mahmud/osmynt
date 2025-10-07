@@ -1,5 +1,11 @@
 # @osmynt-core/osmynt
 
+## 1.1.17
+
+### Patch Changes
+
+- [#6](https://github.com/moeen-mahmud/osmynt/pull/6) [`38ea082`](https://github.com/moeen-mahmud/osmynt/commit/38ea08200982f4d9290b759f4c422f6e009a186c) Thanks [@moeen-mahmud](https://github.com/moeen-mahmud)! - fixes the env issue while logging in
+
 ## 1.1.16
 
 ### Patch Changes
