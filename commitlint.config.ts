@@ -14,6 +14,7 @@ const Configuration: UserConfig = {
 				"@osmynt-core/api",
 				"@osmynt-core/database",
 				"@osmynt-core/library",
+				"release",
 			],
 		],
 		"scope-empty": [2, "never"],
@@ -21,7 +22,6 @@ const Configuration: UserConfig = {
 			2,
 			"always",
 			[
-				"release",
 				"build",
 				"chore",
 				"ci",

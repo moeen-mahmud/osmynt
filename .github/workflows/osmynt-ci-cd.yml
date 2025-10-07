@@ -1,4 +1,4 @@
-name: Osmynt CI/CD
+name: Osmynt CI/CD #v2
 
 on:
   push:
