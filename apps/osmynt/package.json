@@ -14,6 +14,7 @@
 		"type": "git",
 		"url": "https://github.com/moeen-mahmud/osmynt"
 	},
+	"license": "BSL1.1",
 	"devDependencies": {
 		"@types/bun": "1.1.13",
 		"@osmynt-core/api": "workspace:*",
@@ -36,7 +37,7 @@
 		"clean": "rm -r ./dist"
 	},
 	"publisher": "Osmynt",
-	"name": "osmynt",
+	"name": "@osmynt-core/osmynt",
 	"version": "0.17.3",
 	"displayName": "Osmynt Beta",
 	"description": "Real-time snippet sharing through Osmynt",
@@ -46,6 +47,7 @@
 		"Chat"
 	],
 	"icon": "resources/osmynt-128x.png",
+	"pricing": "Free",
 	"contributes": {
 		"viewsWelcome": [
 			{
