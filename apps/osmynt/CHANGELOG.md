@@ -1,5 +1,11 @@
 # @osmynt-core/osmynt
 
+## 1.1.20
+
+### Patch Changes
+
+- [#12](https://github.com/moeen-mahmud/osmynt/pull/12) [`817c8b8`](https://github.com/moeen-mahmud/osmynt/commit/817c8b816174279f1f790805948751a6d2485f27) Thanks [@moeen-mahmud](https://github.com/moeen-mahmud)! - improves the osmynt provider tree view
+
 ## 1.1.19
 
 ### Patch Changes
