@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import type { OsmyntNodeKind } from "@/types/osmynt.types";
 import { getBaseAndAccess } from "@/services/osmynt.services";
 import { ENDPOINTS } from "@/constants/endpoints.constant";
+import { ACCESS_SECRET_KEY } from "@/constants/osmynt.constant";
 
 class OsmyntItem extends vscode.TreeItem {
 	kind: OsmyntNodeKind;
@@ -187,14 +188,20 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			// return [emptyItem];
 			return [];
 		} catch {
-			const emptyItem = new OsmyntItem(
+			// If user isn't logged in yet, return empty to allow viewsWelcome to show
+			try {
+				const access = await this.context.secrets.get(ACCESS_SECRET_KEY);
+				if (!access) return [];
+			} catch {}
+			// User appears logged in → show a single error item
+			const errorItem = new OsmyntItem(
 				"action",
-				"Something went wrong. Please try to login again.",
+				"Something went wrong. Please try again.",
 				vscode.TreeItemCollapsibleState.None,
 				undefined,
 				"alert"
 			);
-			return [emptyItem];
+			return [errorItem];
 		}
 	}
 
