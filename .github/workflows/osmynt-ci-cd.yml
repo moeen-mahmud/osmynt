@@ -90,6 +90,9 @@ jobs:
                 engine|api|database|library)
                   deploy_engine=true
                   ;;
+                osmynt)
+                  publish_extension=true
+                  ;;
               esac
             elif [[ $tag =~ ^osmynt@(.*)$ ]]; then
               publish_extension=true
