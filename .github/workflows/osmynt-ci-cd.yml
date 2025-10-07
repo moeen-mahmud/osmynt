@@ -1,0 +1,134 @@
+name: Osmynt CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/engine/**"
+      - "apps/osmynt/**"
+      - "packages/**"
+      - "cloudbuild.yaml"
+      - "package.json"
+      - "bun.lockb"
+      - ".github/workflows/osmynt-ci-cd.yml"
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  release:
+    name: Version and Tag (changesets)
+    runs-on: ubuntu-latest
+    outputs:
+      hasChangesets: ${{ steps.changesets.outputs.hasChangesets }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run changesets
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: bun run release:version
+          publish: bun run release:tag
+          title: "chore(release): version packages"
+          commit: "chore(release): version packages"
+          createGithubReleases: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.CHANGESETS_TOKEN}}
+
+      - name: Push tags (if any)
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        run: |
+          tags=$(git tag --points-at HEAD)
+          if [ -n "$tags" ]; then
+            git push origin --tags
+          else
+            echo 'No tags to push'
+          fi
+
+  decide-deploy:
+    name: Decide Deploy Targets
+    needs: release
+    if: needs.release.outputs.hasChangesets == 'false'
+    runs-on: ubuntu-latest
+    outputs:
+      deploy-engine: ${{ steps.check.outputs.deploy_engine }}
+      publish-extension: ${{ steps.check.outputs.publish_extension }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: check
+        run: |
+          deploy_engine=false
+          publish_extension=false
+
+          tags=$(git tag --points-at HEAD)
+          echo "Tags at HEAD: $tags"
+
+          for tag in $tags; do
+            # @osmynt-core/<pkg>@<ver> or osmynt@<ver>
+            if [[ $tag =~ ^@osmynt-core/(.*)@(.*)$ ]]; then
+              pkg="${BASH_REMATCH[1]}"
+              case "$pkg" in
+                engine|api|database|library)
+                  deploy_engine=true
+                  ;;
+                osmynt)
+                  publish_extension=true
+                  ;;
+              esac
+            elif [[ $tag =~ ^osmynt@(.*)$ ]]; then
+              publish_extension=true
+            fi
+          done
+
+          echo "deploy_engine=$deploy_engine" >> $GITHUB_OUTPUT
+          echo "publish_extension=$publish_extension" >> $GITHUB_OUTPUT
+
+  # NOTE: Engine deployment is handled by Cloud Build Trigger on tag push.
+
+  publish-extension:
+    name: Publish VS Code Extension
+    needs: [release, decide-deploy]
+    if: needs.decide-deploy.outputs.publish-extension == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install deps
+        run: bun install
+
+      - name: Build and Publish
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          ENGINE_BASE_URL: ${{ secrets.ENGINE_BASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          cd apps/osmynt
+          echo "ENGINE_BASE_URL=${ENGINE_BASE_URL}" >> .env
+          echo "SUPABASE_URL=${SUPABASE_URL}" >> .env
+          echo "SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}" >> .env
+          NODE_ENV=production bun run scripts/build-with-esbuild.ts
+          NODE_ENV=production bunx vsce publish -p "$VSCE_PAT"

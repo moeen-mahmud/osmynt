@@ -1,7 +1,7 @@
 import { ENV } from "@/config/env.config";
 
 export const ENDPOINTS = {
-	engineBaseUrl: ENV.isDev ? "http://localhost:3000" : ENV.engineBaseUrl,
+	engineBaseUrl: ENV.engineBaseUrl,
 	base: "osmynt-api-engine",
 	auth: {
 		loginWithToken: "auth/login-with-token",
