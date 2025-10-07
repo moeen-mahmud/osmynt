@@ -61,3 +61,6 @@ This is where **Osmynt** comes in. We addresses these challenges by providing a 
 Since the extension is in closed beta, please follow the email instruction above. We'll be happy to have you on board. Don't forget to share with your friends and colleagues. The more the merrier 🎉
 
 We're exciting to get your feedback and suggestions. Please feel free to drop an email on [contact@osmynt.dev](mailto:contact@osmynt.dev) with your thoughts. We're looking forward to hearing from you 🙏
+
+## Author
+[Moeen Mahmud](https://github.com/moeen-mahmud)

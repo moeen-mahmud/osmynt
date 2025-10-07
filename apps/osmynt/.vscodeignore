@@ -11,7 +11,3 @@ scripts/**
 !CHANGELOG.md
 !LICENSE.txt
 !README.md
-
-# Environment variables
-.env
-.env.prod
