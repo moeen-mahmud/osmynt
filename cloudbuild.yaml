@@ -33,7 +33,7 @@ images:
 
 substitutions:
   _SERVICE: osmynt-engine
-  _REGION: us-central1
+  _REGION: asia-south1
 
 options:
   logging: CLOUD_LOGGING_ONLY
