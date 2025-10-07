@@ -38,7 +38,7 @@
 	},
 	"publisher": "Osmynt",
 	"name": "@osmynt-core/osmynt",
-	"version": "0.17.3",
+	"version": "1.2.0",
 	"displayName": "Osmynt Beta",
 	"description": "Real-time snippet sharing through Osmynt",
 	"categories": [
