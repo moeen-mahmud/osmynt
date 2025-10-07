@@ -9,6 +9,11 @@ const config: BuildOptions = {
 	outExtension: {
 		".js": ".cjs",
 	},
+	define: { 
+		'process.env.ENGINE_BASE_URL': JSON.stringify(process.env.ENGINE_BASE_URL), 
+		'process.env.SUPABASE_URL': JSON.stringify(process.env.SUPABASE_URL), 
+		'process.env.SUPABASE_ANON_KEY': JSON.stringify(process.env.SUPABASE_ANON_KEY) 
+	},
 	format: "cjs",
 	external: ["vscode"],
 	tsconfig: "./apps/osmynt/tsconfig.json",
