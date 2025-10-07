@@ -120,15 +120,13 @@ jobs:
         run: bun install
 
       - name: Build and Publish
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-          ENGINE_BASE_URL: ${{ secrets.ENGINE_BASE_URL }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           cd apps/osmynt
-          echo "ENGINE_BASE_URL=${ENGINE_BASE_URL}" >> .env
-          echo "SUPABASE_URL=${SUPABASE_URL}" >> .env
-          echo "SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}" >> .env
+          echo "OVSX_TOKEN=${{secrets.OVSX_TOKEN}}" >> .env
+          echo "ENGINE_BASE_URL=${{secrets.ENGINE_BASE_URL}}" >> .env
+          echo "SUPABASE_URL=${{secrets.SUPABASE_URL}}" >> .env
+          echo "SUPABASE_ANON_KEY=${{secrets.SUPABASE_ANON_KEY}}" >> .env
           NODE_ENV=production bun run scripts/build-with-esbuild.ts
-          NODE_ENV=production bunx vsce publish -p "$VSCE_PAT"
+          NODE_ENV=production bunx vsce publish -p ${{ secrets.VSCE_PAT }}
+          NODE_ENV=production bun run scripts/build-with-esbuild.ts
+          NODE_ENV=production bunx ovsx publish -p ${{ secrets.OVSX_TOKEN }}
