@@ -1,5 +1,11 @@
 # @osmynt-core/osmynt
 
+## 1.1.18
+
+### Patch Changes
+
+- [#8](https://github.com/moeen-mahmud/osmynt/pull/8) [`afec0fc`](https://github.com/moeen-mahmud/osmynt/commit/afec0fc472b7e904571f84a08862e685fa109aa4) Thanks [@moeen-mahmud](https://github.com/moeen-mahmud)! - updates readme and config
+
 ## 1.1.17
 
 ### Patch Changes
