@@ -3,15 +3,7 @@
 	"changelog": ["@changesets/changelog-github", { "repo": "moeen-mahmud/osmynt" }],
 	"commit": false,
 	"fixed": [],
-	"linked": [
-		[
-			"@osmynt-core/engine",
-			"@osmynt-core/osmynt",
-			"@osmynt-core/api",
-			"@osmynt-core/database",
-			"@osmynt-core/library"
-		]
-	],
+	"linked": [["@osmynt-core/engine", "osmynt", "@osmynt-core/api", "@osmynt-core/database", "@osmynt-core/library"]],
 	"access": "restricted",
 	"baseBranch": "main",
 	"updateInternalDependencies": "patch",
