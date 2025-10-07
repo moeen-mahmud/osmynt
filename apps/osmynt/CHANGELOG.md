@@ -1,5 +1,11 @@
 # @osmynt-core/osmynt
 
+## 1.1.19
+
+### Patch Changes
+
+- [#10](https://github.com/moeen-mahmud/osmynt/pull/10) [`c573a82`](https://github.com/moeen-mahmud/osmynt/commit/c573a82f3add28c6a8f051a39af6c05c63e9cf26) Thanks [@moeen-mahmud](https://github.com/moeen-mahmud)! - updates extension's ci-cd pipeline
+
 ## 1.1.18
 
 ### Patch Changes
