@@ -1,5 +1,11 @@
 # @osmynt-core/osmynt
 
+## 1.1.16
+
+### Patch Changes
+
+- [#4](https://github.com/moeen-mahmud/osmynt/pull/4) [`bea2499`](https://github.com/moeen-mahmud/osmynt/commit/bea2499401777154216a4cfdf3600e1fe76e11bc) Thanks [@moeen-mahmud](https://github.com/moeen-mahmud)! - updates the extension package name from @osmynt-core/osmynt to osmynt only
+
 ## 1.2.0
 
 ### Minor Changes
