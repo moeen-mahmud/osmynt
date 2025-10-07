@@ -26,6 +26,7 @@ steps:
       - --region=$_REGION
       - --platform=managed
       - --allow-unauthenticated
+      - --timeout=300s
 
 images:
   - gcr.io/$PROJECT_ID/osmynt-engine:$COMMIT_SHA
