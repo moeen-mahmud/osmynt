@@ -37,7 +37,7 @@
 		"clean": "rm -r ./dist"
 	},
 	"publisher": "Osmynt",
-	"name": "@osmynt-core/osmynt",
+	"name": "osmynt",
 	"version": "0.17.3",
 	"displayName": "Osmynt Beta",
 	"description": "Real-time snippet sharing through Osmynt",
