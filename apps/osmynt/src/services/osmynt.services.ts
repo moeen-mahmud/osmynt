@@ -619,6 +619,7 @@ export async function shareSelectedCode(
 	]);
 
 	let recipients: any[] = [];
+	let meUserId: string | undefined;
 	if (target.kind === "team") {
 		const teamId = target.teamId ?? (await promptTeamId(context));
 		if (!teamId) throw new Error("No team selected");
@@ -631,6 +632,14 @@ export async function shareSelectedCode(
 		);
 		const j = await recipientsRes.json();
 		recipients = Array.isArray(j?.recipients) ? j.recipients : [];
+		// get current user id for self-wrapping
+		try {
+			const meRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
+				headers: { Authorization: `Bearer ${access}` },
+			});
+			const me = await meRes.json();
+			meUserId = me?.user?.id as string | undefined;
+		} catch {}
 	} else {
 		// Aggregate recipients across all teams then filter by userId
 		const tmRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
@@ -652,6 +661,14 @@ export async function shareSelectedCode(
 			all = all.concat(arr);
 		}
 		recipients = all.filter((r: any) => r.userId === (target as any).userId);
+		// get current user id for self-wrapping
+		try {
+			const meRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
+				headers: { Authorization: `Bearer ${access}` },
+			});
+			const me = await meRes.json();
+			meUserId = me?.user?.id as string | undefined;
+		} catch {}
 	}
 	if (recipients.length === 0) throw new Error("No recipients");
 
@@ -662,6 +679,7 @@ export async function shareSelectedCode(
 	const ciphertext = await subtle.encrypt({ name: "AES-GCM", iv }, cek, new TextEncoder().encode(code));
 
 	const wrappedKeys: any[] = [];
+	const localDeviceId = (await context.secrets.get(DEVICE_ID_KEY)) as string | undefined;
 
 	if (teamKeyMode) {
 		const teamKeyStorageKey = `osmynt.teamKey.${teamKeyNamespace}`;
@@ -716,6 +734,32 @@ export async function shareSelectedCode(
 				wrapIvB64u: b64url(new Uint8Array(wrapIv2)),
 			});
 		}
+		// self-wrap for author's current device to enable future backfill
+		if (meUserId && localDeviceId) {
+			const selfPub = await subtle.importKey(
+				"jwk",
+				encKeypair.publicKeyJwk,
+				{ name: "ECDH", namedCurve: "P-256" },
+				true,
+				[]
+			);
+			const kekSelf = await subtle.deriveKey(
+				{ name: "ECDH", public: selfPub },
+				eph.privateKey,
+				{ name: "AES-GCM", length: 256 },
+				false,
+				["encrypt"]
+			);
+			const wrapIvSelf = nodeCrypto.randomBytes(12);
+			const wrappedSelf = await subtle.encrypt({ name: "AES-GCM", iv: wrapIvSelf }, kekSelf, cekRaw);
+			wrappedKeys.push({
+				recipientUserId: meUserId,
+				recipientDeviceId: localDeviceId,
+				senderEphemeralPublicKeyJwk: ephPubJwk,
+				wrappedCekB64u: b64url(new Uint8Array(wrappedSelf as ArrayBuffer)),
+				wrapIvB64u: b64url(new Uint8Array(wrapIvSelf)),
+			});
+		}
 	} else {
 		const eph = (await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, [
 			"deriveKey",
@@ -746,6 +790,32 @@ export async function shareSelectedCode(
 				senderEphemeralPublicKeyJwk: ephPubJwk,
 				wrappedCekB64u,
 				wrapIvB64u: b64url(new Uint8Array(wrapIv2)),
+			});
+		}
+		// self-wrap for author's current device to enable future backfill
+		if (meUserId && localDeviceId) {
+			const selfPub = await subtle.importKey(
+				"jwk",
+				encKeypair.publicKeyJwk,
+				{ name: "ECDH", namedCurve: "P-256" },
+				true,
+				[]
+			);
+			const kekSelf = await subtle.deriveKey(
+				{ name: "ECDH", public: selfPub },
+				eph.privateKey,
+				{ name: "AES-GCM", length: 256 },
+				false,
+				["encrypt"]
+			);
+			const wrapIvSelf = nodeCrypto.randomBytes(12);
+			const wrappedSelf = await subtle.encrypt({ name: "AES-GCM", iv: wrapIvSelf }, kekSelf, cekRaw);
+			wrappedKeys.push({
+				recipientUserId: meUserId,
+				recipientDeviceId: localDeviceId,
+				senderEphemeralPublicKeyJwk: ephPubJwk,
+				wrappedCekB64u: b64url(new Uint8Array(wrappedSelf as ArrayBuffer)),
+				wrapIvB64u: b64url(new Uint8Array(wrapIvSelf)),
 			});
 		}
 	}
