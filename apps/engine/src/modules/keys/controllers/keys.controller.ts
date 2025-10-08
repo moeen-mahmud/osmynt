@@ -46,8 +46,16 @@ export class KeysController {
 			return c.json({ error: "Unauthorized" }, 401);
 		}
 		const devices = await KeysService.listUserDevices(user.id);
+		const primaryId = devices[0]?.deviceId;
+		const enriched = devices.map(d => ({
+			deviceId: d.deviceId,
+			encryptionPublicKeyJwk: d.encryptionPublicKeyJwk,
+			signingPublicKeyJwk: d.signingPublicKeyJwk,
+			createdAt: d.createdAt,
+			isPrimary: d.deviceId === primaryId,
+		}));
 		logger.info("Listed devices", { userId: user.id });
-		return c.json({ devices }, 200);
+		return c.json({ devices: enriched }, 200);
 	}
 
 	static async teamDefault(c: Context) {
@@ -144,6 +152,9 @@ export class KeysController {
 		}
 		const deviceId = c.req.param("deviceId");
 		if (!deviceId) return c.json({ error: "Invalid device" }, 400);
+		const devices = await KeysService.listUserDevices(user.id);
+		const primaryId = devices[0]?.deviceId;
+		if (deviceId === primaryId) return c.json({ error: "Cannot remove primary device" }, 400);
 		await prisma.deviceKey.deleteMany({ where: { userId: user.id, deviceId } });
 		await prisma.auditLog.create({
 			data: {

@@ -91,9 +91,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	const access = await context.secrets.get(ACCESS_SECRET_KEY);
 	await vscode.commands.executeCommand("setContext", "osmynt.isLoggedIn", Boolean(access));
-	// Prime primary/companion contexts: default to unknown until computed
-	await vscode.commands.executeCommand("setContext", "osmynt.isPrimaryDevice", true);
+	// Prime contexts to false until computed
+	await vscode.commands.executeCommand("setContext", "osmynt.isPrimaryDevice", false);
 	await vscode.commands.executeCommand("setContext", "osmynt.isCompanionDevice", false);
+	await vscode.commands.executeCommand("setContext", "osmynt.canGeneratePairing", false);
+	await vscode.commands.executeCommand("setContext", "osmynt.canPastePairing", false);
 	if (access) {
 		try {
 			await ensureDeviceKeys(context);

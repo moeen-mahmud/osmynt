@@ -1,4 +1,4 @@
-import { ACCESS_SECRET_KEY, LANGUAGE_BY_EXT, REFRESH_SECRET_KEY } from "@/constants/osmynt.constant";
+import { ACCESS_SECRET_KEY, DEVICE_ID_KEY, LANGUAGE_BY_EXT, REFRESH_SECRET_KEY } from "@/constants/osmynt.constant";
 import type { OsmyntTreeProvider } from "@/provider/osmynt.provider";
 import {
 	ensureDeviceKeys,
@@ -53,7 +53,40 @@ export async function handleAddDeviceCompanion(context: vscode.ExtensionContext)
 }
 
 export async function handleRemoveDevice(context: vscode.ExtensionContext) {
-	await removeDevice(context);
+	// Replace raw input with picker of available devices (companion only removable)
+	try {
+		const { base, access } = await getBaseAndAccess(context);
+		const res = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const j = await res.json();
+		const devices: Array<{ deviceId: string; isPrimary?: boolean }> = Array.isArray(j?.devices) ? j.devices : [];
+		const localId = await context.secrets.get(DEVICE_ID_KEY);
+		const items = devices
+			.filter(d => !d.isPrimary)
+			.map(d => ({ label: d.deviceId === localId ? `${d.deviceId} (this device)` : d.deviceId, id: d.deviceId }));
+		if (items.length === 0) {
+			vscode.window.showInformationMessage("No removable companion device found.");
+			return;
+		}
+		const pick = await vscode.window.showQuickPick(items, { placeHolder: "Select companion device to remove" });
+		if (!pick) return;
+		const r = await vscode.window.showWarningMessage(`Remove device ${pick.id}?`, { modal: true }, "Remove");
+		if (r !== "Remove") return;
+		const del = await fetch(
+			`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.deviceRemove(encodeURIComponent(pick.id))}`,
+			{
+				method: "DELETE",
+				headers: { Authorization: `Bearer ${access}` },
+			}
+		);
+		const dj = await del.json();
+		if (!del.ok || !dj?.ok) throw new Error(dj?.error || `Failed (${del.status})`);
+		vscode.window.showInformationMessage("Device removed");
+		await computeAndSetDeviceContexts(context);
+	} catch (e) {
+		vscode.window.showErrorMessage(`Remove device failed: ${e}`);
+	}
 }
 
 export async function handleBackfillCompanion(context: vscode.ExtensionContext) {

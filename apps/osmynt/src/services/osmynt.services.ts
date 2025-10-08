@@ -309,8 +309,7 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 				const meUserId: string | undefined = meTeams?.user?.id;
 				if (!meUserId || full?.authorId !== meUserId) continue;
 
-				// Derive CEK by re-encrypt workflow is not possible without original CEK; skip if cannot unwrap from our perspective
-				// Try to unwrap CEK from one of our recipient entries (sender ephemeral ECDH)
+				// Derive CEK: try local ECDH unwrap first; then fall back to team-key unwrap if enabled
 				let cekRaw: ArrayBuffer | null = null;
 				for (const wk of full?.wrappedKeys ?? []) {
 					if (wk?.recipientDeviceId === (localId as string)) {
@@ -334,6 +333,38 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 							cekRaw = await subtle.decrypt({ name: "AES-GCM", iv: wrapIv }, kek, wrappedBytes);
 							break;
 						} catch {}
+					}
+				}
+				// Fallback: team-key unwrap (only for team snippets and if team key is configured)
+				if (!cekRaw && full?.metadata?.teamId) {
+					const config = vscode.workspace.getConfiguration("osmynt");
+					const teamKeyMode = config.get<boolean>("teamKeyMode") ?? false;
+					if (teamKeyMode) {
+						const teamKeyNamespace = config.get<string>("teamKeyNamespace") ?? "default";
+						const teamKeyStorageKey = `osmynt.teamKey.${teamKeyNamespace}`;
+						const teamKeyRawB64 = await context.secrets.get(teamKeyStorageKey);
+						if (teamKeyRawB64) {
+							try {
+								const teamKeyRaw = Buffer.from(teamKeyRawB64, "base64");
+								const teamKey = await subtle.importKey(
+									"raw",
+									teamKeyRaw,
+									{ name: "AES-GCM", length: 256 },
+									false,
+									["decrypt"]
+								);
+								const wk0 = (full?.wrappedKeys ?? [])[0];
+								if (wk0?.wrappedCekB64u && wk0?.wrapIvB64u) {
+									const wrappedBytes = b64uToBytes(wk0.wrappedCekB64u);
+									const wrapIv = b64uToBytes(wk0.wrapIvB64u);
+									cekRaw = await subtle.decrypt(
+										{ name: "AES-GCM", iv: wrapIv },
+										teamKey,
+										wrappedBytes
+									);
+								}
+							} catch {}
+						}
 					}
 				}
 				if (!cekRaw) continue;
@@ -394,19 +425,22 @@ export async function computeAndSetDeviceContexts(context: vscode.ExtensionConte
 			headers: { Authorization: `Bearer ${access}` },
 		});
 		const j = await res.json();
-		const devices: Array<{ deviceId: string; createdAt?: string }> = Array.isArray(j?.devices) ? j.devices : [];
-		const sorted = [...devices].sort(
-			(a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
-		);
+		const devices: Array<{ deviceId: string; createdAt?: string; isPrimary?: boolean }> = Array.isArray(j?.devices)
+			? j.devices
+			: [];
 		const localId = await context.secrets.get(DEVICE_ID_KEY);
-		const primaryDeviceId = sorted[0]?.deviceId as string | undefined;
-		const isPrimary = Boolean(localId && primaryDeviceId && localId === primaryDeviceId);
-		await vscode.commands.executeCommand("setContext", "osmynt.isPrimaryDevice", isPrimary || devices.length === 0);
-		await vscode.commands.executeCommand(
-			"setContext",
-			"osmynt.isCompanionDevice",
-			!isPrimary && devices.length > 0
-		);
+		const local = devices.find(d => d.deviceId === localId);
+		const hasPrimary = devices.some(d => d.isPrimary);
+		const deviceCount = devices.length;
+
+		const isPrimary = Boolean(local && (local.isPrimary || (!hasPrimary && deviceCount <= 1)));
+		const isCompanion = Boolean(local && !local.isPrimary && deviceCount >= 1);
+		const hasCompanion = deviceCount >= 2;
+
+		await vscode.commands.executeCommand("setContext", "osmynt.isPrimaryDevice", isPrimary);
+		await vscode.commands.executeCommand("setContext", "osmynt.isCompanionDevice", isCompanion);
+		await vscode.commands.executeCommand("setContext", "osmynt.canGeneratePairing", isPrimary && !hasCompanion);
+		await vscode.commands.executeCommand("setContext", "osmynt.canPastePairing", isCompanion);
 	} catch {
 		// leave defaults
 	}

@@ -104,14 +104,14 @@
 				"title": "Add Device (Primary - generate code)",
 				"category": "Osmynt",
 				"icon": "$(plug)",
-				"enablement": "osmynt.isPrimaryDevice == true"
+				"enablement": "osmynt.canGeneratePairing == true"
 			},
 			{
 				"command": "osmynt.addDeviceCompanion",
 				"title": "Add Device (Companion - paste code)",
 				"category": "Osmynt",
 				"icon": "$(plug)",
-				"enablement": "osmynt.isCompanionDevice == true"
+				"enablement": "osmynt.canPastePairing == true"
 			},
 			{
 				"command": "osmynt.removeDevice",

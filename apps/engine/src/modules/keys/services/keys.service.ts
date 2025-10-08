@@ -36,7 +36,7 @@ export class KeysService {
 	}
 
 	static async listUserDevices(userId: string) {
-		return prisma.deviceKey.findMany({ where: { userId } });
+		return prisma.deviceKey.findMany({ where: { userId }, orderBy: { createdAt: "asc" } });
 	}
 
 	static async listTeamRecipients(teamId: string) {

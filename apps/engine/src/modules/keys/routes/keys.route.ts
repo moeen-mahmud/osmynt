@@ -57,6 +57,10 @@ export const route_keysMe = createRoute({
 			description: "Unauthorized",
 			content: { "application/json": { schema: z.object({ error: z.string() }) } },
 		},
+		403: {
+			description: "Forbidden",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
 	},
 });
 
@@ -159,6 +163,10 @@ export const route_pairingInit = createRoute({
 		},
 		401: {
 			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+		403: {
+			description: "Forbidden",
 			content: { "application/json": { schema: z.object({ error: z.string() }) } },
 		},
 	},
