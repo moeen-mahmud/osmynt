@@ -100,6 +100,24 @@
 				"icon": "$(check)"
 			},
 			{
+				"command": "osmynt.addDevicePrimary",
+				"title": "Add Device (Primary - generate code)",
+				"category": "Osmynt",
+				"icon": "$(plug)"
+			},
+			{
+				"command": "osmynt.addDeviceCompanion",
+				"title": "Add Device (Companion - paste code)",
+				"category": "Osmynt",
+				"icon": "$(plug)"
+			},
+			{
+				"command": "osmynt.removeDevice",
+				"title": "Remove Device",
+				"category": "Osmynt",
+				"icon": "$(trash)"
+			},
+			{
 				"command": "osmynt.viewSnippet",
 				"title": "View Snippet",
 				"category": "Osmynt",

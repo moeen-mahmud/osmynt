@@ -112,6 +112,115 @@ export async function registerDeviceKey(context: vscode.ExtensionContext, device
 	});
 }
 
+export async function initiateDevicePairing(context: vscode.ExtensionContext): Promise<string | null> {
+	try {
+		const nodeCrypto = await import("crypto");
+		const subtle: any = (globalThis as any).crypto?.subtle ?? (nodeCrypto as any).webcrypto?.subtle;
+		if (!subtle) throw new Error("WebCrypto Subtle API not available");
+		const { base, access } = await getBaseAndAccess(context);
+		// Pack current device's public key for transfer
+		const encKeypair = JSON.parse((await context.secrets.get(ENC_KEYPAIR_JWK_KEY)) || "{}");
+		if (!encKeypair?.publicKeyJwk) throw new Error("Missing device public key");
+		const payload = JSON.stringify({ publicKeyJwk: encKeypair.publicKeyJwk });
+		const iv = (await import("crypto")).randomBytes(12);
+		// For pairing bootstrap, encrypt payload with a random symmetric key shown only on screen
+		const pairingKey = (await import("crypto")).randomBytes(32);
+		const key = await subtle.importKey("raw", pairingKey, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);
+		const ciphertext = await subtle.encrypt({ name: "AES-GCM", iv }, key, Buffer.from(payload, "utf-8"));
+		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.pairingInit}`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json", Authorization: `Bearer ${access}` },
+			body: JSON.stringify({
+				ivB64u: b64url(new Uint8Array(iv)),
+				ciphertextB64u: b64url(new Uint8Array(ciphertext as ArrayBuffer)),
+			}),
+		});
+		const j = await res.json();
+		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
+		const token = j?.token as string;
+		// Show both token and pairingKey to user to transfer
+		const pairingKeyB64 = Buffer.from(pairingKey).toString("base64");
+		await vscode.env.clipboard.writeText(`${token}#${pairingKeyB64}`);
+		vscode.window.showInformationMessage("Pairing code (token#key) copied. Paste on companion device.");
+		return `${token}#${pairingKeyB64}`;
+	} catch (e) {
+		vscode.window.showErrorMessage(`Pairing init failed: ${e}`);
+		return null;
+	}
+}
+
+export async function claimDevicePairing(context: vscode.ExtensionContext): Promise<boolean> {
+	try {
+		const raw = await vscode.window.showInputBox({
+			prompt: "Paste pairing code from primary device (token#base64key)",
+		});
+		if (!raw) return false;
+		const [token, keyB64] = raw.split("#");
+		if (!token || !keyB64) throw new Error("Invalid pairing code format");
+		const pairingKey = Buffer.from(keyB64, "base64");
+		const nodeCrypto = await import("crypto");
+		const subtle: any = (globalThis as any).crypto?.subtle ?? (nodeCrypto as any).webcrypto?.subtle;
+		if (!subtle) throw new Error("WebCrypto Subtle API not available");
+		const { base, access } = await getBaseAndAccess(context);
+		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.pairingClaim}`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json", Authorization: `Bearer ${access}` },
+			body: JSON.stringify({ token }),
+		});
+		const j = await res.json();
+		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
+		const iv = b64uToBytes(j.ivB64u);
+		const ciphertext = b64uToBytes(j.ciphertextB64u);
+		const key = await subtle.importKey("raw", pairingKey, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+		const plaintext = await subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+		const msg = JSON.parse(Buffer.from(new Uint8Array(plaintext)).toString("utf-8"));
+		const publicKeyJwk = msg?.publicKeyJwk;
+		if (!publicKeyJwk) throw new Error("Invalid payload");
+		// Generate own private key and register with backend
+		const kp: any = await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, [
+			"deriveKey",
+			"deriveBits",
+		]);
+		const myPub = await subtle.exportKey("jwk", kp.publicKey);
+		const myPriv = await subtle.exportKey("jwk", kp.privateKey);
+		await context.secrets.store(
+			ENC_KEYPAIR_JWK_KEY,
+			JSON.stringify({ publicKeyJwk: myPub, privateKeyJwk: myPriv })
+		);
+		let deviceId = await context.secrets.get(DEVICE_ID_KEY);
+		if (!deviceId) {
+			deviceId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+			await context.secrets.store(DEVICE_ID_KEY, deviceId);
+		}
+		await registerDeviceKey(context, deviceId!, myPub);
+		vscode.window.showInformationMessage("Device paired successfully");
+		return true;
+	} catch (e) {
+		vscode.window.showErrorMessage(`Pairing claim failed: ${e}`);
+		return false;
+	}
+}
+
+export async function removeDevice(context: vscode.ExtensionContext): Promise<void> {
+	try {
+		const { base, access } = await getBaseAndAccess(context);
+		const deviceId = await vscode.window.showInputBox({ prompt: "Enter deviceId to remove" });
+		if (!deviceId) return;
+		const res = await fetch(
+			`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.deviceRemove(encodeURIComponent(deviceId))}`,
+			{
+				method: "DELETE",
+				headers: { Authorization: `Bearer ${access}` },
+			}
+		);
+		const j = await res.json();
+		if (!res.ok || !j?.ok) throw new Error(j?.error || `Failed (${res.status})`);
+		vscode.window.showInformationMessage("Device removed");
+	} catch (e) {
+		vscode.window.showErrorMessage(`Remove device failed: ${e}`);
+	}
+}
+
 export async function getBaseAndAccess(context: vscode.ExtensionContext) {
 	const base = ENDPOINTS.engineBaseUrl!.replace(/\/$/, "");
 	const access = await context.secrets.get(ACCESS_SECRET_KEY);

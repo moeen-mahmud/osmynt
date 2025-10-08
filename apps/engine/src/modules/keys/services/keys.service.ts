@@ -8,6 +8,16 @@ export class KeysService {
 		signingPublicKeyJwk?: unknown;
 		algorithm: string;
 	}) {
+		const existing = await prisma.deviceKey.findUnique({
+			where: { userId_deviceId: { userId: data.userId, deviceId: data.deviceId } },
+			select: { id: true },
+		});
+		if (!existing) {
+			const count = await prisma.deviceKey.count({ where: { userId: data.userId } });
+			if (count >= 2) {
+				throw new Error("Device limit reached (2)");
+			}
+		}
 		return prisma.deviceKey.upsert({
 			where: { userId_deviceId: { userId: data.userId, deviceId: data.deviceId } },
 			create: {

@@ -12,6 +12,9 @@ import {
 	handleRefreshTeam,
 	handleViewSnippet,
 	handleRemoveTeamMember,
+	handleAddDevicePrimary,
+	handleAddDeviceCompanion,
+	handleRemoveDevice,
 } from "@/commands/osmynt.commands";
 
 import { getBaseAndAccess } from "@/services/osmynt.services";
@@ -34,6 +37,9 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand("osmynt.removeTeamMember", async (item?: any) =>
 			handleRemoveTeamMember(context, tree, item)
 		),
+		vscode.commands.registerCommand("osmynt.addDevicePrimary", () => handleAddDevicePrimary(context)),
+		vscode.commands.registerCommand("osmynt.addDeviceCompanion", () => handleAddDeviceCompanion(context)),
+		vscode.commands.registerCommand("osmynt.removeDevice", () => handleRemoveDevice(context)),
 		vscode.commands.registerCommand("osmynt.snippet.copy", async (item?: any) => {
 			if (!item?.data?.id) return;
 			const { base, access } = await getBaseAndAccess(context);

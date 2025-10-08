@@ -124,9 +124,104 @@ export const route_keysTeamById = createRoute({
 	},
 });
 
+export const route_pairingInit = createRoute({
+	tags: ["Keys"],
+	operationId: "pairingInit",
+	method: "post",
+	path: `/pairing/init`,
+	request: {
+		body: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						ivB64u: z.string(),
+						ciphertextB64u: z.string(),
+						ttlMs: z
+							.number()
+							.int()
+							.min(1000)
+							.max(1000 * 60 * 10)
+							.default(1000 * 60 * 5),
+					}),
+				},
+			},
+		},
+	},
+	responses: {
+		200: {
+			description: "Pairing token created",
+			content: { "application/json": { schema: z.object({ token: z.string() }) } },
+		},
+		400: {
+			description: "Bad Request",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+		401: {
+			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+	},
+});
+
+export const route_pairingClaim = createRoute({
+	tags: ["Keys"],
+	operationId: "pairingClaim",
+	method: "post",
+	path: `/pairing/claim`,
+	request: {
+		body: {
+			content: {
+				"application/json": {
+					schema: z.object({ token: z.string() }),
+				},
+			},
+		},
+	},
+	responses: {
+		200: {
+			description: "Encrypted payload for pairing",
+			content: { "application/json": { schema: z.object({ ivB64u: z.string(), ciphertextB64u: z.string() }) } },
+		},
+		400: {
+			description: "Bad Request",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+		401: {
+			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+		403: {
+			description: "Forbidden",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+		404: { description: "Not Found", content: { "application/json": { schema: z.object({ error: z.string() }) } } },
+	},
+});
+
+export const route_deviceRemove = createRoute({
+	tags: ["Keys"],
+	operationId: "deviceRemove",
+	method: "delete",
+	path: `/device/:deviceId`,
+	responses: {
+		200: { description: "Removed", content: { "application/json": { schema: z.object({ ok: z.literal(true) }) } } },
+		400: {
+			description: "Bad Request",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+		401: {
+			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+	},
+});
+
 export type KeysRoutes = {
 	keysRegister: typeof route_keysRegister;
 	keysMe: typeof route_keysMe;
 	keysTeamDefault: typeof route_keysTeamDefault;
 	keysTeamById: typeof route_keysTeamById;
+	pairingInit: typeof route_pairingInit;
+	pairingClaim: typeof route_pairingClaim;
+	deviceRemove: typeof route_deviceRemove;
 };

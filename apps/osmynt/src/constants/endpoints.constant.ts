@@ -9,6 +9,9 @@ export const ENDPOINTS = {
 	keys: {
 		register: "protected/keys/register",
 		teamById: (teamId: string) => `protected/keys/team/${teamId}`,
+		pairingInit: "protected/keys/pairing/init",
+		pairingClaim: "protected/keys/pairing/claim",
+		deviceRemove: (deviceId: string) => `protected/keys/device/${deviceId}`,
 	},
 	teams: {
 		me: "protected/teams/me",

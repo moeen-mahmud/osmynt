@@ -8,6 +8,9 @@ import {
 	promptTeamId,
 	shareSelectedCode,
 	tryDecryptSnippet,
+	initiateDevicePairing,
+	claimDevicePairing,
+	removeDevice,
 } from "@/services/osmynt.services";
 import { extractInviteToken } from "@/utils/osmynt.utils";
 import * as vscode from "vscode";
@@ -36,6 +39,18 @@ export async function handleLogin(
 	} catch (e) {
 		vscode.window.showErrorMessage(`Login failed: ${e}`);
 	}
+}
+
+export async function handleAddDevicePrimary(context: vscode.ExtensionContext) {
+	await initiateDevicePairing(context);
+}
+
+export async function handleAddDeviceCompanion(context: vscode.ExtensionContext) {
+	await claimDevicePairing(context);
+}
+
+export async function handleRemoveDevice(context: vscode.ExtensionContext) {
+	await removeDevice(context);
 }
 
 export async function handleLogout(
