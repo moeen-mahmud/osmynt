@@ -79,8 +79,30 @@ export async function ensureDeviceKeys(context: vscode.ExtensionContext) {
 		await context.secrets.store(DEVICE_ID_KEY, deviceId);
 	}
 
+	// Check existing server devices to decide whether to auto-register or require pairing
+	let devicesCount = 0;
+	try {
+		const { base, access } = await getBaseAndAccess(context);
+		const dm = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const dj = await dm.json();
+		devicesCount = Array.isArray(dj?.devices) ? dj.devices.length : 0;
+	} catch {}
+
 	let encKeypairJwk = await context.secrets.get(ENC_KEYPAIR_JWK_KEY);
 	if (!encKeypairJwk) {
+		if (devicesCount > 0) {
+			// Another device already exists (primary). Do NOT auto-register this device.
+			try {
+				await vscode.commands.executeCommand("setContext", "osmynt.isRegisteredDevice", false);
+				await vscode.commands.executeCommand("setContext", "osmynt.canPastePairing", true);
+			} catch {}
+			vscode.window.showInformationMessage(
+				"Osmynt: Pair this device using 'Add Device (Companion - paste code)'."
+			);
+			return { deviceId };
+		}
 		const kp: any = await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, [
 			"deriveKey",
 			"deriveBits",
@@ -141,6 +163,37 @@ export async function clearLocalDeviceSecrets(context: vscode.ExtensionContext):
 	try {
 		await context.secrets.delete(ENC_KEYPAIR_JWK_KEY);
 	} catch {}
+}
+
+export type DeviceState =
+	| { kind: "unpaired" }
+	| { kind: "registeredPrimary"; deviceId: string }
+	| { kind: "registeredCompanion"; deviceId: string }
+	| { kind: "removed" };
+
+export async function getDeviceState(context: vscode.ExtensionContext): Promise<DeviceState> {
+	try {
+		const { base, access } = await getBaseAndAccess(context);
+		const localId = await context.secrets.get(DEVICE_ID_KEY);
+		const enc = await context.secrets.get(ENC_KEYPAIR_JWK_KEY);
+		if (!localId || !enc) return { kind: "unpaired" };
+		const res = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const j = await res.json();
+		const devices: Array<{ deviceId: string }> = Array.isArray(j?.devices) ? j.devices : [];
+		const idx = devices.findIndex(d => d.deviceId === localId);
+		if (idx === -1) return { kind: "removed" };
+		return idx === 0
+			? { kind: "registeredPrimary", deviceId: localId }
+			: { kind: "registeredCompanion", deviceId: localId };
+	} catch {
+		// Network error → do not disrupt
+		const localId = await context.secrets.get(DEVICE_ID_KEY);
+		const enc = await context.secrets.get(ENC_KEYPAIR_JWK_KEY);
+		if (!localId || !enc) return { kind: "unpaired" };
+		return { kind: "registeredCompanion", deviceId: localId };
+	}
 }
 
 export async function initiateDevicePairing(context: vscode.ExtensionContext): Promise<string | null> {
@@ -458,27 +511,15 @@ export async function getBaseAndAccess(context: vscode.ExtensionContext) {
 
 export async function computeAndSetDeviceContexts(context: vscode.ExtensionContext) {
 	try {
-		const { base, access } = await getBaseAndAccess(context);
-		const res = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
-			headers: { Authorization: `Bearer ${access}` },
-		});
-		const j = await res.json();
-		const devices: Array<{ deviceId: string; createdAt?: string; isPrimary?: boolean }> = Array.isArray(j?.devices)
-			? j.devices
-			: [];
-		const localId = await context.secrets.get(DEVICE_ID_KEY);
-		const local = devices.find(d => d.deviceId === localId);
-		const hasPrimary = devices.some(d => d.isPrimary);
-		const deviceCount = devices.length;
-
-		const isPrimary = Boolean(local && (local.isPrimary || (!hasPrimary && deviceCount <= 1)));
-		const isCompanion = Boolean(local && !local.isPrimary && deviceCount >= 1);
-		const hasCompanion = deviceCount >= 2;
-
+		const state = await getDeviceState(context);
+		const isRegistered = state.kind === "registeredPrimary" || state.kind === "registeredCompanion";
+		const isPrimary = state.kind === "registeredPrimary";
+		const isCompanion = state.kind === "registeredCompanion";
+		await vscode.commands.executeCommand("setContext", "osmynt.isRegisteredDevice", isRegistered);
 		await vscode.commands.executeCommand("setContext", "osmynt.isPrimaryDevice", isPrimary);
 		await vscode.commands.executeCommand("setContext", "osmynt.isCompanionDevice", isCompanion);
-		await vscode.commands.executeCommand("setContext", "osmynt.canGeneratePairing", isPrimary && !hasCompanion);
-		await vscode.commands.executeCommand("setContext", "osmynt.canPastePairing", isCompanion);
+		await vscode.commands.executeCommand("setContext", "osmynt.canGeneratePairing", isPrimary);
+		await vscode.commands.executeCommand("setContext", "osmynt.canPastePairing", !isRegistered || isCompanion);
 	} catch {
 		// leave defaults
 	}

@@ -96,6 +96,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	await vscode.commands.executeCommand("setContext", "osmynt.isCompanionDevice", false);
 	await vscode.commands.executeCommand("setContext", "osmynt.canGeneratePairing", false);
 	await vscode.commands.executeCommand("setContext", "osmynt.canPastePairing", false);
+	await vscode.commands.executeCommand("setContext", "osmynt.isRegisteredDevice", false);
 	if (access) {
 		try {
 			await ensureDeviceKeys(context);
@@ -172,19 +173,16 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 						currentUserId = me?.user?.id as string | undefined;
 					} catch {}
 
-					const addressedToMe =
-						Array.isArray(j?.wrappedKeys) && currentUserId
-							? ((j.wrappedKeys as any[]) || []).some(w => w?.recipientUserId === currentUserId)
+					const localDeviceForWrap = await _context.secrets.get(DEVICE_ID_KEY);
+					const addressedToThisDevice =
+						Array.isArray(j?.wrappedKeys) && localDeviceForWrap
+							? ((j.wrappedKeys as any[]) || []).some(w => w?.recipientDeviceId === localDeviceForWrap)
 							: false;
-					if (canDecrypt && authorId !== currentUserId) {
+					if (authorId !== currentUserId && (canDecrypt || addressedToThisDevice)) {
 						// Receiver toast
 						vscode.window.showInformationMessage(
 							`A NEW SNIPPET ${title} ARRIVED FROM ${authorName ?? "someone"}`
 						);
-						treeProvider.refresh();
-					} else if (addressedToMe && authorId !== currentUserId) {
-						// Addressed to me; show notification even if decrypt fails right now
-						vscode.window.showInformationMessage(`A NEW SNIPPET ${title} ARRIVED`);
 						treeProvider.refresh();
 					} else if (currentUserId && authorId === currentUserId) {
 						// Sender toast
