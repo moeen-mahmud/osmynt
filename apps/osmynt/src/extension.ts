@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { ACCESS_SECRET_KEY } from "@/constants/osmynt.constant";
 import { OsmyntTreeProvider } from "@/provider/osmynt.provider";
-import { ensureDeviceKeys, tryDecryptSnippet } from "@/services/osmynt.services";
+import { ensureDeviceKeys, tryDecryptSnippet, computeAndSetDeviceContexts } from "@/services/osmynt.services";
 import { ENDPOINTS } from "@/constants/endpoints.constant";
 import {
 	handleLogin,
@@ -15,6 +15,7 @@ import {
 	handleAddDevicePrimary,
 	handleAddDeviceCompanion,
 	handleRemoveDevice,
+	handleBackfillCompanion,
 } from "@/commands/osmynt.commands";
 
 import { getBaseAndAccess } from "@/services/osmynt.services";
@@ -40,6 +41,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand("osmynt.addDevicePrimary", () => handleAddDevicePrimary(context)),
 		vscode.commands.registerCommand("osmynt.addDeviceCompanion", () => handleAddDeviceCompanion(context)),
 		vscode.commands.registerCommand("osmynt.removeDevice", () => handleRemoveDevice(context)),
+		vscode.commands.registerCommand("osmynt.backfillCompanion", () => handleBackfillCompanion(context)),
 		vscode.commands.registerCommand("osmynt.snippet.copy", async (item?: any) => {
 			if (!item?.data?.id) return;
 			const { base, access } = await getBaseAndAccess(context);
@@ -89,12 +91,18 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	const access = await context.secrets.get(ACCESS_SECRET_KEY);
 	await vscode.commands.executeCommand("setContext", "osmynt.isLoggedIn", Boolean(access));
+	// Prime primary/companion contexts: default to unknown until computed
+	await vscode.commands.executeCommand("setContext", "osmynt.isPrimaryDevice", true);
+	await vscode.commands.executeCommand("setContext", "osmynt.isCompanionDevice", false);
 	if (access) {
 		try {
 			await ensureDeviceKeys(context);
 		} catch {
 			// vscode.window.showErrorMessage("Failed to ensure device keys");
 		}
+		try {
+			await computeAndSetDeviceContexts(context);
+		} catch {}
 		try {
 			if (!realtimeChannel) {
 				await connectRealtime(context, tree);

@@ -113,6 +113,26 @@ export class CodeShareController {
 		return c.json({ ver: 1, alg: CODE_SHARE_ALGORITHM, ...item, createdAt: item.createdAt.toISOString() }, 200);
 	}
 
+	static async addWrappedKeys(c: Context) {
+		const user = c.get("user") as { id: string } | undefined;
+		if (!user) {
+			logger.error("Unauthorized");
+			return c.json({ error: "Unauthorized" }, 401);
+		}
+		const id = c.req.param("id");
+		const item = await CodeShareService.getById(id);
+		if (!item) return c.json({ error: "Not Found" }, 404);
+		// Only author can add more wrapped keys (prevents others from tampering)
+		if (item.authorId !== user.id) return c.json({ error: "Forbidden" }, 403);
+		const body = await c.req.json().catch(() => ({}));
+		const incoming = Array.isArray(body?.wrappedKeys) ? body.wrappedKeys : [];
+		const existing = (item.wrappedKeys as unknown as any[]) || [];
+		const merged = existing.concat(incoming);
+		await prisma.codeShare.update({ where: { id }, data: { wrappedKeys: merged as unknown as object } });
+		logger.info("Added wrapped keys", { id, count: incoming.length });
+		return c.json({ ok: true }, 200);
+	}
+
 	static async listTeamByAuthor(c: Context) {
 		const user = c.get("user") as { id: string } | undefined;
 		if (!user) {

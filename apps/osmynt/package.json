@@ -103,19 +103,28 @@
 				"command": "osmynt.addDevicePrimary",
 				"title": "Add Device (Primary - generate code)",
 				"category": "Osmynt",
-				"icon": "$(plug)"
+				"icon": "$(plug)",
+				"enablement": "osmynt.isPrimaryDevice == true"
 			},
 			{
 				"command": "osmynt.addDeviceCompanion",
 				"title": "Add Device (Companion - paste code)",
 				"category": "Osmynt",
-				"icon": "$(plug)"
+				"icon": "$(plug)",
+				"enablement": "osmynt.isCompanionDevice == true"
 			},
 			{
 				"command": "osmynt.removeDevice",
 				"title": "Remove Device",
 				"category": "Osmynt",
 				"icon": "$(trash)"
+			},
+			{
+				"command": "osmynt.backfillCompanion",
+				"title": "Backfill Access for This Device",
+				"category": "Osmynt",
+				"icon": "$(cloud-download)",
+				"enablement": "osmynt.isCompanionDevice == true"
 			},
 			{
 				"command": "osmynt.viewSnippet",

@@ -90,10 +90,18 @@ export class KeysController {
 			return c.json({ error: "Unauthorized" }, 401);
 		}
 		const body = await c.req.json().catch(() => ({}));
+		const deviceId = body?.deviceId as string | undefined;
 		const ivB64u = body?.ivB64u as string | undefined;
 		const ciphertextB64u = body?.ciphertextB64u as string | undefined;
 		const ttlMs = Math.min(Math.max(Number(body?.ttlMs ?? 1000 * 60 * 5), 1000), 1000 * 60 * 10);
-		if (!ivB64u || !ciphertextB64u) return c.json({ error: "Invalid body" }, 400);
+		if (!deviceId || !ivB64u || !ciphertextB64u) return c.json({ error: "Invalid body" }, 400);
+		const devices = await KeysService.listUserDevices(user.id);
+		const sorted = [...devices].sort(
+			(a: any, b: any) => new Date(a.createdAt as any).getTime() - new Date(b.createdAt as any).getTime()
+		);
+		const primaryId = sorted[0]?.deviceId as string | undefined;
+		const isPrimary = devices.length === 0 || (primaryId && primaryId === deviceId);
+		if (!isPrimary) return c.json({ error: "Only primary device can initiate pairing" }, 403);
 		const token = nanoid(24);
 		await PairingStore.save(
 			token,

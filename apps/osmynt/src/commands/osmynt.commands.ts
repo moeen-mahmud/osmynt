@@ -15,6 +15,7 @@ import {
 import { extractInviteToken } from "@/utils/osmynt.utils";
 import * as vscode from "vscode";
 import { ENDPOINTS } from "@/constants/endpoints.constant";
+import { computeAndSetDeviceContexts, backfillAccessForCompanion } from "@/services/osmynt.services";
 
 export async function handleLogin(
 	context: vscode.ExtensionContext,
@@ -43,14 +44,20 @@ export async function handleLogin(
 
 export async function handleAddDevicePrimary(context: vscode.ExtensionContext) {
 	await initiateDevicePairing(context);
+	await computeAndSetDeviceContexts(context);
 }
 
 export async function handleAddDeviceCompanion(context: vscode.ExtensionContext) {
 	await claimDevicePairing(context);
+	await computeAndSetDeviceContexts(context);
 }
 
 export async function handleRemoveDevice(context: vscode.ExtensionContext) {
 	await removeDevice(context);
+}
+
+export async function handleBackfillCompanion(context: vscode.ExtensionContext) {
+	await backfillAccessForCompanion(context);
 }
 
 export async function handleLogout(

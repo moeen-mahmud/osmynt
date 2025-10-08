@@ -127,10 +127,12 @@ export async function initiateDevicePairing(context: vscode.ExtensionContext): P
 		const pairingKey = (await import("crypto")).randomBytes(32);
 		const key = await subtle.importKey("raw", pairingKey, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);
 		const ciphertext = await subtle.encrypt({ name: "AES-GCM", iv }, key, Buffer.from(payload, "utf-8"));
+		const deviceId = (await context.secrets.get(DEVICE_ID_KEY))!;
 		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.pairingInit}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json", Authorization: `Bearer ${access}` },
 			body: JSON.stringify({
+				deviceId,
 				ivB64u: b64url(new Uint8Array(iv)),
 				ciphertextB64u: b64url(new Uint8Array(ciphertext as ArrayBuffer)),
 			}),
@@ -221,11 +223,193 @@ export async function removeDevice(context: vscode.ExtensionContext): Promise<vo
 	}
 }
 
+export async function backfillAccessForCompanion(context: vscode.ExtensionContext): Promise<void> {
+	try {
+		const { base, access } = await getBaseAndAccess(context);
+		// determine companion device id
+		const meRes = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const me = await meRes.json();
+		const devices: Array<{ deviceId: string; encryptionPublicKeyJwk: any }> = Array.isArray(me?.devices)
+			? me.devices
+			: [];
+		if (devices.length < 2) {
+			vscode.window.showInformationMessage("No companion device found.");
+			return;
+		}
+		const localId = await context.secrets.get(DEVICE_ID_KEY);
+		const companion = devices.find(d => d.deviceId !== localId) || devices[1];
+		if (!companion) {
+			vscode.window.showWarningMessage("Companion device not found.");
+			return;
+		}
+
+		// fetch recent team items as a starter (can be expanded to DMs, etc.)
+		const teamId = await promptTeamId(context);
+		if (!teamId) {
+			vscode.window.showWarningMessage("No team available to backfill.");
+			return;
+		}
+		const listRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.listTeam}`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const list = await listRes.json();
+		const items: Array<{ id: string; wrappedKeys?: any[] }> = Array.isArray(list?.items) ? list.items : [];
+
+		const nodeCrypto = await import("crypto");
+		const subtle: any = (globalThis as any).crypto?.subtle ?? (nodeCrypto as any).webcrypto?.subtle;
+		if (!subtle) throw new Error("WebCrypto Subtle API not available");
+
+		// load our device keypair
+		const encKeypair = JSON.parse((await context.secrets.get(ENC_KEYPAIR_JWK_KEY)) || "{}");
+		if (!encKeypair?.privateKeyJwk || !encKeypair?.publicKeyJwk) {
+			vscode.window.showWarningMessage("Missing device keys.");
+			return;
+		}
+		const myPriv: any = await subtle.importKey(
+			"jwk",
+			encKeypair.privateKeyJwk,
+			{ name: "ECDH", namedCurve: "P-256" },
+			true,
+			["deriveKey", "deriveBits"]
+		);
+
+		const companionPub = await subtle.importKey(
+			"jwk",
+			companion.encryptionPublicKeyJwk,
+			{ name: "ECDH", namedCurve: "P-256" },
+			true,
+			[]
+		);
+
+		// iterate and add a wrapped key for companion device per item where not already present
+		for (const it of items) {
+			try {
+				// fetch full item to get ciphertext iv and existing wraps
+				const itemRes = await fetch(
+					`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.getById(encodeURIComponent(it.id))}`,
+					{
+						headers: { Authorization: `Bearer ${access}` },
+					}
+				);
+				const full = await itemRes.json();
+				if (!itemRes.ok) continue;
+				const already = (full?.wrappedKeys ?? []).some(
+					(wk: any) => wk?.recipientDeviceId === companion.deviceId
+				);
+				if (already) continue;
+
+				// We need the CEK; since server stores only ciphertext, we cannot decrypt without sender-side CEK.
+				// Strategy: require that this device authored the snippet OR stored CEK in memory. For v1, only backfill when authored by me.
+				const meTeamsRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
+					headers: { Authorization: `Bearer ${access}` },
+				});
+				const meTeams = await meTeamsRes.json();
+				const meUserId: string | undefined = meTeams?.user?.id;
+				if (!meUserId || full?.authorId !== meUserId) continue;
+
+				// Derive CEK by re-encrypt workflow is not possible without original CEK; skip if cannot unwrap from our perspective
+				// Try to unwrap CEK from one of our recipient entries (sender ephemeral ECDH)
+				let cekRaw: ArrayBuffer | null = null;
+				for (const wk of full?.wrappedKeys ?? []) {
+					if (wk?.recipientDeviceId === (localId as string)) {
+						try {
+							const senderPub = await subtle.importKey(
+								"jwk",
+								wk.senderEphemeralPublicKeyJwk,
+								{ name: "ECDH", namedCurve: "P-256" },
+								true,
+								[]
+							);
+							const kek = await subtle.deriveKey(
+								{ name: "ECDH", public: senderPub },
+								myPriv,
+								{ name: "AES-GCM", length: 256 },
+								false,
+								["decrypt"]
+							);
+							const wrapIv = b64uToBytes(wk.wrapIvB64u);
+							const wrappedBytes = b64uToBytes(wk.wrappedCekB64u);
+							cekRaw = await subtle.decrypt({ name: "AES-GCM", iv: wrapIv }, kek, wrappedBytes);
+							break;
+						} catch {}
+					}
+				}
+				if (!cekRaw) continue;
+
+				// Wrap CEK for companion
+				const eph = (await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, [
+					"deriveKey",
+					"deriveBits",
+				])) as any;
+				const ephPubJwk = await subtle.exportKey("jwk", eph.publicKey);
+				const kek2 = await subtle.deriveKey(
+					{ name: "ECDH", public: companionPub },
+					eph.privateKey,
+					{ name: "AES-GCM", length: 256 },
+					false,
+					["encrypt"]
+				);
+				const wrapIv2 = (await import("crypto")).randomBytes(12);
+				const wrapped2 = await subtle.encrypt({ name: "AES-GCM", iv: wrapIv2 }, kek2, cekRaw);
+				const payload = {
+					wrappedKeys: [
+						{
+							recipientUserId: meUserId,
+							recipientDeviceId: companion.deviceId,
+							senderEphemeralPublicKeyJwk: ephPubJwk,
+							wrappedCekB64u: b64url(new Uint8Array(wrapped2 as ArrayBuffer)),
+							wrapIvB64u: b64url(new Uint8Array(wrapIv2)),
+						},
+					],
+				};
+				await fetch(
+					`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.addWrappedKeys(encodeURIComponent(full.id))}`,
+					{
+						method: "POST",
+						headers: { "Content-Type": "application/json", Authorization: `Bearer ${access}` },
+						body: JSON.stringify(payload),
+					}
+				);
+			} catch {}
+		}
+		vscode.window.showInformationMessage("Backfill completed for companion device (authored items).");
+	} catch (e) {
+		vscode.window.showErrorMessage(`Backfill failed: ${e}`);
+	}
+}
+
 export async function getBaseAndAccess(context: vscode.ExtensionContext) {
 	const base = ENDPOINTS.engineBaseUrl!.replace(/\/$/, "");
 	const access = await context.secrets.get(ACCESS_SECRET_KEY);
 	if (!access) throw new Error("Not logged in");
 	return { base, access };
+}
+
+export async function computeAndSetDeviceContexts(context: vscode.ExtensionContext) {
+	try {
+		const { base, access } = await getBaseAndAccess(context);
+		const res = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const j = await res.json();
+		const devices: Array<{ deviceId: string; createdAt?: string }> = Array.isArray(j?.devices) ? j.devices : [];
+		const sorted = [...devices].sort(
+			(a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+		);
+		const localId = await context.secrets.get(DEVICE_ID_KEY);
+		const primaryDeviceId = sorted[0]?.deviceId as string | undefined;
+		const isPrimary = Boolean(localId && primaryDeviceId && localId === primaryDeviceId);
+		await vscode.commands.executeCommand("setContext", "osmynt.isPrimaryDevice", isPrimary || devices.length === 0);
+		await vscode.commands.executeCommand(
+			"setContext",
+			"osmynt.isCompanionDevice",
+			!isPrimary && devices.length > 0
+		);
+	} catch {
+		// leave defaults
+	}
 }
 
 export async function promptTeamId(context: vscode.ExtensionContext): Promise<string | undefined> {

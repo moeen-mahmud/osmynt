@@ -113,6 +113,41 @@ export const route_getById = createRoute({
 	},
 });
 
+export const route_addWrappedKeys = createRoute({
+	tags: ["CodeShare"],
+	operationId: "codeShareAddWrappedKeys",
+	method: "post",
+	path: "/:id/add-wrapped-keys",
+	request: {
+		body: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						wrappedKeys: z.array(
+							z.object({
+								recipientUserId: z.string(),
+								recipientDeviceId: z.string(),
+								senderEphemeralPublicKeyJwk: z.any(),
+								wrappedCekB64u: z.string(),
+								wrapIvB64u: z.string(),
+							})
+						),
+					}),
+				},
+			},
+		},
+	},
+	responses: {
+		200: { description: "Updated", content: { "application/json": { schema: z.object({ ok: z.literal(true) }) } } },
+		401: {
+			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+		403: { description: "Forbidden", content: { "application/json": { schema: z.object({ error: z.string() }) } } },
+		404: { description: "Not Found", content: { "application/json": { schema: z.object({ error: z.string() }) } } },
+	},
+});
+
 export const route_listTeamByAuthor = createRoute({
 	tags: ["CodeShare"],
 	operationId: "codeShareListTeamByAuthor",
@@ -187,6 +222,7 @@ export type CodeShareRoutes = {
 	codeShareShare: typeof route_share;
 	codeShareListTeam: typeof route_listTeam;
 	codeShareGetById: typeof route_getById;
+	codeShareAddWrappedKeys: typeof route_addWrappedKeys;
 	codeShareListTeamByAuthor: typeof route_listTeamByAuthor;
 	codeShareListDmWith: typeof route_listDmWith;
 	codeShareRealtimeConfig: typeof route_realtimeConfig;

@@ -134,6 +134,7 @@ export const route_pairingInit = createRoute({
 			content: {
 				"application/json": {
 					schema: z.object({
+						deviceId: z.string(),
 						ivB64u: z.string(),
 						ciphertextB64u: z.string(),
 						ttlMs: z
