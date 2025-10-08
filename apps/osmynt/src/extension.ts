@@ -177,6 +177,17 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 				treeProvider.refresh();
 			} catch {}
 		})
+		.on("broadcast", { event: "keys:changed" }, async _payload => {
+			try {
+				await computeAndSetDeviceContexts(_context);
+				treeProvider.refresh();
+			} catch {}
+		})
+		.on("broadcast", { event: "team:memberJoined" }, async _payload => {
+			try {
+				treeProvider.refresh();
+			} catch {}
+		})
 		.subscribe();
 }
 

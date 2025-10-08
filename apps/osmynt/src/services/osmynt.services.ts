@@ -231,7 +231,9 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 			headers: { Authorization: `Bearer ${access}` },
 		});
 		const me = await meRes.json();
-		const devices: Array<{ deviceId: string; encryptionPublicKeyJwk: any }> = Array.isArray(me?.devices)
+		const devices: Array<{ deviceId: string; encryptionPublicKeyJwk: any; isPrimary?: boolean }> = Array.isArray(
+			me?.devices
+		)
 			? me.devices
 			: [];
 		if (devices.length < 2) {
@@ -240,6 +242,11 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 		}
 		const localId = await context.secrets.get(DEVICE_ID_KEY);
 		const companion = devices.find(d => d.deviceId !== localId) || devices[1];
+		const meIsPrimary = (devices.find(d => d.deviceId === localId)?.isPrimary ?? false) || devices.length === 1;
+		if (!meIsPrimary) {
+			vscode.window.showWarningMessage("Run backfill from the primary device.");
+			return;
+		}
 		if (!companion) {
 			vscode.window.showWarningMessage("Companion device not found.");
 			return;

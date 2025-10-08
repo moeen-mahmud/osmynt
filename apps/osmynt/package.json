@@ -121,10 +121,10 @@
 			},
 			{
 				"command": "osmynt.backfillCompanion",
-				"title": "Backfill Access for This Device",
+				"title": "Backfill Access for Companion",
 				"category": "Osmynt",
 				"icon": "$(cloud-download)",
-				"enablement": "osmynt.isCompanionDevice == true"
+				"enablement": "osmynt.isPrimaryDevice == true"
 			},
 			{
 				"command": "osmynt.viewSnippet",

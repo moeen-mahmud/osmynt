@@ -9,6 +9,6 @@ const TeamsAPIModule = new OpenAPIHono<Env>();
 TeamsAPIModule.use("*", jwtMiddleware);
 TeamsAPIModule.openapi(route_me, TeamsController.me);
 TeamsAPIModule.openapi(route_invite, TeamsController.invite);
-TeamsAPIModule.openapi(route_accept, TeamsController.accept);
+TeamsAPIModule.openapi(route_accept, TeamsController.accept as any);
 TeamsAPIModule.openapi(route_removeTeamMember, TeamsController.removeTeamMember);
 export { TeamsAPIModule };

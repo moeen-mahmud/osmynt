@@ -1,6 +1,7 @@
 import type { Context } from "hono";
 import { logger } from "@osmynt-core/library";
 import { TeamsService } from "@/modules/teams/services/teams.service";
+import { getBroadcastChannel } from "@/config/supabase.config";
 
 export class TeamsController {
 	static async me(c: Context) {
@@ -58,6 +59,14 @@ export class TeamsController {
 			}
 
 			const response = await TeamsService.acceptInvitation(invite.teamId, user.id, inviteToken);
+			try {
+				const ch = await getBroadcastChannel();
+				await ch.send({
+					type: "broadcast",
+					event: "team:memberJoined",
+					payload: { teamId: invite.teamId, userId: user.id },
+				});
+			} catch {}
 
 			return c.json(response, 200);
 		} catch (error) {
