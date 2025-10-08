@@ -6,7 +6,7 @@ import { logger } from "@osmynt-core/library";
 import { KEYS_AUDIT_LOG_ACTIONS } from "@/modules/keys/constants/keys.constants";
 import { PairingStore } from "@/modules/keys/services/pairing.store";
 import { nanoid } from "nanoid";
-import { getBroadcastChannel } from "@/config/supabase.config";
+import { publishBroadcast } from "@/config/realtime.config";
 
 export class KeysController {
 	static async register(c: Context) {
@@ -37,8 +37,7 @@ export class KeysController {
 			},
 		});
 		try {
-			const ch = await getBroadcastChannel();
-			await ch.send({ type: "broadcast", event: "keys:changed", payload: { userId: user.id } });
+			await publishBroadcast("keys:changed", { userId: user.id });
 		} catch {}
 		logger.info("Registered", { userId: user.id });
 		return c.json({ ok: true }, 200);
@@ -169,8 +168,7 @@ export class KeysController {
 			},
 		});
 		try {
-			const ch = await getBroadcastChannel();
-			await ch.send({ type: "broadcast", event: "keys:changed", payload: { userId: user.id } });
+			await publishBroadcast("keys:changed", { userId: user.id });
 		} catch {}
 		logger.info("Device removed", { userId: user.id, deviceId });
 		return c.json({ ok: true }, 200);

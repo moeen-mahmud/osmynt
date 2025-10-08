@@ -19,7 +19,7 @@ import {
 } from "@/commands/osmynt.commands";
 
 import { getBaseAndAccess } from "@/services/osmynt.services";
-import { createClient, type RealtimeChannel, type SupabaseClient } from "@supabase/supabase-js";
+import Redis from "ioredis";
 import { ENV } from "@/config/env.config";
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -107,7 +107,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			await computeAndSetDeviceContexts(context);
 		} catch {}
 		try {
-			if (!realtimeChannel) {
+			if (!redisSubscriber) {
 				await connectRealtime(context, tree);
 			}
 		} catch {}
@@ -117,29 +117,42 @@ export async function activate(context: vscode.ExtensionContext) {
 export function deactivate() {}
 
 let treeProvider: OsmyntTreeProvider | null = null;
-let realtimeChannel: RealtimeChannel | null = null;
-let supabaseClient: SupabaseClient | null = null;
+let redisSubscriber: Redis | null = null;
 
 export async function connectRealtime(_context: vscode.ExtensionContext, treeProvider: OsmyntTreeProvider) {
-	if (realtimeChannel) return; // already connected
-	const url = ENV.supabaseUrl;
-	const anonKey = ENV.supabaseAnonKey;
-	if (!url || !anonKey) {
-		vscode.window.showWarningMessage("Error connecting to realtime. Please check your configuration.");
+	if (redisSubscriber) return; // already connected
+	const url = ENV.upstashRedisUrl;
+	if (!url) {
+		vscode.window.showWarningMessage("Error connecting to realtime. Please set UPSTASH_REDIS_URL.");
 		return;
 	}
-	supabaseClient = createClient(url, anonKey, { realtime: { params: { eventsPerSecond: 3 } } });
-	const channel = supabaseClient.channel("osmynt-recent-snippets");
-	realtimeChannel = channel
-		.on("broadcast", { event: "snippet:created" }, async payload => {
+	redisSubscriber = new Redis(url);
+	await new Promise<void>((resolve, reject) => {
+		redisSubscriber!.subscribe("osmynt-recent-snippets", err => {
+			if (err) reject(err);
+			else resolve();
+		});
+	});
+	redisSubscriber.on("message", async (channel: string, message: string) => {
+		if (channel !== "osmynt-recent-snippets") return;
+		let payload: any;
+		try {
+			payload = JSON.parse(message);
+		} catch {
+			return;
+		}
+		const event = payload?.event as string | undefined;
+		const data = payload?.payload;
+		if (!event) return;
+		if (event === "snippet:created") {
 			try {
 				const { base, access } = await getBaseAndAccess(_context);
-				const id = payload?.payload?.id as string | undefined;
+				const id = data?.id as string | undefined;
 				if (id) {
 					// Short-circuit: if this device is no longer registered, ignore notification
 					try {
 						const localDeviceId = await _context.secrets.get(DEVICE_ID_KEY);
-						const dres = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+						const dres = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 							headers: { Authorization: `Bearer ${access}` },
 						});
 						const dj = await dres.json();
@@ -157,12 +170,10 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 					const j = await res.json();
 					const canDecrypt = (await tryDecryptSnippet(_context, j)) !== null;
 					const title =
-						(payload?.payload?.title as string | undefined) ||
-						(j?.metadata?.title as string | undefined) ||
-						"Snippet";
-					const authorName = (payload?.payload?.authorName as string | undefined) || j?.authorName;
-					const firstRecipientName = payload?.payload?.firstRecipientName as string | undefined;
-					const authorId = (payload?.payload?.authorId as string | undefined) || j?.authorId;
+						(data?.title as string | undefined) || (j?.metadata?.title as string | undefined) || "Snippet";
+					const authorName = (data?.authorName as string | undefined) || j?.authorName;
+					const firstRecipientName = data?.firstRecipientName as string | undefined;
+					const authorId = (data?.authorId as string | undefined) || j?.authorId;
 					let currentUserId: string | undefined;
 
 					try {
@@ -187,7 +198,7 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 					} else if (currentUserId && authorId === currentUserId) {
 						// Sender toast
 						vscode.window.showInformationMessage(
-							`SNIPPET ${title} SHARED TO ${firstRecipientName ?? payload?.payload?.teamName ?? "team"}`
+							`SNIPPET ${title} SHARED TO ${firstRecipientName ?? data?.teamName ?? "team"}`
 						);
 						treeProvider.refresh();
 					}
@@ -195,28 +206,24 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 				// Refresh both sides
 				treeProvider.refresh();
 			} catch {}
-		})
-		.on("broadcast", { event: "keys:changed" }, async _payload => {
+		}
+		if (event === "keys:changed") {
 			try {
 				await computeAndSetDeviceContexts(_context);
 				treeProvider.refresh();
 			} catch {}
-		})
-		.on("broadcast", { event: "team:memberJoined" }, async _payload => {
+		}
+		if (event === "team:memberJoined") {
 			try {
 				treeProvider.refresh();
 			} catch {}
-		})
-		.subscribe();
+		}
+	});
 }
 
 export async function disconnectRealtime(_context: vscode.ExtensionContext) {
 	try {
-		await realtimeChannel?.unsubscribe();
+		await redisSubscriber?.quit();
 	} catch {}
-	try {
-		await supabaseClient?.removeAllChannels();
-	} catch {}
-	realtimeChannel = null;
-	supabaseClient = null;
+	redisSubscriber = null;
 }

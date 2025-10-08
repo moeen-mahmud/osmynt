@@ -29,6 +29,11 @@ export const ENV = {
 		ANON_KEY: Bun.env.SUPABASE_ANON_KEY,
 	},
 
+	UPSTASH: {
+		REST_URL: Bun.env.UPSTASH_REDIS_REST_URL,
+		REST_TOKEN: Bun.env.UPSTASH_REDIS_REST_TOKEN,
+	},
+
 	// Validation flag for environment variables
 	isConfigValid: function () {
 		const requiredVars = [

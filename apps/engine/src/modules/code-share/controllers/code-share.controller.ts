@@ -4,7 +4,7 @@ import { CodeShareService } from "@/modules/code-share/services/code-share.servi
 import { logger } from "@osmynt-core/library";
 import { codeShareSchema } from "@/modules/code-share/schemas/code-share.schema";
 import { CODE_SHARE_ALGORITHM, CODE_SHARE_AUDIT_LOG_ACTIONS } from "@/modules/code-share/constants/code-share.constant";
-import { getBroadcastChannel } from "@/config/supabase.config";
+import { publishBroadcast } from "@/config/realtime.config";
 import { ENV } from "@/config/env.config";
 export class CodeShareController {
 	static async share(c: Context) {
@@ -35,7 +35,6 @@ export class CodeShareController {
 		});
 
 		try {
-			const channel = await getBroadcastChannel();
 			const author = await prisma.user.findUnique({ where: { id: user.id }, select: { name: true } });
 			const meta: any = parsed.data.metadata ?? {};
 			const recipientUserIds = Array.from(
@@ -54,19 +53,15 @@ export class CodeShareController {
 				const team = await prisma.team.findUnique({ where: { id: meta.teamId }, select: { name: true } });
 				teamName = team?.name ?? undefined;
 			}
-			await channel.send({
-				type: "broadcast",
-				event: "snippet:created",
-				payload: {
-					id: created.id,
-					title: meta?.title,
-					authorId: user.id,
-					authorName: author?.name,
-					recipientUserIds,
-					teamId: meta?.teamId,
-					teamName,
-					firstRecipientName,
-				},
+			await publishBroadcast("snippet:created", {
+				id: created.id,
+				title: meta?.title,
+				authorId: user.id,
+				authorName: author?.name,
+				recipientUserIds,
+				teamId: meta?.teamId,
+				teamName,
+				firstRecipientName,
 			});
 		} catch (error) {
 			logger.error("Failed to broadcast snippet:created", { error });

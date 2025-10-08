@@ -8,6 +8,7 @@ export const ENDPOINTS = {
 	},
 	keys: {
 		register: "protected/keys/register",
+		me: "protected/keys/me",
 		teamById: (teamId: string) => `protected/keys/team/${teamId}`,
 		pairingInit: "protected/keys/pairing/init",
 		pairingClaim: "protected/keys/pairing/claim",
