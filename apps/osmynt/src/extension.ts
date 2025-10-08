@@ -152,7 +152,7 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 					// Short-circuit: if this device is no longer registered, ignore notification
 					try {
 						const localDeviceId = await _context.secrets.get(DEVICE_ID_KEY);
-						const dres = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
+						const dres = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
 							headers: { Authorization: `Bearer ${access}` },
 						});
 						const dj = await dres.json();
@@ -185,11 +185,14 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 					} catch {}
 
 					const localDeviceForWrap = await _context.secrets.get(DEVICE_ID_KEY);
-					const addressedToThisDevice =
-						Array.isArray(j?.wrappedKeys) && localDeviceForWrap
-							? ((j.wrappedKeys as any[]) || []).some(w => w?.recipientDeviceId === localDeviceForWrap)
-							: false;
-					if (authorId !== currentUserId && (canDecrypt || addressedToThisDevice)) {
+					const wraps: any[] = Array.isArray(j?.wrappedKeys) ? (j.wrappedKeys as any[]) : [];
+					const addressedToThisDevice = localDeviceForWrap
+						? wraps.some(w => w?.recipientDeviceId === localDeviceForWrap)
+						: false;
+					const addressedToUser = currentUserId
+						? wraps.some(w => w?.recipientUserId === currentUserId)
+						: false;
+					if (authorId !== currentUserId && (canDecrypt || addressedToThisDevice || addressedToUser)) {
 						// Receiver toast
 						vscode.window.showInformationMessage(
 							`A NEW SNIPPET ${title} ARRIVED FROM ${authorName ?? "someone"}`
