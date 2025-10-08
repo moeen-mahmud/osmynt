@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ACCESS_SECRET_KEY } from "@/constants/osmynt.constant";
+import { ACCESS_SECRET_KEY, DEVICE_ID_KEY } from "@/constants/osmynt.constant";
 import { OsmyntTreeProvider } from "@/provider/osmynt.provider";
 import { ensureDeviceKeys, tryDecryptSnippet, computeAndSetDeviceContexts } from "@/services/osmynt.services";
 import { ENDPOINTS } from "@/constants/endpoints.constant";
@@ -135,6 +135,18 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 				const { base, access } = await getBaseAndAccess(_context);
 				const id = payload?.payload?.id as string | undefined;
 				if (id) {
+					// Short-circuit: if this device is no longer registered, ignore notification
+					try {
+						const localDeviceId = await _context.secrets.get(DEVICE_ID_KEY);
+						const dres = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+							headers: { Authorization: `Bearer ${access}` },
+						});
+						const dj = await dres.json();
+						const isRegistered = Array.isArray(dj?.devices)
+							? (dj.devices as any[]).some(d => d?.deviceId === localDeviceId)
+							: false;
+						if (!isRegistered) return;
+					} catch {}
 					const res = await fetch(
 						`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.getById(encodeURIComponent(id))}`,
 						{
@@ -159,11 +171,20 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 						const me = await meRes.json();
 						currentUserId = me?.user?.id as string | undefined;
 					} catch {}
+
+					const addressedToMe =
+						Array.isArray(j?.wrappedKeys) && currentUserId
+							? ((j.wrappedKeys as any[]) || []).some(w => w?.recipientUserId === currentUserId)
+							: false;
 					if (canDecrypt && authorId !== currentUserId) {
 						// Receiver toast
 						vscode.window.showInformationMessage(
 							`A NEW SNIPPET ${title} ARRIVED FROM ${authorName ?? "someone"}`
 						);
+						treeProvider.refresh();
+					} else if (addressedToMe && authorId !== currentUserId) {
+						// Addressed to me; show notification even if decrypt fails right now
+						vscode.window.showInformationMessage(`A NEW SNIPPET ${title} ARRIVED`);
 						treeProvider.refresh();
 					} else if (currentUserId && authorId === currentUserId) {
 						// Sender toast

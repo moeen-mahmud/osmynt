@@ -94,7 +94,13 @@ export async function ensureDeviceKeys(context: vscode.ExtensionContext) {
 		try {
 			const parsed = JSON.parse(encKeypairJwk);
 			if (parsed?.publicKeyJwk) {
-				await registerDeviceKey(context, deviceId, parsed.publicKeyJwk);
+				const stillRegistered = await verifySelfDeviceRegistered(context);
+				if (!stillRegistered) {
+					await clearLocalDeviceSecrets(context);
+					vscode.window.showInformationMessage("Osmynt: This device was removed. Pair again to reconnect.");
+				} else {
+					await registerDeviceKey(context, deviceId, parsed.publicKeyJwk);
+				}
 			}
 		} catch {}
 	}
@@ -110,6 +116,31 @@ export async function registerDeviceKey(context: vscode.ExtensionContext, device
 		headers: { "Content-Type": "application/json", Authorization: `Bearer ${access}` },
 		body: JSON.stringify({ deviceId, encryptionPublicKeyJwk: publicKeyJwk, algorithm: "ECDH-P-256" }),
 	});
+}
+
+export async function verifySelfDeviceRegistered(context: vscode.ExtensionContext): Promise<boolean> {
+	try {
+		const { base, access } = await getBaseAndAccess(context);
+		const localId = await context.secrets.get(DEVICE_ID_KEY);
+		if (!localId) return false;
+		const res = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const j = await res.json();
+		const devices: Array<{ deviceId: string }> = Array.isArray(j?.devices) ? j.devices : [];
+		return devices.some(d => d.deviceId === localId);
+	} catch {
+		return true;
+	}
+}
+
+export async function clearLocalDeviceSecrets(context: vscode.ExtensionContext): Promise<void> {
+	try {
+		await context.secrets.delete(DEVICE_ID_KEY);
+	} catch {}
+	try {
+		await context.secrets.delete(ENC_KEYPAIR_JWK_KEY);
+	} catch {}
 }
 
 export async function initiateDevicePairing(context: vscode.ExtensionContext): Promise<string | null> {
