@@ -16,6 +16,7 @@ import {
 	handleAddDeviceCompanion,
 	handleRemoveDevice,
 	handleBackfillCompanion,
+	handleApplyDiff,
 } from "@/commands/osmynt.commands";
 
 import { getBaseAndAccess } from "@/services/osmynt.services";
@@ -88,6 +89,12 @@ export async function activate(context: vscode.ExtensionContext) {
 			await context.globalState.update(`osmynt.filter.${teamId}`, undefined);
 			await vscode.commands.executeCommand("setContext", `osmynt.filter.${teamId}`, undefined);
 			treeProvider?.refresh();
+		}),
+		vscode.commands.registerCommand("osmynt.applyDiff", (item?: any) => {
+			console.log("Apply diff command called with item:", item);
+			const snippetId = item?.data?.id;
+			console.log("Extracted snippet ID:", snippetId);
+			handleApplyDiff(context, snippetId);
 		})
 	);
 

@@ -168,6 +168,12 @@
 				"title": "Clear Recents Filter",
 				"category": "Osmynt",
 				"icon": "$(clear-all)"
+			},
+			{
+				"command": "osmynt.applyDiff",
+				"title": "Apply Diff",
+				"category": "Osmynt",
+				"icon": "$(diff)"
 			}
 		],
 		"viewsContainers": {
@@ -222,6 +228,11 @@
 					"group": "inline@3"
 				},
 				{
+					"command": "osmynt.applyDiff",
+					"when": "view == osmyntView && viewItem == snippetItem",
+					"group": "inline@4"
+				},
+				{
 					"command": "osmynt.removeTeamMember",
 					"when": "view == osmyntView && viewItem == memberItemOwner",
 					"group": "inline@9"
@@ -241,21 +252,6 @@
 		"configuration": {
 			"title": "Osmynt",
 			"properties": {
-				"osmynt.engineBaseUrl": {
-					"type": "string",
-					"default": "",
-					"description": "Osmynt Engine base URL (e.g. https://api.osmynt.com/osmynt-api-engine)"
-				},
-				"osmynt.supabaseUrl": {
-					"type": "string",
-					"default": "",
-					"description": "Supabase project URL for realtime subscriptions (optional)"
-				},
-				"osmynt.supabaseAnonKey": {
-					"type": "string",
-					"default": "",
-					"description": "Supabase anon key for realtime (optional)"
-				},
 				"osmynt.teamKeyMode": {
 					"type": "boolean",
 					"default": true,

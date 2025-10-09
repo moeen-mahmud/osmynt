@@ -910,3 +910,127 @@ export async function shareSelectedCode(
 	);
 	if (!res.ok) throw new Error(`Share failed (${res.status})`);
 }
+
+export async function showDiffPreview(
+	_context: vscode.ExtensionContext,
+	diffData: {
+		snippetId: string;
+		content: string;
+		metadata: any;
+		originalContent: string;
+		startLine: number;
+		endLine: number;
+		filePath: string;
+		relativeFilePath: string;
+	}
+) {
+	const { content, originalContent, startLine, endLine, filePath } = diffData;
+
+	// Create a new branch for the changes
+	const branchName = `osmynt-diff-${Date.now()}`;
+
+	try {
+		// Check if git is available
+		const gitStatus = await vscode.commands.executeCommand("git.status");
+		if (!gitStatus) {
+			vscode.window.showWarningMessage("Git repository not found. Changes will be applied directly to the file.");
+		} else {
+			// Create new branch
+			await vscode.commands.executeCommand("git.checkout", "-b", branchName);
+			vscode.window.showInformationMessage(`Created new branch: ${branchName}`);
+		}
+	} catch {
+		console.log("Git operations failed, proceeding without branch creation");
+	}
+
+	// Show diff preview in a new document
+	const diffContent = generateDiffContent(originalContent, content, startLine, endLine);
+	const diffDoc = await vscode.workspace.openTextDocument({
+		language: "diff",
+		content: diffContent,
+	});
+
+	// Show the diff in a new editor
+	await vscode.window.showTextDocument(diffDoc, {
+		viewColumn: vscode.ViewColumn.Beside,
+		preview: false,
+	});
+
+	// Show apply options
+	const action = await vscode.window.showQuickPick(
+		[
+			{ label: "Apply changes to file", value: "apply" },
+			{ label: "Apply and stage changes", value: "applyAndStage" },
+			{ label: "Cancel", value: "cancel" },
+		],
+		{
+			placeHolder: "What would you like to do with these changes?",
+			canPickMany: false,
+		}
+	);
+
+	if (action?.value === "apply" || action?.value === "applyAndStage") {
+		await applyDiffToFile(filePath, content, startLine, endLine);
+
+		if (action.value === "applyAndStage") {
+			try {
+				await vscode.commands.executeCommand("git.stage", filePath);
+				vscode.window.showInformationMessage("Changes applied and staged successfully!");
+			} catch {
+				vscode.window.showWarningMessage("Changes applied but staging failed. You can stage manually.");
+			}
+		} else {
+			vscode.window.showInformationMessage("Changes applied successfully!");
+		}
+	}
+}
+
+function generateDiffContent(originalContent: string, newContent: string, startLine: number, endLine: number): string {
+	const originalLines = originalContent.split("\n");
+	const newLines = newContent.split("\n");
+
+	let diffContent = `--- Original (lines ${startLine}-${endLine})\n`;
+	diffContent += `+++ New content\n`;
+	diffContent += `@@ -${startLine},${endLine - startLine + 1} +${startLine},${newLines.length} @@\n`;
+
+	// Add original lines with - prefix
+	for (let i = startLine - 1; i < endLine; i++) {
+		if (originalLines[i]) {
+			diffContent += `-${originalLines[i]}\n`;
+		}
+	}
+
+	// Add new lines with + prefix
+	newLines.forEach(line => {
+		diffContent += `+${line}\n`;
+	});
+
+	return diffContent;
+}
+
+async function applyDiffToFile(filePath: string, newContent: string, startLine: number, endLine: number) {
+	try {
+		// Read current file content
+		const fileUri = vscode.Uri.file(filePath);
+		const fileContent = await vscode.workspace.fs.readFile(fileUri);
+		const currentContent = new TextDecoder().decode(fileContent);
+		const lines = currentContent.split("\n");
+
+		// Replace the specified lines with new content
+		const newLines = newContent.split("\n");
+		const beforeLines = lines.slice(0, startLine - 1);
+		const afterLines = lines.slice(endLine);
+
+		const updatedContent = [...beforeLines, ...newLines, ...afterLines].join("\n");
+
+		// Write the updated content back to the file
+		await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(updatedContent));
+
+		// Open the file in the editor
+		const doc = await vscode.workspace.openTextDocument(fileUri);
+		await vscode.window.showTextDocument(doc);
+	} catch (error) {
+		vscode.window.showErrorMessage(`Failed to apply changes to file: ${error}`);
+		throw error;
+	}
+}

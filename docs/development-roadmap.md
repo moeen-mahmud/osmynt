@@ -22,8 +22,8 @@
   - Multiple Devices Support ✅
   - Automatic extension activation ✅
   - File share [WIP]
-  - Apply diff [WIP]
-    - Github diff like feature, so when a user shares a code snippet, it will be applied to the code in the editor to the specific file's line number. Then the user can review the changes and apply them. Like how we do code review. Similar to Cursor Editor's apply code changes from the AI to insert the code at the specific positions.
+  - Apply diff ✅
+    - Git diff like feature, so when a user shares a code snippet, it will be applied to the code in the editor to the specific file's line number. Then the user can review the changes and apply them. Like how we do code review. Similar to Cursor Editor's apply code changes from the AI to insert the code at the specific positions.
     - It should be able to apply the changes to the specific file's line number.
     - When the user shares the code snippet, the project's root directory path should be shared as a metadata and the filename with filepath should be shared as a metadata. Also, the user can share the whole file's content.
     - Create a new branch from the snippet and stage the changes if the path matches.
@@ -33,7 +33,6 @@
 - Badges in List
 - Integrations
 - Docs/Positioning
-
 - Team Org Features
 - SSO Gating
 - Retention Defaults
