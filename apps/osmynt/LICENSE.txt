@@ -1,21 +1,36 @@
-MIT License
+Business Source License 1.1
 
-Copyright (c) 2024 Moeen Mahmud
+Licensor: Moeen Mahmud
+Licensed Work: Osmynt  
+Additional Use Grant: You may use this Licensed Work for non-commercial purposes only.  
+Change Date: December 1, 2028  
+Change License: Apache License 2.0
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+---
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Terms
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+The Licensor hereby grants you the right to copy, modify, create derivative works, redistribute, and make non-production use of the Licensed Work. The foregoing rights are conditioned upon your agreement that you **do not use the Licensed Work for a commercial purpose**, which includes offering a hosted or managed service based on the Licensed Work or using the Licensed Work in a product or service that is offered for a fee.
+
+A **“commercial purpose”** means using the Licensed Work or a work derived from it in any way that is primarily intended for or directed toward commercial advantage or monetary compensation.
+
+After the **Change Date**, the License will automatically convert to the **Change License** as defined above.
+
+---
+
+Alternative Licensing
+
+If you wish to use the Licensed Work for a commercial purpose prior to the Change Date, commercial licensing terms are available.  
+Please contact: **license@osmynt.dev**
+
+---
+
+Disclaimer
+
+THE LICENSED WORK IS PROVIDED “AS IS,” WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.  
+IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE LICENSED WORK OR THE USE OR OTHER DEALINGS IN THE LICENSED WORK.
+
+---
+
+For more information about the Business Source License, see:  
+https://mariadb.com/bsl11
