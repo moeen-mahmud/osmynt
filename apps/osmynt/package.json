@@ -174,42 +174,6 @@
 				"title": "Apply Diff",
 				"category": "Osmynt",
 				"icon": "$(diff)"
-			},
-			{
-				"command": "osmynt.diff.acceptAll",
-				"title": "Accept All Changes",
-				"category": "Osmynt Diff",
-				"icon": "$(check-all)"
-			},
-			{
-				"command": "osmynt.diff.rejectAll",
-				"title": "Reject All Changes",
-				"category": "Osmynt Diff",
-				"icon": "$(close-all)"
-			},
-			{
-				"command": "osmynt.diff.acceptCurrent",
-				"title": "Accept Current Change",
-				"category": "Osmynt Diff",
-				"icon": "$(check)"
-			},
-			{
-				"command": "osmynt.diff.applyAndStage",
-				"title": "Apply and Stage Changes",
-				"category": "Osmynt Diff",
-				"icon": "$(git-commit)"
-			},
-			{
-				"command": "osmynt.diff.showSideBySide",
-				"title": "Show Side by Side",
-				"category": "Osmynt Diff",
-				"icon": "$(split-horizontal)"
-			},
-			{
-				"command": "osmynt.diff.toggleInline",
-				"title": "Toggle Inline View",
-				"category": "Osmynt Diff",
-				"icon": "$(eye)"
 			}
 		],
 		"viewsContainers": {
@@ -238,26 +202,6 @@
 					"command": "osmynt.shareCode",
 					"group": "navigation",
 					"when": "editor.hasSelection"
-				},
-				{
-					"command": "osmynt.diff.acceptAll",
-					"when": "resourceFilename =~ /.*\\.osmynt-diff-.*/",
-					"group": "osmynt-diff@1"
-				},
-				{
-					"command": "osmynt.diff.rejectAll",
-					"when": "resourceFilename =~ /.*\\.osmynt-diff-.*/",
-					"group": "osmynt-diff@2"
-				},
-				{
-					"command": "osmynt.diff.acceptCurrent",
-					"when": "resourceFilename =~ /.*\\.osmynt-diff-.*/",
-					"group": "osmynt-diff@3"
-				},
-				{
-					"command": "osmynt.diff.applyAndStage",
-					"when": "resourceFilename =~ /.*\\.osmynt-diff-.*/",
-					"group": "osmynt-diff@4"
 				}
 			],
 			"view/title": [
@@ -327,26 +271,5 @@
 	"activationEvents": [
 		"onStartupFinished"
 	],
-	"keybindings": [
-		{
-			"command": "osmynt.diff.acceptAll",
-			"key": "ctrl+shift+a",
-			"when": "resourceFilename =~ /.*\\.osmynt-diff-.*/"
-		},
-		{
-			"command": "osmynt.diff.rejectAll",
-			"key": "ctrl+shift+r",
-			"when": "resourceFilename =~ /.*\\.osmynt-diff-.*/"
-		},
-		{
-			"command": "osmynt.diff.acceptCurrent",
-			"key": "ctrl+shift+c",
-			"when": "resourceFilename =~ /.*\\.osmynt-diff-.*/"
-		},
-		{
-			"command": "osmynt.diff.applyAndStage",
-			"key": "ctrl+shift+s",
-			"when": "resourceFilename =~ /.*\\.osmynt-diff-.*/"
-		}
-	]
+	"keybindings": []
 }

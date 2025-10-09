@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY, DEVICE_ID_KEY, ENC_KEYPAIR_JWK_KEY } from "@/constants/osmynt.constant";
 import { b64uToBytes, b64url } from "@/utils/osmynt.utils";
 import { ENDPOINTS } from "@/constants/endpoints.constant";
-import type { ShareTarget } from "@/types/osmynt.types";
+import type { DeviceState, ShareTarget } from "@/types/osmynt.types";
 
 export async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessToken: string) {
 	const base = ENDPOINTS.engineBaseUrl?.replace(/\/$/, "");
@@ -165,12 +165,6 @@ export async function clearLocalDeviceSecrets(context: vscode.ExtensionContext):
 	} catch {}
 }
 
-export type DeviceState =
-	| { kind: "unpaired" }
-	| { kind: "registeredPrimary"; deviceId: string }
-	| { kind: "registeredCompanion"; deviceId: string }
-	| { kind: "removed" };
-
 export async function getDeviceState(context: vscode.ExtensionContext): Promise<DeviceState> {
 	try {
 		const { base, access } = await getBaseAndAccess(context);
@@ -202,12 +196,14 @@ export async function initiateDevicePairing(context: vscode.ExtensionContext): P
 		const subtle: any = (globalThis as any).crypto?.subtle ?? (nodeCrypto as any).webcrypto?.subtle;
 		if (!subtle) throw new Error("WebCrypto Subtle API not available");
 		const { base, access } = await getBaseAndAccess(context);
-		// Pack current device's public key for transfer
+
+		// Start packing current device's public key for transfer
 		const encKeypair = JSON.parse((await context.secrets.get(ENC_KEYPAIR_JWK_KEY)) || "{}");
 		if (!encKeypair?.publicKeyJwk) throw new Error("Missing device public key");
 		const payload = JSON.stringify({ publicKeyJwk: encKeypair.publicKeyJwk });
 		const iv = (await import("crypto")).randomBytes(12);
-		// For pairing bootstrap, encrypt payload with a random symmetric key shown only on screen
+
+		// For pairing bootstrap, encrypt payload with a random symmetric key shown only on screen. !IMPORTANT
 		const pairingKey = (await import("crypto")).randomBytes(32);
 		const key = await subtle.importKey("raw", pairingKey, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);
 		const ciphertext = await subtle.encrypt({ name: "AES-GCM", iv }, key, Buffer.from(payload, "utf-8"));
@@ -224,7 +220,7 @@ export async function initiateDevicePairing(context: vscode.ExtensionContext): P
 		const j = await res.json();
 		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
 		const token = j?.token as string;
-		// Show both token and pairingKey to user to transfer
+		// Show both token and pairingKey to user to transfer. !IMPORTANT
 		const pairingKeyB64 = Buffer.from(pairingKey).toString("base64");
 		await vscode.env.clipboard.writeText(`${token}#${pairingKeyB64}`);
 		vscode.window.showInformationMessage("Pairing code (token#key) copied. Paste on companion device.");
@@ -262,7 +258,7 @@ export async function claimDevicePairing(context: vscode.ExtensionContext): Prom
 		const msg = JSON.parse(Buffer.from(new Uint8Array(plaintext)).toString("utf-8"));
 		const publicKeyJwk = msg?.publicKeyJwk;
 		if (!publicKeyJwk) throw new Error("Invalid payload");
-		// Generate own private key and register with backend
+		// Generate own private key and register with backend. !IMPORTANT
 		const kp: any = await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, [
 			"deriveKey",
 			"deriveBits",
@@ -310,7 +306,7 @@ export async function removeDevice(context: vscode.ExtensionContext): Promise<vo
 export async function backfillAccessForCompanion(context: vscode.ExtensionContext): Promise<void> {
 	try {
 		const { base, access } = await getBaseAndAccess(context);
-		// determine companion device id
+		// Determine companion device id. !IMPORTANT
 		const meRes = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
@@ -352,7 +348,7 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 		const subtle: any = (globalThis as any).crypto?.subtle ?? (nodeCrypto as any).webcrypto?.subtle;
 		if (!subtle) throw new Error("WebCrypto Subtle API not available");
 
-		// load our device keypair
+		// load the device keypair. Important for future backfill. !IMPORTANT
 		const encKeypair = JSON.parse((await context.secrets.get(ENC_KEYPAIR_JWK_KEY)) || "{}");
 		if (!encKeypair?.privateKeyJwk || !encKeypair?.publicKeyJwk) {
 			vscode.window.showWarningMessage("Missing device keys.");
@@ -374,7 +370,7 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 			[]
 		);
 
-		// iterate and add a wrapped key for companion device per item where not already present
+		// Iterate and add a wrapped key for companion device per item where not already present. !IMPORTANT
 		for (const it of items) {
 			try {
 				// fetch full item to get ciphertext iv and existing wraps
@@ -392,7 +388,8 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 				if (already) continue;
 
 				// We need the CEK; since server stores only ciphertext, we cannot decrypt without sender-side CEK.
-				// Strategy: require that this device authored the snippet OR stored CEK in memory. For v1, only backfill when authored by me.
+				// Strategy: require that this device authored the snippet OR stored CEK in memory.
+				// For v1, only backfill when authored by me.
 				const meTeamsRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 					headers: { Authorization: `Bearer ${access}` },
 				});
@@ -950,16 +947,16 @@ export async function showDiffPreview(
 	const action = await vscode.window.showQuickPick(
 		[
 			{
-				label: "📋 Show Side by Side (VS Code Style)",
+				label: "Show Side by Side (Git Working Tree)",
 				value: "sideBySide",
 				description: "Open VS Code's built-in diff with line-by-line controls",
 			},
 			{
-				label: "⚡ Apply Changes Directly",
+				label: "Apply Changes Directly (Fastest Option)",
 				value: "applyDirect",
 				description: "Apply changes to the file immediately",
 			},
-			{ label: "❌ Cancel", value: "cancel", description: "Don't apply any changes" },
+			{ label: "Cancel", value: "cancel", description: "Don't apply any changes" },
 		],
 		{
 			placeHolder: "How would you like to view and apply the changes?",
@@ -1115,13 +1112,14 @@ async function showGitWorkingTreeView(diffData: {
 	});
 
 	// Show instructions
-	vscode.window.showInformationMessage(
-		"📋 Side-by-side diff opened!\n" +
+	vscode.window.showOpenDialog({
+		title:
+			"Working Tree View Opened!\n" +
 			"• LEFT: Snippet content (new changes)\n" +
 			"• RIGHT: Original file (your current file)\n" +
-			"• Use VS Code's diff controls to apply changes from snippet to original file\n" +
-			"• Click 'Accept' (✓) to apply snippet changes to the original file"
-	);
+			"• Use VS Code's diff controls to apply changes from snippet to original file.\n" +
+			"• Save the changes to the original file to apply the changes.",
+	});
 
 	// Set up cleanup when the diff editor is closed
 	const closeDisposable = vscode.workspace.onDidCloseTextDocument(async document => {
@@ -1155,5 +1153,18 @@ async function showSnippetView(diffData: {
 	const doc = await vscode.workspace.openTextDocument(tempUri);
 	await vscode.window.showTextDocument(doc);
 
-	vscode.window.showInformationMessage("📄 Snippet view opened! This is the new content from the snippet.");
+	vscode.window.showInformationMessage("Snippet view opened! This is the new content from the snippet.");
+
+	// Set up cleanup when the snippet editor is closed
+	const closeDisposable = vscode.workspace.onDidCloseTextDocument(async document => {
+		if (document.uri.fsPath === tempUri.fsPath) {
+			// Clean up the temporary snippet file
+			try {
+				await vscode.workspace.fs.delete(tempUri);
+			} catch {
+				// File might already be deleted, ignore error
+			}
+			closeDisposable.dispose();
+		}
+	});
 }

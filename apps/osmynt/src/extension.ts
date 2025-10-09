@@ -19,7 +19,7 @@ import {
 	handleApplyDiff,
 } from "@/commands/osmynt.commands";
 
-import { getBaseAndAccess, applyAllChanges, showSideBySideView } from "@/services/osmynt.services";
+import { getBaseAndAccess } from "@/services/osmynt.services";
 import Redis from "ioredis";
 import { ENV } from "@/config/env.config";
 
@@ -95,86 +95,32 @@ export async function activate(context: vscode.ExtensionContext) {
 			const snippetId = item?.data?.id;
 			console.log("Extracted snippet ID:", snippetId);
 			handleApplyDiff(context, snippetId);
-		}),
-		// Diff commands
-		vscode.commands.registerCommand("osmynt.diff.acceptAll", async () => {
-			const diffData = (await context.globalState.get("osmynt.currentDiffData")) as any;
-			if (!diffData) {
-				vscode.window.showWarningMessage("No active diff session found.");
-				return;
-			}
-			await applyAllChanges(diffData);
-			vscode.window.showInformationMessage("✅ All changes accepted and applied!");
-		}),
-		vscode.commands.registerCommand("osmynt.diff.rejectAll", async () => {
-			vscode.window.showInformationMessage("❌ Changes rejected!");
-		}),
-		vscode.commands.registerCommand("osmynt.diff.acceptCurrent", async () => {
-			const diffData = (await context.globalState.get("osmynt.currentDiffData")) as any;
-			if (!diffData) {
-				vscode.window.showWarningMessage("No active diff session found.");
-				return;
-			}
-			await applyAllChanges(diffData);
-			vscode.window.showInformationMessage("✅ Current change accepted!");
-		}),
-		vscode.commands.registerCommand("osmynt.diff.applyAndStage", async () => {
-			const diffData = (await context.globalState.get("osmynt.currentDiffData")) as any;
-			if (!diffData) {
-				vscode.window.showWarningMessage("No active diff session found.");
-				return;
-			}
-			await applyAllChanges(diffData);
-			try {
-				await vscode.commands.executeCommand("git.stage", diffData.filePath);
-				vscode.window.showInformationMessage("✅ Changes applied and staged successfully!");
-			} catch {
-				vscode.window.showWarningMessage("Changes applied but staging failed. You can stage manually.");
-			}
-		}),
-		vscode.commands.registerCommand("osmynt.diff.showSideBySide", async () => {
-			const diffData = (await context.globalState.get("osmynt.currentDiffData")) as any;
-			if (!diffData) {
-				vscode.window.showWarningMessage("No active diff session found.");
-				return;
-			}
-			await showSideBySideView(diffData);
-		}),
-		vscode.commands.registerCommand("osmynt.diff.toggleInline", async () => {
-			vscode.window.showInformationMessage("Inline view toggle not implemented yet.");
 		})
 	);
 
-	// Initialize contexts
+	// Set Contexts
 	const access = await context.secrets.get(ACCESS_SECRET_KEY);
 	await vscode.commands.executeCommand("setContext", "osmynt.isLoggedIn", Boolean(access));
-	// Prime contexts to false until computed
 	await vscode.commands.executeCommand("setContext", "osmynt.isPrimaryDevice", false);
 	await vscode.commands.executeCommand("setContext", "osmynt.isCompanionDevice", false);
 	await vscode.commands.executeCommand("setContext", "osmynt.canGeneratePairing", false);
 	await vscode.commands.executeCommand("setContext", "osmynt.canPastePairing", false);
 	await vscode.commands.executeCommand("setContext", "osmynt.isRegisteredDevice", false);
 
-	// Automatic login and background setup
 	await initializeBackgroundServices(context, tree);
 }
 
 export function deactivate() {
-	// Clean up realtime connection on deactivation
 	disconnectRealtime();
 }
 
 let treeProvider: OsmyntTreeProvider | null = null;
 let redisSubscriber: Redis | null = null;
 
-/**
- * Initialize background services for automatic login and notifications
- */
 async function initializeBackgroundServices(context: vscode.ExtensionContext, tree: OsmyntTreeProvider) {
 	const access = await context.secrets.get(ACCESS_SECRET_KEY);
 
 	if (access) {
-		// User is already logged in, set up background services
 		try {
 			await ensureDeviceKeys(context);
 		} catch (error) {
@@ -198,7 +144,8 @@ async function initializeBackgroundServices(context: vscode.ExtensionContext, tr
 }
 
 export async function connectRealtime(_context: vscode.ExtensionContext, treeProvider: OsmyntTreeProvider) {
-	if (redisSubscriber) return; // already connected
+	if (redisSubscriber) return;
+
 	const url = ENV.upstashRedisUrl;
 	if (!url) {
 		vscode.window.showWarningMessage("Error connecting to realtime. Please set UPSTASH_REDIS_URL.");

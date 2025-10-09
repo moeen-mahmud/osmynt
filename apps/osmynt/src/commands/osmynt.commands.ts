@@ -10,7 +10,6 @@ import {
 	tryDecryptSnippet,
 	initiateDevicePairing,
 	claimDevicePairing,
-	removeDevice,
 } from "@/services/osmynt.services";
 import { extractInviteToken } from "@/utils/osmynt.utils";
 import * as vscode from "vscode";
