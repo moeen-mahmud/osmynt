@@ -199,7 +199,7 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			// User appears logged in → show a single error item
 			const errorItem = new OsmyntItem(
 				"action",
-				"Something went wrong. Please try again.",
+				"Something went wrong. Please log in again.",
 				vscode.TreeItemCollapsibleState.None,
 				undefined,
 				"alert"

@@ -29,7 +29,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand("osmynt.login", () => handleLogin(context, tree, connectRealtime)),
-		vscode.commands.registerCommand("osmynt.logout", () => handleLogout(context, tree, disconnectRealtime)),
+		vscode.commands.registerCommand("osmynt.logout", () =>
+			handleLogout(context, tree, () => disconnectRealtime(context))
+		),
 		vscode.commands.registerCommand("osmynt.shareCode", () => handleShareCode(context, tree)),
 		vscode.commands.registerCommand("osmynt.inviteMember", () => handleInviteMember(context)),
 		vscode.commands.registerCommand("osmynt.acceptInvitation", () => handleAcceptInvitation(context, tree)),
@@ -89,6 +91,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
+	// Initialize contexts
 	const access = await context.secrets.get(ACCESS_SECRET_KEY);
 	await vscode.commands.executeCommand("setContext", "osmynt.isLoggedIn", Boolean(access));
 	// Prime contexts to false until computed
@@ -97,27 +100,48 @@ export async function activate(context: vscode.ExtensionContext) {
 	await vscode.commands.executeCommand("setContext", "osmynt.canGeneratePairing", false);
 	await vscode.commands.executeCommand("setContext", "osmynt.canPastePairing", false);
 	await vscode.commands.executeCommand("setContext", "osmynt.isRegisteredDevice", false);
+
+	// Automatic login and background setup
+	await initializeBackgroundServices(context, tree);
+}
+
+export function deactivate() {
+	// Clean up realtime connection on deactivation
+	disconnectRealtime();
+}
+
+let treeProvider: OsmyntTreeProvider | null = null;
+let redisSubscriber: Redis | null = null;
+
+/**
+ * Initialize background services for automatic login and notifications
+ */
+async function initializeBackgroundServices(context: vscode.ExtensionContext, tree: OsmyntTreeProvider) {
+	const access = await context.secrets.get(ACCESS_SECRET_KEY);
+
 	if (access) {
+		// User is already logged in, set up background services
 		try {
 			await ensureDeviceKeys(context);
-		} catch {
-			// vscode.window.showErrorMessage("Failed to ensure device keys");
+		} catch (error) {
+			console.log("Failed to ensure device keys:", error);
 		}
+
 		try {
 			await computeAndSetDeviceContexts(context);
-		} catch {}
+		} catch (error) {
+			console.log("Failed to compute device contexts:", error);
+		}
+
 		try {
 			if (!redisSubscriber) {
 				await connectRealtime(context, tree);
 			}
-		} catch {}
+		} catch (error) {
+			console.log("Failed to connect to realtime:", error);
+		}
 	}
 }
-
-export function deactivate() {}
-
-let treeProvider: OsmyntTreeProvider | null = null;
-let redisSubscriber: Redis | null = null;
 
 export async function connectRealtime(_context: vscode.ExtensionContext, treeProvider: OsmyntTreeProvider) {
 	if (redisSubscriber) return; // already connected
@@ -224,7 +248,7 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 	});
 }
 
-export async function disconnectRealtime(_context: vscode.ExtensionContext) {
+export async function disconnectRealtime(_context?: vscode.ExtensionContext) {
 	try {
 		await redisSubscriber?.quit();
 	} catch {}

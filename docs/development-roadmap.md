@@ -19,7 +19,8 @@
   - Accept invitation ✅
   - Join team ✅
   - Leave team ✅
-  - Multiple Devices Support [WIP]
+  - Multiple Devices Support ✅
+  - Automatic extension activation ✅
   - File share [WIP]
   - Apply diff [WIP]
     - Github diff like feature, so when a user shares a code snippet, it will be applied to the code in the editor to the specific file's line number. Then the user can review the changes and apply them. Like how we do code review. Similar to Cursor Editor's apply code changes from the AI to insert the code at the specific positions.
