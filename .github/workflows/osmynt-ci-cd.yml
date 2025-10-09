@@ -122,10 +122,23 @@ jobs:
       - name: Build and Publish
         run: |
           cd apps/osmynt
-          echo "ENGINE_BASE_URL=${{secrets.ENGINE_BASE_URL}}" >> .env
-          echo "SUPABASE_URL=${{secrets.SUPABASE_URL}}" >> .env
-          echo "SUPABASE_ANON_KEY=${{secrets.SUPABASE_ANON_KEY}}" >> .env
-          echo "UPSTASH_REDIS_URL=${{secrets.UPSTASH_REDIS_URL}}" >> .env
+          # Create .env file in a temporary location to avoid packaging it
+          mkdir -p ../.env-temp
+          echo "ENGINE_BASE_URL=${{secrets.ENGINE_BASE_URL}}" > ../.env-temp/.env
+          echo "SUPABASE_URL=${{secrets.SUPABASE_URL}}" >> ../.env-temp/.env
+          echo "SUPABASE_ANON_KEY=${{secrets.SUPABASE_ANON_KEY}}" >> ../.env-temp/.env
+          echo "UPSTASH_REDIS_URL=${{secrets.UPSTASH_REDIS_URL}}" >> ../.env-temp/.env
+          # Copy the .env file to the osmynt directory for build
+          cp ../.env-temp/.env .env
+          # Set environment variables for the build process
+          export ENGINE_BASE_URL="${{secrets.ENGINE_BASE_URL}}"
+          export SUPABASE_URL="${{secrets.SUPABASE_URL}}"
+          export SUPABASE_ANON_KEY="${{secrets.SUPABASE_ANON_KEY}}"
+          export UPSTASH_REDIS_URL="${{secrets.UPSTASH_REDIS_URL}}"
           NODE_ENV=production bun run scripts/build-with-esbuild.ts
-          NODE_ENV=production bunx vsce publish --allow-package-all-secrets --allow-package-env-file -p ${{ secrets.VSCE_PAT }}
+          # Remove .env file before packaging
+          rm -f .env
+          NODE_ENV=production bunx vsce publish --allow-package-all-secrets -p ${{ secrets.VSCE_PAT }}
           NODE_ENV=production bunx ovsx publish -p ${{ secrets.OVSX_TOKEN }}
+          # Clean up temporary .env file
+          rm -rf ../.env-temp

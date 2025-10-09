@@ -255,3 +255,5 @@ export async function disconnectRealtime(_context?: vscode.ExtensionContext) {
 	} catch {}
 	redisSubscriber = null;
 }
+
+// release trigger: "https://github.com/osmynt-io/osmynt/releases/tag/v1.2.0"
