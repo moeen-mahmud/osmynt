@@ -1,5 +1,11 @@
 # @osmynt-core/engine
 
+## 1.3.2
+
+### Patch Changes
+
+- [#21](https://github.com/moeen-mahmud/osmynt/pull/21) [`9b57b3f`](https://github.com/moeen-mahmud/osmynt/commit/9b57b3fed56b6439cee02c9d1e64248d1f88e81b) Thanks [@moeen-mahmud](https://github.com/moeen-mahmud)! - adds ci-cd pipeline while releasing the extension
+
 ## 1.3.1
 
 ### Patch Changes
