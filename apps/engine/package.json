@@ -2,7 +2,7 @@
 	"name": "@osmynt-core/engine",
 	"type": "module",
 	"main": "src/app.ts",
-	"version": "0.18.2",
+	"version": "1.2.0",
 	"scripts": {
 		"type-check": "tsc --noEmit",
 		"start": "bun run src/app.ts",
