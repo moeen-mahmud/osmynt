@@ -4,6 +4,8 @@
 mocks/**
 node_modules/**
 scripts/**
+**/.env
+**/.env.*
 
 # Whitelist what you need
 !.vscodeignore
