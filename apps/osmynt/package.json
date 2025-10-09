@@ -1,9 +1,10 @@
 {
 	"main": "dist/extension.cjs",
 	"dependencies": {
+		"@supabase/supabase-js": "^2.58.0",
 		"@types/bun": "^1.1.13",
 		"@types/vscode": "^1.86.0",
-		"@supabase/supabase-js": "^2.58.0"
+		"ioredis": "^5.8.1"
 	},
 	"author": {
 		"name": "Moeen Mahmud",
@@ -100,6 +101,33 @@
 				"icon": "$(check)"
 			},
 			{
+				"command": "osmynt.addDevicePrimary",
+				"title": "Add Device (Primary - generate code)",
+				"category": "Osmynt",
+				"icon": "$(plug)",
+				"enablement": "osmynt.canGeneratePairing == true"
+			},
+			{
+				"command": "osmynt.addDeviceCompanion",
+				"title": "Add Device (Companion - paste code)",
+				"category": "Osmynt",
+				"icon": "$(plug)",
+				"enablement": "osmynt.canPastePairing == true"
+			},
+			{
+				"command": "osmynt.removeDevice",
+				"title": "Remove Device",
+				"category": "Osmynt",
+				"icon": "$(trash)"
+			},
+			{
+				"command": "osmynt.backfillCompanion",
+				"title": "Backfill Access for Companion",
+				"category": "Osmynt",
+				"icon": "$(cloud-download)",
+				"enablement": "osmynt.isPrimaryDevice == true"
+			},
+			{
 				"command": "osmynt.viewSnippet",
 				"title": "View Snippet",
 				"category": "Osmynt",
@@ -140,6 +168,12 @@
 				"title": "Clear Recents Filter",
 				"category": "Osmynt",
 				"icon": "$(clear-all)"
+			},
+			{
+				"command": "osmynt.applyDiff",
+				"title": "Apply Diff",
+				"category": "Osmynt",
+				"icon": "$(diff)"
 			}
 		],
 		"viewsContainers": {
@@ -194,6 +228,11 @@
 					"group": "inline@3"
 				},
 				{
+					"command": "osmynt.applyDiff",
+					"when": "view == osmyntView && viewItem == snippetItem",
+					"group": "inline@4"
+				},
+				{
 					"command": "osmynt.removeTeamMember",
 					"when": "view == osmyntView && viewItem == memberItemOwner",
 					"group": "inline@9"
@@ -213,21 +252,6 @@
 		"configuration": {
 			"title": "Osmynt",
 			"properties": {
-				"osmynt.engineBaseUrl": {
-					"type": "string",
-					"default": "",
-					"description": "Osmynt Engine base URL (e.g. https://api.osmynt.com/osmynt-api-engine)"
-				},
-				"osmynt.supabaseUrl": {
-					"type": "string",
-					"default": "",
-					"description": "Supabase project URL for realtime subscriptions (optional)"
-				},
-				"osmynt.supabaseAnonKey": {
-					"type": "string",
-					"default": "",
-					"description": "Supabase anon key for realtime (optional)"
-				},
 				"osmynt.teamKeyMode": {
 					"type": "boolean",
 					"default": true,
@@ -243,5 +267,9 @@
 	},
 	"engines": {
 		"vscode": "^1.94.0"
-	}
+	},
+	"activationEvents": [
+		"onStartupFinished"
+	],
+	"keybindings": []
 }

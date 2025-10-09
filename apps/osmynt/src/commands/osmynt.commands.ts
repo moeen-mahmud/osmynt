@@ -1,4 +1,4 @@
-import { ACCESS_SECRET_KEY, LANGUAGE_BY_EXT, REFRESH_SECRET_KEY } from "@/constants/osmynt.constant";
+import { ACCESS_SECRET_KEY, DEVICE_ID_KEY, LANGUAGE_BY_EXT, REFRESH_SECRET_KEY } from "@/constants/osmynt.constant";
 import type { OsmyntTreeProvider } from "@/provider/osmynt.provider";
 import {
 	ensureDeviceKeys,
@@ -8,10 +8,13 @@ import {
 	promptTeamId,
 	shareSelectedCode,
 	tryDecryptSnippet,
+	initiateDevicePairing,
+	claimDevicePairing,
 } from "@/services/osmynt.services";
 import { extractInviteToken } from "@/utils/osmynt.utils";
 import * as vscode from "vscode";
 import { ENDPOINTS } from "@/constants/endpoints.constant";
+import { computeAndSetDeviceContexts, backfillAccessForCompanion, showDiffPreview } from "@/services/osmynt.services";
 
 export async function handleLogin(
 	context: vscode.ExtensionContext,
@@ -38,6 +41,57 @@ export async function handleLogin(
 	}
 }
 
+export async function handleAddDevicePrimary(context: vscode.ExtensionContext) {
+	await initiateDevicePairing(context);
+	await computeAndSetDeviceContexts(context);
+}
+
+export async function handleAddDeviceCompanion(context: vscode.ExtensionContext) {
+	await claimDevicePairing(context);
+	await computeAndSetDeviceContexts(context);
+}
+
+export async function handleRemoveDevice(context: vscode.ExtensionContext) {
+	// Replace raw input with picker of available devices (companion only removable)
+	try {
+		const { base, access } = await getBaseAndAccess(context);
+		const res = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
+		const j = await res.json();
+		const devices: Array<{ deviceId: string; isPrimary?: boolean }> = Array.isArray(j?.devices) ? j.devices : [];
+		const localId = await context.secrets.get(DEVICE_ID_KEY);
+		const items = devices
+			.filter(d => !d.isPrimary)
+			.map(d => ({ label: d.deviceId === localId ? `${d.deviceId} (this device)` : d.deviceId, id: d.deviceId }));
+		if (items.length === 0) {
+			vscode.window.showInformationMessage("No removable companion device found.");
+			return;
+		}
+		const pick = await vscode.window.showQuickPick(items, { placeHolder: "Select companion device to remove" });
+		if (!pick) return;
+		const r = await vscode.window.showWarningMessage(`Remove device ${pick.id}?`, { modal: true }, "Remove");
+		if (r !== "Remove") return;
+		const del = await fetch(
+			`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.deviceRemove(encodeURIComponent(pick.id))}`,
+			{
+				method: "DELETE",
+				headers: { Authorization: `Bearer ${access}` },
+			}
+		);
+		const dj = await del.json();
+		if (!del.ok || !dj?.ok) throw new Error(dj?.error || `Failed (${del.status})`);
+		vscode.window.showInformationMessage("Device removed");
+		await computeAndSetDeviceContexts(context);
+	} catch (e) {
+		vscode.window.showErrorMessage(`Remove device failed: ${e}`);
+	}
+}
+
+export async function handleBackfillCompanion(context: vscode.ExtensionContext) {
+	await backfillAccessForCompanion(context);
+}
+
 export async function handleLogout(
 	context: vscode.ExtensionContext,
 	tree: OsmyntTreeProvider,
@@ -61,7 +115,11 @@ export async function handleShareCode(context: vscode.ExtensionContext, treeProv
 	}
 	const selected = editor.document.getText(editor.selection);
 	const includeContext = await vscode.window.showQuickPick(
-		[{ label: "Include file name and extension", picked: true }, { label: "Don't include" }],
+		[
+			{ label: "Include file name and extension", picked: true },
+			{ label: "Include full file context for diff application", value: "full" },
+			{ label: "Don't include" },
+		],
 		{ canPickMany: false, placeHolder: "Include file context in snippet metadata?" }
 	);
 	const title = await vscode.window.showInputBox({ prompt: "Snippet title (required)" });
@@ -74,10 +132,30 @@ export async function handleShareCode(context: vscode.ExtensionContext, treeProv
 		await ensureDeviceKeys(context);
 		const editorFile = editor.document.uri.fsPath || "";
 		const metadataExtra: any = {};
+
+		// Get workspace root directory
+		const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || "";
+
 		if (includeContext?.label?.startsWith("Include")) {
 			metadataExtra.filePath = editorFile;
 			metadataExtra.fileExt = (editorFile.split(".").pop() || "").toLowerCase();
+
+			// Add project root directory for diff application
+			if (workspaceRoot) {
+				metadataExtra.projectRoot = workspaceRoot;
+				metadataExtra.relativeFilePath = editorFile.replace(workspaceRoot, "").replace(/^[/\\]/, "");
+			}
+
+			// If full context is requested, include line numbers and full file content
+			if (includeContext.value === "full") {
+				const selection = editor.selection;
+				metadataExtra.startLine = selection.start.line + 1; // 1-based line numbers
+				metadataExtra.endLine = selection.end.line + 1;
+				metadataExtra.fullFileContent = editor.document.getText();
+				metadataExtra.isDiffApplicable = true;
+			}
 		}
+
 		await shareSelectedCode(context, selected, title.trim(), target, metadataExtra);
 		treeProvider.refresh();
 		vscode.window.showInformationMessage("Osmynt: Snippet shared securely");
@@ -173,6 +251,72 @@ export async function handleViewSnippet(context: vscode.ExtensionContext, id?: s
 		await vscode.window.showTextDocument(doc, { preview: false });
 	} catch (e) {
 		vscode.window.showErrorMessage(`Open failed: ${e}`);
+	}
+}
+
+export async function handleApplyDiff(context: vscode.ExtensionContext, snippetId?: string) {
+	try {
+		const { base, access } = await getBaseAndAccess(context);
+		const id = snippetId ?? (await vscode.window.showInputBox({ prompt: "Enter snippet id" }));
+		if (!id) {
+			vscode.window.showWarningMessage("No snippet ID provided.");
+			return;
+		}
+
+		console.log("Applying diff for snippet ID:", id);
+
+		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.getById(encodeURIComponent(id))}`, {
+			headers: { Authorization: `Bearer ${access}` },
+		});
+
+		console.log("Fetch response status:", res.status);
+
+		if (!res.ok) {
+			const errorText = await res.text();
+			console.log("Error response:", errorText);
+			throw new Error(`Failed to fetch snippet (${res.status}): ${errorText}`);
+		}
+
+		const j = await res.json();
+		console.log("Snippet metadata:", j?.metadata);
+
+		const text = await tryDecryptSnippet(context, j);
+		if (!text) {
+			vscode.window.showErrorMessage("Failed to decrypt snippet or snippet not addressed to this device.");
+			return;
+		}
+
+		const metadata = j?.metadata || {};
+		if (!metadata.isDiffApplicable) {
+			vscode.window.showWarningMessage("This snippet is not configured for diff application.");
+			return;
+		}
+
+		// Check if project root matches
+		const currentWorkspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || "";
+		if (metadata.projectRoot && currentWorkspaceRoot !== metadata.projectRoot) {
+			const proceed = await vscode.window.showWarningMessage(
+				`Project root mismatch. Snippet was created in "${metadata.projectRoot}" but current workspace is "${currentWorkspaceRoot}". Do you want to proceed anyway?`,
+				"Yes",
+				"No"
+			);
+			if (proceed !== "Yes") return;
+		}
+
+		// Show diff preview and apply
+		await showDiffPreview(context, {
+			snippetId: id,
+			content: text,
+			metadata: metadata,
+			originalContent: metadata.fullFileContent || "",
+			startLine: metadata.startLine || 1,
+			endLine: metadata.endLine || 1,
+			filePath: metadata.filePath || "",
+			relativeFilePath: metadata.relativeFilePath || "",
+		});
+	} catch (e) {
+		console.error("Apply diff error:", e);
+		vscode.window.showErrorMessage(`Apply diff failed: ${e}`);
 	}
 }
 

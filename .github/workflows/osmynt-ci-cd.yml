@@ -122,10 +122,10 @@ jobs:
       - name: Build and Publish
         run: |
           cd apps/osmynt
-          echo "OVSX_TOKEN=${{secrets.OVSX_TOKEN}}" >> .env
           echo "ENGINE_BASE_URL=${{secrets.ENGINE_BASE_URL}}" >> .env
           echo "SUPABASE_URL=${{secrets.SUPABASE_URL}}" >> .env
           echo "SUPABASE_ANON_KEY=${{secrets.SUPABASE_ANON_KEY}}" >> .env
+          echo "UPSTASH_REDIS_URL=${{secrets.UPSTASH_REDIS_URL}}" >> .env
           NODE_ENV=production bun run scripts/build-with-esbuild.ts
           NODE_ENV=production bunx vsce publish -p ${{ secrets.VSCE_PAT }} --allow-package-env-file
-          NODE_ENV=production bun run scripts/build-with-esbuild.ts
+          NODE_ENV=production bunx ovsx publish -p ${{ secrets.OVSX_TOKEN }}

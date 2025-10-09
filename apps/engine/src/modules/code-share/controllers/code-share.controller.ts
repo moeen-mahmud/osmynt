@@ -4,7 +4,7 @@ import { CodeShareService } from "@/modules/code-share/services/code-share.servi
 import { logger } from "@osmynt-core/library";
 import { codeShareSchema } from "@/modules/code-share/schemas/code-share.schema";
 import { CODE_SHARE_ALGORITHM, CODE_SHARE_AUDIT_LOG_ACTIONS } from "@/modules/code-share/constants/code-share.constant";
-import { getBroadcastChannel } from "@/config/supabase.config";
+import { publishBroadcast } from "@/config/realtime.config";
 import { ENV } from "@/config/env.config";
 export class CodeShareController {
 	static async share(c: Context) {
@@ -35,7 +35,6 @@ export class CodeShareController {
 		});
 
 		try {
-			const channel = await getBroadcastChannel();
 			const author = await prisma.user.findUnique({ where: { id: user.id }, select: { name: true } });
 			const meta: any = parsed.data.metadata ?? {};
 			const recipientUserIds = Array.from(
@@ -54,19 +53,15 @@ export class CodeShareController {
 				const team = await prisma.team.findUnique({ where: { id: meta.teamId }, select: { name: true } });
 				teamName = team?.name ?? undefined;
 			}
-			await channel.send({
-				type: "broadcast",
-				event: "snippet:created",
-				payload: {
-					id: created.id,
-					title: meta?.title,
-					authorId: user.id,
-					authorName: author?.name,
-					recipientUserIds,
-					teamId: meta?.teamId,
-					teamName,
-					firstRecipientName,
-				},
+			await publishBroadcast("snippet:created", {
+				id: created.id,
+				title: meta?.title,
+				authorId: user.id,
+				authorName: author?.name,
+				recipientUserIds,
+				teamId: meta?.teamId,
+				teamName,
+				firstRecipientName,
 			});
 		} catch (error) {
 			logger.error("Failed to broadcast snippet:created", { error });
@@ -111,6 +106,26 @@ export class CodeShareController {
 		}
 		logger.info("Got snippet by id", { id, item });
 		return c.json({ ver: 1, alg: CODE_SHARE_ALGORITHM, ...item, createdAt: item.createdAt.toISOString() }, 200);
+	}
+
+	static async addWrappedKeys(c: Context) {
+		const user = c.get("user") as { id: string } | undefined;
+		if (!user) {
+			logger.error("Unauthorized");
+			return c.json({ error: "Unauthorized" }, 401);
+		}
+		const id = c.req.param("id");
+		const item = await CodeShareService.getById(id);
+		if (!item) return c.json({ error: "Not Found" }, 404);
+		// Only author can add more wrapped keys (prevents others from tampering)
+		if (item.authorId !== user.id) return c.json({ error: "Forbidden" }, 403);
+		const body = await c.req.json().catch(() => ({}));
+		const incoming = Array.isArray(body?.wrappedKeys) ? body.wrappedKeys : [];
+		const existing = (item.wrappedKeys as unknown as any[]) || [];
+		const merged = existing.concat(incoming);
+		await prisma.codeShare.update({ where: { id }, data: { wrappedKeys: merged as unknown as object } });
+		logger.info("Added wrapped keys", { id, count: incoming.length });
+		return c.json({ ok: true }, 200);
 	}
 
 	static async listTeamByAuthor(c: Context) {

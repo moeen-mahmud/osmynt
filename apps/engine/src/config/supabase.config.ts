@@ -34,7 +34,7 @@ export async function getBroadcastChannel(): Promise<RealtimeChannel> {
 
 	// Create channel with self: true so sender also receives broadcasts
 	broadcastChannel = client.channel("osmynt-recent-snippets", {
-		config: { broadcast: { self: true } },
+		config: { broadcast: { self: true, ack: true } },
 	});
 
 	// Subscribe to the channel

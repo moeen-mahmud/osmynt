@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import type { OsmyntNodeKind } from "@/types/osmynt.types";
-import { getBaseAndAccess } from "@/services/osmynt.services";
+import { getBaseAndAccess, getDeviceState } from "@/services/osmynt.services";
 import { ENDPOINTS } from "@/constants/endpoints.constant";
 import { ACCESS_SECRET_KEY } from "@/constants/osmynt.constant";
 
@@ -43,6 +43,9 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 		try {
 			// Root
 			if (!element) {
+				// Suppress entire tree when device is not registered (server-verifiable)
+				const ds = await getDeviceState(this.context);
+				if (ds.kind === "removed" || ds.kind === "unpaired") return [];
 				await this.ensureTeams();
 				if (!Array.isArray(this.cachedTeams) || this.cachedTeams.length === 0) {
 					// const emptyItem = new OsmyntItem(
@@ -196,7 +199,7 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			// User appears logged in → show a single error item
 			const errorItem = new OsmyntItem(
 				"action",
-				"Something went wrong. Please try again.",
+				"Something went wrong. Please log in again.",
 				vscode.TreeItemCollapsibleState.None,
 				undefined,
 				"alert"
@@ -229,6 +232,14 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 	}
 
 	private async ensureRecent(teamId: string, authorId?: string) {
+		// Do not fetch or render snippets if device is unregistered (server check)
+		{
+			const ds = await getDeviceState(this.context);
+			if (ds.kind === "removed" || ds.kind === "unpaired") {
+				this.cachedRecentByTeam[teamId] = [];
+				return;
+			}
+		}
 		const { base, access } = await getBaseAndAccess(this.context).catch(() => ({ base: "", access: "" }));
 		if (!base || !access || !teamId) {
 			this.cachedRecentByTeam[teamId] = [];
@@ -252,6 +263,14 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 	}
 
 	private async ensureDm(otherUserId: string) {
+		// Do not fetch or render DM snippets if device is unregistered (server check)
+		{
+			const ds = await getDeviceState(this.context);
+			if (ds.kind === "removed" || ds.kind === "unpaired") {
+				this.cachedDmByUserId[otherUserId] = [];
+				return;
+			}
+		}
 		const { base, access } = await getBaseAndAccess(this.context).catch(() => ({ base: "", access: "" }));
 		if (!base || !access || !otherUserId) {
 			this.cachedDmByUserId[otherUserId] = [];
