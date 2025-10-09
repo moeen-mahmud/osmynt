@@ -19,7 +19,7 @@ import {
 	handleApplyDiff,
 } from "@/commands/osmynt.commands";
 
-import { getBaseAndAccess } from "@/services/osmynt.services";
+import { getBaseAndAccess, applyAllChanges, showSideBySideView } from "@/services/osmynt.services";
 import Redis from "ioredis";
 import { ENV } from "@/config/env.config";
 
@@ -95,6 +95,53 @@ export async function activate(context: vscode.ExtensionContext) {
 			const snippetId = item?.data?.id;
 			console.log("Extracted snippet ID:", snippetId);
 			handleApplyDiff(context, snippetId);
+		}),
+		// Diff commands
+		vscode.commands.registerCommand("osmynt.diff.acceptAll", async () => {
+			const diffData = (await context.globalState.get("osmynt.currentDiffData")) as any;
+			if (!diffData) {
+				vscode.window.showWarningMessage("No active diff session found.");
+				return;
+			}
+			await applyAllChanges(diffData);
+			vscode.window.showInformationMessage("✅ All changes accepted and applied!");
+		}),
+		vscode.commands.registerCommand("osmynt.diff.rejectAll", async () => {
+			vscode.window.showInformationMessage("❌ Changes rejected!");
+		}),
+		vscode.commands.registerCommand("osmynt.diff.acceptCurrent", async () => {
+			const diffData = (await context.globalState.get("osmynt.currentDiffData")) as any;
+			if (!diffData) {
+				vscode.window.showWarningMessage("No active diff session found.");
+				return;
+			}
+			await applyAllChanges(diffData);
+			vscode.window.showInformationMessage("✅ Current change accepted!");
+		}),
+		vscode.commands.registerCommand("osmynt.diff.applyAndStage", async () => {
+			const diffData = (await context.globalState.get("osmynt.currentDiffData")) as any;
+			if (!diffData) {
+				vscode.window.showWarningMessage("No active diff session found.");
+				return;
+			}
+			await applyAllChanges(diffData);
+			try {
+				await vscode.commands.executeCommand("git.stage", diffData.filePath);
+				vscode.window.showInformationMessage("✅ Changes applied and staged successfully!");
+			} catch {
+				vscode.window.showWarningMessage("Changes applied but staging failed. You can stage manually.");
+			}
+		}),
+		vscode.commands.registerCommand("osmynt.diff.showSideBySide", async () => {
+			const diffData = (await context.globalState.get("osmynt.currentDiffData")) as any;
+			if (!diffData) {
+				vscode.window.showWarningMessage("No active diff session found.");
+				return;
+			}
+			await showSideBySideView(diffData);
+		}),
+		vscode.commands.registerCommand("osmynt.diff.toggleInline", async () => {
+			vscode.window.showInformationMessage("Inline view toggle not implemented yet.");
 		})
 	);
 

@@ -912,7 +912,7 @@ export async function shareSelectedCode(
 }
 
 export async function showDiffPreview(
-	_context: vscode.ExtensionContext,
+	context: vscode.ExtensionContext,
 	diffData: {
 		snippetId: string;
 		content: string;
@@ -924,7 +924,7 @@ export async function showDiffPreview(
 		relativeFilePath: string;
 	}
 ) {
-	const { content, originalContent, startLine, endLine, filePath } = diffData;
+	const { content, originalContent, startLine, endLine, filePath, snippetId } = diffData;
 
 	// Create a new branch for the changes
 	const branchName = `osmynt-diff-${Date.now()}`;
@@ -943,72 +943,70 @@ export async function showDiffPreview(
 		console.log("Git operations failed, proceeding without branch creation");
 	}
 
-	// Show diff preview in a new document
-	const diffContent = generateDiffContent(originalContent, content, startLine, endLine);
-	const diffDoc = await vscode.workspace.openTextDocument({
-		language: "diff",
-		content: diffContent,
-	});
+	// Store diff data for commands to access
+	await context.globalState.update("osmynt.currentDiffData", diffData);
 
-	// Show the diff in a new editor
-	await vscode.window.showTextDocument(diffDoc, {
-		viewColumn: vscode.ViewColumn.Beside,
-		preview: false,
-	});
-
-	// Show apply options
+	// Show quick pick with options for better UX
 	const action = await vscode.window.showQuickPick(
 		[
-			{ label: "Apply changes to file", value: "apply" },
-			{ label: "Apply and stage changes", value: "applyAndStage" },
-			{ label: "Cancel", value: "cancel" },
+			{
+				label: "📋 Show Side by Side (VS Code Style)",
+				value: "sideBySide",
+				description: "Open VS Code's built-in diff with line-by-line controls",
+			},
+			{
+				label: "⚡ Apply Changes Directly",
+				value: "applyDirect",
+				description: "Apply changes to the file immediately",
+			},
+			{ label: "❌ Cancel", value: "cancel", description: "Don't apply any changes" },
 		],
 		{
-			placeHolder: "What would you like to do with these changes?",
+			placeHolder: "How would you like to view and apply the changes?",
 			canPickMany: false,
 		}
 	);
 
-	if (action?.value === "apply" || action?.value === "applyAndStage") {
-		await applyDiffToFile(filePath, content, startLine, endLine);
+	if (!action || action.value === "cancel") return;
 
-		if (action.value === "applyAndStage") {
-			try {
-				await vscode.commands.executeCommand("git.stage", filePath);
-				vscode.window.showInformationMessage("Changes applied and staged successfully!");
-			} catch {
-				vscode.window.showWarningMessage("Changes applied but staging failed. You can stage manually.");
-			}
-		} else {
-			vscode.window.showInformationMessage("Changes applied successfully!");
-		}
+	if (action.value === "sideBySide") {
+		await showSideBySideView({
+			snippetId,
+			originalContent,
+			newContent: content,
+			startLine,
+			endLine,
+			filePath,
+			relativeFilePath: diffData.relativeFilePath,
+			metadata: diffData.metadata,
+		});
+	} else if (action.value === "applyDirect") {
+		await applyAllChanges({
+			snippetId,
+			originalContent,
+			newContent: content,
+			startLine,
+			endLine,
+			filePath,
+			relativeFilePath: diffData.relativeFilePath,
+			metadata: diffData.metadata,
+		});
+		vscode.window.showInformationMessage("✅ Changes applied directly to the file!");
 	}
 }
 
-function generateDiffContent(originalContent: string, newContent: string, startLine: number, endLine: number): string {
-	const originalLines = originalContent.split("\n");
-	const newLines = newContent.split("\n");
+export async function applyAllChanges(diffData: {
+	snippetId: string;
+	originalContent: string;
+	newContent: string;
+	startLine: number;
+	endLine: number;
+	filePath: string;
+	relativeFilePath: string;
+	metadata: any;
+}) {
+	const { newContent, startLine, endLine, filePath } = diffData;
 
-	let diffContent = `--- Original (lines ${startLine}-${endLine})\n`;
-	diffContent += `+++ New content\n`;
-	diffContent += `@@ -${startLine},${endLine - startLine + 1} +${startLine},${newLines.length} @@\n`;
-
-	// Add original lines with - prefix
-	for (let i = startLine - 1; i < endLine; i++) {
-		if (originalLines[i]) {
-			diffContent += `-${originalLines[i]}\n`;
-		}
-	}
-
-	// Add new lines with + prefix
-	newLines.forEach(line => {
-		diffContent += `+${line}\n`;
-	});
-
-	return diffContent;
-}
-
-async function applyDiffToFile(filePath: string, newContent: string, startLine: number, endLine: number) {
 	try {
 		// Read current file content
 		const fileUri = vscode.Uri.file(filePath);
@@ -1033,4 +1031,129 @@ async function applyDiffToFile(filePath: string, newContent: string, startLine: 
 		vscode.window.showErrorMessage(`Failed to apply changes to file: ${error}`);
 		throw error;
 	}
+}
+
+// Enhanced diff functionality
+
+export async function showSideBySideView(diffData: {
+	snippetId: string;
+	originalContent: string;
+	newContent: string;
+	startLine: number;
+	endLine: number;
+	filePath: string;
+	relativeFilePath: string;
+	metadata: any;
+}) {
+	// Check if the file exists in the current workspace
+	const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+	if (!workspaceRoot) {
+		vscode.window.showWarningMessage("No workspace found. Falling back to snippet view.");
+		await showSnippetView(diffData);
+		return;
+	}
+
+	// Check if the file path matches the current workspace
+	const fullFilePath = diffData.filePath;
+	const isFileInWorkspace = fullFilePath.startsWith(workspaceRoot);
+
+	if (!isFileInWorkspace) {
+		vscode.window.showInformationMessage(
+			`File ${diffData.relativeFilePath} is not in the current workspace. Showing snippet view instead.`
+		);
+		await showSnippetView(diffData);
+		return;
+	}
+
+	// Check if the file actually exists
+	try {
+		await vscode.workspace.fs.stat(vscode.Uri.file(fullFilePath));
+	} catch {
+		vscode.window.showInformationMessage(
+			`File ${diffData.relativeFilePath} does not exist. Showing snippet view instead.`
+		);
+		await showSnippetView(diffData);
+		return;
+	}
+
+	// File exists and is in workspace - use VS Code's Git Working Tree mechanism
+	await showGitWorkingTreeView(diffData);
+}
+
+async function showGitWorkingTreeView(diffData: {
+	snippetId: string;
+	originalContent: string;
+	newContent: string;
+	startLine: number;
+	endLine: number;
+	filePath: string;
+	relativeFilePath: string;
+	metadata: any;
+}) {
+	// Create a temporary file with the snippet content (LEFT SIDE)
+	const snippetUri = vscode.Uri.file(`${diffData.filePath}.osmynt-snippet-${diffData.snippetId.slice(0, 8)}`);
+	await vscode.workspace.fs.writeFile(snippetUri, new TextEncoder().encode(diffData.newContent));
+
+	// Original file (RIGHT SIDE)
+	const originalUri = vscode.Uri.file(diffData.filePath);
+
+	// Use VS Code's built-in diff with snippet on LEFT, original on RIGHT
+	await vscode.commands.executeCommand("vscode.diff", snippetUri, originalUri, "Snippet ↔ Original File");
+
+	// Set up a listener to monitor when the diff editor is closed
+	// This ensures we clean up properly and don't save the snippet file
+	const changeDisposable = vscode.workspace.onDidCloseTextDocument(async document => {
+		if (document.uri.fsPath === snippetUri.fsPath) {
+			// The snippet file is being closed, make sure it's not saved
+			// and clean up the temporary file
+			try {
+				await vscode.workspace.fs.delete(snippetUri);
+			} catch {
+				// File might already be deleted, ignore error
+			}
+		}
+	});
+
+	// Show instructions
+	vscode.window.showInformationMessage(
+		"📋 Side-by-side diff opened!\n" +
+			"• LEFT: Snippet content (new changes)\n" +
+			"• RIGHT: Original file (your current file)\n" +
+			"• Use VS Code's diff controls to apply changes from snippet to original file\n" +
+			"• Click 'Accept' (✓) to apply snippet changes to the original file"
+	);
+
+	// Set up cleanup when the diff editor is closed
+	const closeDisposable = vscode.workspace.onDidCloseTextDocument(async document => {
+		if (document.uri.fsPath === snippetUri.fsPath) {
+			// Clean up the temporary snippet file and disposables
+			try {
+				await vscode.workspace.fs.delete(snippetUri);
+			} catch {
+				// File might already be deleted, ignore error
+			}
+			changeDisposable.dispose();
+			closeDisposable.dispose();
+		}
+	});
+}
+
+async function showSnippetView(diffData: {
+	snippetId: string;
+	originalContent: string;
+	newContent: string;
+	startLine: number;
+	endLine: number;
+	filePath: string;
+	relativeFilePath: string;
+	metadata: any;
+}) {
+	// Fallback: Show the snippet content in a new editor
+	const tempUri = vscode.Uri.file(`/tmp/osmynt-snippet-${diffData.snippetId.slice(0, 8)}.txt`);
+	await vscode.workspace.fs.writeFile(tempUri, new TextEncoder().encode(diffData.newContent));
+
+	const doc = await vscode.workspace.openTextDocument(tempUri);
+	await vscode.window.showTextDocument(doc);
+
+	vscode.window.showInformationMessage("📄 Snippet view opened! This is the new content from the snippet.");
 }

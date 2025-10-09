@@ -144,7 +144,7 @@ export async function handleShareCode(context: vscode.ExtensionContext, treeProv
 			// Add project root directory for diff application
 			if (workspaceRoot) {
 				metadataExtra.projectRoot = workspaceRoot;
-				metadataExtra.relativeFilePath = editorFile.replace(workspaceRoot, "").replace(/^[\/\\]/, "");
+				metadataExtra.relativeFilePath = editorFile.replace(workspaceRoot, "").replace(/^[/\\]/, "");
 			}
 
 			// If full context is requested, include line numbers and full file content
