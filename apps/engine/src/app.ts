@@ -68,6 +68,8 @@ app.route(Routes.keys.base, KeysAPIModule);
 app.route(Routes.codeShare.base, CodeShareAPIModule);
 app.route(Routes.teams.base, TeamsAPIModule);
 
+// release trigger: "https://github.com/osmynt-io/osmynt/releases/tag/v1.2.0"
+
 // main server
 export default {
 	port: ENV.PORT,
