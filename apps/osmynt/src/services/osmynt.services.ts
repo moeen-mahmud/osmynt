@@ -988,7 +988,7 @@ export async function showDiffPreview(
 			relativeFilePath: diffData.relativeFilePath,
 			metadata: diffData.metadata,
 		});
-		vscode.window.showInformationMessage("✅ Changes applied directly to the file!");
+		vscode.window.showInformationMessage("Changes applied directly to the file!");
 	}
 }
 
@@ -1112,13 +1112,14 @@ async function showGitWorkingTreeView(diffData: {
 	});
 
 	// Show instructions
-	vscode.window.showOpenDialog({
-		title:
-			"Working Tree View Opened!\n" +
-			"• LEFT: Snippet content (new changes)\n" +
-			"• RIGHT: Original file (your current file)\n" +
-			"• Use VS Code's diff controls to apply changes from snippet to original file.\n" +
-			"• Save the changes to the original file to apply the changes.",
+	vscode.window.showInformationMessage(`You are now in the Git Working Tree View`, {
+		modal: true,
+		detail: `
+• LEFT: Snippet content (new changes)
+• RIGHT: Original file (your current file)
+• Use VS Code's diff controls to apply changes from snippet to original file.
+• Save the changes to the original file to apply the changes.
+		`,
 	});
 
 	// Set up cleanup when the diff editor is closed
