@@ -127,5 +127,5 @@ jobs:
           echo "SUPABASE_ANON_KEY=${{secrets.SUPABASE_ANON_KEY}}" >> .env
           echo "UPSTASH_REDIS_URL=${{secrets.UPSTASH_REDIS_URL}}" >> .env
           NODE_ENV=production bun run scripts/build-with-esbuild.ts
-          NODE_ENV=production bunx vsce publish -p ${{ secrets.VSCE_PAT }} --allow-package-env-file
+          NODE_ENV=production bunx vsce publish --allow-package-all-secrets --allow-package-env-file -p ${{ secrets.VSCE_PAT }}
           NODE_ENV=production bunx ovsx publish -p ${{ secrets.OVSX_TOKEN }}
