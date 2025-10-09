@@ -1,5 +1,11 @@
 # @osmynt-core/engine
 
+## 1.3.1
+
+### Patch Changes
+
+- [#19](https://github.com/moeen-mahmud/osmynt/pull/19) [`681867d`](https://github.com/moeen-mahmud/osmynt/commit/681867d4da78187ccbad98e8cff403fc2cff9f03) Thanks [@moeen-mahmud](https://github.com/moeen-mahmud)! - improved real time transaction and overall performance of the encryption/decryption
+
 ## 1.3.0
 
 ### Minor Changes
