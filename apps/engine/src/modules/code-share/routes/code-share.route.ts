@@ -6,6 +6,7 @@ import { CODE_SHARE_ALGORITHM } from "@/modules/code-share/constants/code-share.
 export const route_share = createRoute({
 	tags: ["CodeShare"],
 	operationId: "codeShareShare",
+	summary: "Share a code snippet",
 	method: "post",
 	path: Routes.codeShare.share,
 	request: {
@@ -50,6 +51,7 @@ export const route_share = createRoute({
 export const route_listTeam = createRoute({
 	tags: ["CodeShare"],
 	operationId: "codeShareListTeam",
+	summary: "List team ciphertexts",
 	method: "get",
 	path: Routes.codeShare.listTeam,
 	responses: {
@@ -72,6 +74,7 @@ export const route_listTeam = createRoute({
 export const route_getById = createRoute({
 	tags: ["CodeShare"],
 	operationId: "codeShareGetById",
+	summary: "Get item",
 	method: "get",
 	path: Routes.codeShare.getById,
 	responses: {
@@ -116,6 +119,7 @@ export const route_getById = createRoute({
 export const route_addWrappedKeys = createRoute({
 	tags: ["CodeShare"],
 	operationId: "codeShareAddWrappedKeys",
+	summary: "Add wrapped keys",
 	method: "post",
 	path: "/:id/add-wrapped-keys",
 	request: {
@@ -151,6 +155,7 @@ export const route_addWrappedKeys = createRoute({
 export const route_listTeamByAuthor = createRoute({
 	tags: ["CodeShare"],
 	operationId: "codeShareListTeamByAuthor",
+	summary: "List team ciphertexts by author",
 	method: "get",
 	// IMPORTANT: this route module is mounted at Routes.codeShare.base, so this path must be RELATIVE
 	path: "/team/:teamId/by-author/:userId",
@@ -177,6 +182,7 @@ export const route_listTeamByAuthor = createRoute({
 export const route_listDmWith = createRoute({
 	tags: ["CodeShare"],
 	operationId: "codeShareListDmWith",
+	summary: "List direct messages with a user",
 	method: "get",
 	path: "/dm/with/:userId",
 	responses: {
@@ -202,6 +208,7 @@ export const route_listDmWith = createRoute({
 export const route_realtimeConfig = createRoute({
 	tags: ["CodeShare"],
 	operationId: "codeShareRealtimeConfig",
+	summary: "Realtime config (public anon)",
 	method: "get",
 	path: "/realtime-config",
 	responses: {

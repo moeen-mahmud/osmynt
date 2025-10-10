@@ -4,6 +4,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import type { Env } from "hono";
 import { poweredBy } from "hono/powered-by";
 import { logger } from "hono/logger";
+import { logger as osmyntLogger } from "@osmynt-core/library";
 import { healthCheckMiddleware } from "@/middlewares/health-check.middleware";
 import { cors } from "hono/cors";
 import { ENV } from "@/config/env.config";

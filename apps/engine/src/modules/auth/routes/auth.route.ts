@@ -11,6 +11,7 @@ import {
 export const route_authGithubAuthorize = createRoute({
 	tags: ["Auth"],
 	operationId: "authGithubAuthorize",
+	summary: "Authorize with github",
 	method: "get",
 	path: Routes.auth.github,
 	responses: {
@@ -30,6 +31,7 @@ export const route_authGithubCallback = createRoute({
 	operationId: "authGithubCallback",
 	method: "get",
 	path: Routes.auth.callback,
+	summary: "Callback from github",
 	responses: {
 		200: {
 			description: "Successfully get the github callback url",
@@ -79,6 +81,7 @@ export const route_authHandshakeInit = createRoute({
 	operationId: "authHandshakeInit",
 	method: "post",
 	path: Routes.auth.handshakeInit,
+	summary: "Initialize handshake",
 	responses: {
 		200: {
 			description: "Successfully init the handshake",
@@ -128,6 +131,7 @@ export const route_authHandshakeRetrieve = createRoute({
 	operationId: "authHandshakeRetrieve",
 	method: "get",
 	path: Routes.auth.handshakeRetrieve,
+	summary: "Retrieve handshake",
 	responses: {
 		200: {
 			description: "Successfully retrieve the handshake",
@@ -193,6 +197,7 @@ export const route_authLoginWithToken = createRoute({
 	operationId: "authLoginWithToken",
 	method: "post",
 	path: Routes.auth.loginWithToken,
+	summary: "Login with token",
 	responses: {
 		200: {
 			description: "Successfully login with token",

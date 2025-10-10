@@ -28,26 +28,6 @@ This is where **Osmynt** comes in. We addresses these challenges by providing a 
 4. **Join a Team**: Join an existing team.
 5. **Start Sharing**: Start sharing your code snippets with your team members in real-time.
 
-## Available Commands
-
-| Command                                | Description                                    | Category | Icon         |
-| -------------------------------------- | ---------------------------------------------- | -------- | ------------ |
-| **Login**                        | Logs into your Osmynt account.                 | Osmynt   | $(github)    |
-| **Logout**                       | Logs out of your Osmynt account.               | Osmynt   | $(github)    |
-| **Refresh**                      | Refreshes Osmynt data in the extension.        | Osmynt   | $(refresh)   |
-| **Share Selected Code**          | Shares the selected code snippet.              | Osmynt   | $(share)     |
-| **Invite Member**                | Sends an invitation to a team member.          | Osmynt   | $(plus)      |
-| **Join Team**                    | Joins an existing Osmynt team.                 | Osmynt   | $(plug)      |
-| **Remove Member**                | Removes a team member from the team.           | Osmynt   | $(trash)     |
-| **Accept Invitation**            | Accepts an invitation to join a team.          | Osmynt   | $(check)     |
-| **View Snippet**                 | Displays a snippet in the Osmynt activity bar. | Osmynt   | $(code)      |
-| **Refresh Team**                 | Refreshes the team data in the extension.      | Osmynt   | $(refresh)   |
-| **Copy Snippet**                 | Copies the snippet to the clipboard.           | Osmynt   | $(copy)      |
-| **Open Snippet to Side**         | Opens the snippet in the side panel.           | Osmynt   | $(file-code) |
-| **Insert Snippet at Cursor**     | Inserts the snippet at the cursor position.    | Osmynt   | $(insert)    |
-| **Filter Recent by This Member** | Filters the recent snippets by this member.    | Osmynt   | $(filter)    |
-| **Clear Recent Filter**          | Clears the recent filter.                      | Osmynt   |              |
-
 ### How to Use
 
 1. Open the **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`).
@@ -60,7 +40,8 @@ This is where **Osmynt** comes in. We addresses these challenges by providing a 
 
 Since the extension is in closed beta, please follow the email instruction above. We'll be happy to have you on board. Don't forget to share with your friends and colleagues. The more the merrier 🎉
 
-We're exciting to get your feedback and suggestions. Please feel free to drop an email on [contact@osmynt.dev](mailto:contact@osmynt.dev) with your thoughts. We're looking forward to hearing from you 🙏
+We're exciting to get your feedback and suggestions. Please feel free to drop an email on [hi@osmynt.dev](mailto:hi@osmynt.dev) with your thoughts. We're looking forward to hearing from you 🙏
 
 ## Author
+
 [Moeen Mahmud](https://github.com/moeen-mahmud)

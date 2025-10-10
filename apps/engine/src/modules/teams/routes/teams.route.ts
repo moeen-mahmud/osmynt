@@ -6,6 +6,7 @@ export const route_me = createRoute({
 	tags: ["Teams"],
 	operationId: "teamsMe",
 	method: "get",
+	summary: "Get user's teams and members",
 	path: Routes.teams.me,
 	responses: {
 		200: {
@@ -34,6 +35,7 @@ export const route_me = createRoute({
 export const route_invite = createRoute({
 	tags: ["Teams"],
 	operationId: "teamsInvite",
+	summary: "Invite a user to a team",
 	method: "post",
 	path: Routes.teams.invite,
 	responses: {
@@ -59,6 +61,7 @@ export const route_invite = createRoute({
 export const route_accept = createRoute({
 	tags: ["Teams"],
 	operationId: "teamsAccept",
+	summary: "Accept an invitation to a team",
 	method: "post",
 	path: Routes.teams.accept,
 	responses: {
@@ -84,6 +87,7 @@ export const route_accept = createRoute({
 export const route_removeTeamMember = createRoute({
 	tags: ["Teams"],
 	operationId: "teamsRemoveTeamMember",
+	summary: "Remove a team member",
 	method: "delete",
 	path: Routes.teams.removeTeamMember,
 	responses: {
