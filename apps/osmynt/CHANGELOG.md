@@ -1,5 +1,11 @@
 # @osmynt-core/osmynt
 
+## 1.3.3
+
+### Patch Changes
+
+- [`a9f86b3`](https://github.com/moeen-mahmud/osmynt/commit/a9f86b32c7037fe555220a2c8da4ab921c84a92a) Thanks [@moeen-mahmud](https://github.com/moeen-mahmud)! - introduced message queues
+
 ## 1.3.2
 
 ### Patch Changes

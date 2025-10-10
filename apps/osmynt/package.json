@@ -39,7 +39,7 @@
 	},
 	"publisher": "Osmynt",
 	"name": "osmynt",
-	"version": "1.3.2",
+	"version": "1.3.3",
 	"displayName": "Osmynt Beta",
 	"description": "Secure, E2EE, Realtime DM for code snippets ⚡",
 	"categories": [
