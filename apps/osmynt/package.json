@@ -53,7 +53,7 @@
 		"viewsWelcome": [
 			{
 				"view": "osmyntView",
-				"when": "!osmynt.isLoggedIn",
+				"when": "!osmynt.isLoggedIn || !osmynt",
 				"contents": "Welcome to Osmynt! \n\n[Login](command:osmynt.login) \nSecure, E2EE, Realtime DM for code snippets ⚡ \nFeatures: \n    ◘ **Real-Time Code Sharing**: Share your code snippets in real-time with your team members.\n    ◘ **End-to-End Encryption**: All the code snippets are encrypted end-to-end. No one can read the code snippets except the intended recipients.\n    ◘ **Team Collaboration**: Share the code within your team members.\n    ◘ **Versatile Use Cases**: Whether you're pair programming, debugging or maybe doing a trial and error; just share the code or get the code from your team members, make necessary changes and share the code back!! You can even use it for sharing environment variables, API keys, etc.\n    ◘ **Offline Support**: You can share the code snippets even when you're offline. The code snippets are stored in the local storage of the extension and will be synced when you're online. Additionally, we can view the previous code snippets which you shared or received."
 			}
 		],

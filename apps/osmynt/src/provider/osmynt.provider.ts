@@ -196,15 +196,16 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 				const access = await this.context.secrets.get(ACCESS_SECRET_KEY);
 				if (!access) return [];
 			} catch {}
+			return [];
 			// User appears logged in → show a single error item
-			const errorItem = new OsmyntItem(
-				"action",
-				"Something went wrong. Please log in again.",
-				vscode.TreeItemCollapsibleState.None,
-				undefined,
-				"alert"
-			);
-			return [errorItem];
+			// const errorItem = new OsmyntItem(
+			// 	"action",
+			// 	"Something went wrong. Please log in again.",
+			// 	vscode.TreeItemCollapsibleState.None,
+			// 	undefined,
+			// 	"alert"
+			// );
+			// return [errorItem];
 		}
 	}
 
@@ -220,7 +221,7 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`,
 			{ headers: { Authorization: `Bearer ${access}` } }
 		);
-		const j = await res.json();
+		const j: any = await res.json();
 		if (!res.ok || !Array.isArray(j?.teams)) {
 			this.cachedTeams = [];
 			this.cachedMembersByTeam = {};
@@ -253,7 +254,7 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 		const res = await fetch(url, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const j = await res.json();
+		const j: any = await res.json();
 		this.cachedRecentByTeam[teamId] = Array.isArray(j.items) ? j.items : [];
 		// update last seen and unread
 		const latest = this.cachedRecentByTeam[teamId][0]?.createdAt as string | undefined;
@@ -283,7 +284,7 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 				headers: { Authorization: `Bearer ${access}` },
 			}
 		);
-		const j = await res.json();
+		const j: any = await res.json();
 		this.cachedDmByUserId[otherUserId] = Array.isArray(j.items) ? j.items : [];
 	}
 

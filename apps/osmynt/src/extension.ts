@@ -180,7 +180,7 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 						const dres = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
 							headers: { Authorization: `Bearer ${access}` },
 						});
-						const dj = await dres.json();
+						const dj: any = await dres.json();
 						const isRegistered = Array.isArray(dj?.devices)
 							? (dj.devices as any[]).some(d => d?.deviceId === localDeviceId)
 							: false;
@@ -192,7 +192,7 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 							headers: { Authorization: `Bearer ${access}` },
 						}
 					);
-					const j = await res.json();
+					const j: any = await res.json();
 					const canDecrypt = (await tryDecryptSnippet(_context, j)) !== null;
 					const title =
 						(data?.title as string | undefined) || (j?.metadata?.title as string | undefined) || "Snippet";
@@ -205,7 +205,7 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 						const meRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 							headers: { Authorization: `Bearer ${access}` },
 						});
-						const me = await meRes.json();
+						const me: any = await meRes.json();
 						currentUserId = me?.user?.id as string | undefined;
 					} catch {}
 

@@ -33,7 +33,7 @@ export async function nativeSecureLogin(context: vscode.ExtensionContext, github
 		vscode.window.showErrorMessage(`Engine login failed (${res.status})`);
 		throw new Error(`Engine login failed (${res.status})`);
 	}
-	const j = await res.json();
+	const j: any = await res.json();
 
 	const serverPub: any = await subtle.importKey(
 		"jwk",
@@ -86,7 +86,7 @@ export async function ensureDeviceKeys(context: vscode.ExtensionContext) {
 		const dm = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const dj = await dm.json();
+		const dj: any = await dm.json();
 		devicesCount = Array.isArray(dj?.devices) ? dj.devices.length : 0;
 	} catch {}
 
@@ -119,7 +119,10 @@ export async function ensureDeviceKeys(context: vscode.ExtensionContext) {
 				const stillRegistered = await verifySelfDeviceRegistered(context);
 				if (!stillRegistered) {
 					await clearLocalDeviceSecrets(context);
-					vscode.window.showInformationMessage("Osmynt: This device was removed. Pair again to reconnect.");
+					vscode.window.showInformationMessage("Osmynt: This device was removed.", {
+						modal: true,
+						detail: "Pair again to reconnect.",
+					});
 				} else {
 					await registerDeviceKey(context, deviceId, parsed.publicKeyJwk);
 				}
@@ -148,7 +151,7 @@ export async function verifySelfDeviceRegistered(context: vscode.ExtensionContex
 		const res = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const j = await res.json();
+		const j: any = await res.json();
 		const devices: Array<{ deviceId: string }> = Array.isArray(j?.devices) ? j.devices : [];
 		return devices.some(d => d.deviceId === localId);
 	} catch {
@@ -174,7 +177,7 @@ export async function getDeviceState(context: vscode.ExtensionContext): Promise<
 		const res = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const j = await res.json();
+		const j: any = await res.json();
 		const devices: Array<{ deviceId: string }> = Array.isArray(j?.devices) ? j.devices : [];
 		const idx = devices.findIndex(d => d.deviceId === localId);
 		if (idx === -1) return { kind: "removed" };
@@ -217,7 +220,7 @@ export async function initiateDevicePairing(context: vscode.ExtensionContext): P
 				ciphertextB64u: b64url(new Uint8Array(ciphertext as ArrayBuffer)),
 			}),
 		});
-		const j = await res.json();
+		const j: any = await res.json();
 		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
 		const token = j?.token as string;
 		// Show both token and pairingKey to user to transfer. !IMPORTANT
@@ -249,7 +252,7 @@ export async function claimDevicePairing(context: vscode.ExtensionContext): Prom
 			headers: { "Content-Type": "application/json", Authorization: `Bearer ${access}` },
 			body: JSON.stringify({ token }),
 		});
-		const j = await res.json();
+		const j: any = await res.json();
 		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
 		const iv = b64uToBytes(j.ivB64u);
 		const ciphertext = b64uToBytes(j.ciphertextB64u);
@@ -295,7 +298,7 @@ export async function removeDevice(context: vscode.ExtensionContext): Promise<vo
 				headers: { Authorization: `Bearer ${access}` },
 			}
 		);
-		const j = await res.json();
+		const j: any = await res.json();
 		if (!res.ok || !j?.ok) throw new Error(j?.error || `Failed (${res.status})`);
 		vscode.window.showInformationMessage("Device removed");
 	} catch (e) {
@@ -310,7 +313,7 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 		const meRes = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const me = await meRes.json();
+		const me: any = await meRes.json();
 		const devices: Array<{ deviceId: string; encryptionPublicKeyJwk: any; isPrimary?: boolean }> = Array.isArray(
 			me?.devices
 		)
@@ -341,7 +344,7 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 		const listRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.listTeam}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const list = await listRes.json();
+		const list: any = await listRes.json();
 		const items: Array<{ id: string; wrappedKeys?: any[] }> = Array.isArray(list?.items) ? list.items : [];
 
 		const nodeCrypto = await import("crypto");
@@ -380,7 +383,7 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 						headers: { Authorization: `Bearer ${access}` },
 					}
 				);
-				const full = await itemRes.json();
+				const full: any = await itemRes.json();
 				if (!itemRes.ok) continue;
 				const already = (full?.wrappedKeys ?? []).some(
 					(wk: any) => wk?.recipientDeviceId === companion.deviceId
@@ -393,7 +396,7 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 				const meTeamsRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 					headers: { Authorization: `Bearer ${access}` },
 				});
-				const meTeams = await meTeamsRes.json();
+				const meTeams: any = await meTeamsRes.json();
 				const meUserId: string | undefined = meTeams?.user?.id;
 				if (!meUserId || full?.authorId !== meUserId) continue;
 
@@ -528,7 +531,7 @@ export async function promptTeamId(context: vscode.ExtensionContext): Promise<st
 		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const j = await res.json();
+		const j: any = await res.json();
 		// Prefer owned team; fallback to first team
 		const teams: Array<{ id: string; ownerId: string }> = Array.isArray(j?.teams) ? j.teams : [];
 		const meOwned = teams.find(t => t.ownerId && j?.user?.id && t.ownerId === j.user.id)?.id;
@@ -630,7 +633,7 @@ export async function pickShareTarget(context: vscode.ExtensionContext): Promise
 	const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 		headers: { Authorization: `Bearer ${access}` },
 	});
-	const j = await res.json();
+	const j: any = await res.json();
 	const teams: Array<{ id: string; name: string }> = Array.isArray(j?.teams) ? j.teams : [];
 	const membersByTeam: Record<string, any[]> = j?.membersByTeam ?? {};
 	const currentUserId: string | undefined = j?.user?.id as string | undefined;
@@ -699,14 +702,14 @@ export async function shareSelectedCode(
 				headers: { Authorization: `Bearer ${access}` },
 			}
 		);
-		const j = await recipientsRes.json();
+		const j: any = await recipientsRes.json();
 		recipients = Array.isArray(j?.recipients) ? j.recipients : [];
 		// get current user id for self-wrapping
 		try {
 			const meRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 				headers: { Authorization: `Bearer ${access}` },
 			});
-			const me = await meRes.json();
+			const me: any = await meRes.json();
 			meUserId = me?.user?.id as string | undefined;
 		} catch {}
 	} else {
@@ -714,7 +717,7 @@ export async function shareSelectedCode(
 		const tmRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const tm = await tmRes.json();
+		const tm: any = await tmRes.json();
 		const teams: Array<{ id: string }> = Array.isArray(tm?.teams) ? tm.teams : [];
 		let all: any[] = [];
 		for (const t of teams) {
@@ -725,7 +728,7 @@ export async function shareSelectedCode(
 					headers: { Authorization: `Bearer ${access}` },
 				}
 			);
-			const rj = await rRes.json();
+			const rj: any = await rRes.json();
 			const arr = Array.isArray(rj?.recipients) ? rj.recipients : [];
 			all = all.concat(arr);
 		}
@@ -735,7 +738,7 @@ export async function shareSelectedCode(
 			const meRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 				headers: { Authorization: `Bearer ${access}` },
 			});
-			const me = await meRes.json();
+			const me: any = await meRes.json();
 			meUserId = me?.user?.id as string | undefined;
 		} catch {}
 	}

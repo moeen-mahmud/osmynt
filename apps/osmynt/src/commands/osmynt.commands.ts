@@ -58,7 +58,7 @@ export async function handleRemoveDevice(context: vscode.ExtensionContext) {
 		const res = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const j = await res.json();
+		const j: any = await res.json();
 		const devices: Array<{ deviceId: string; isPrimary?: boolean }> = Array.isArray(j?.devices) ? j.devices : [];
 		const localId = await context.secrets.get(DEVICE_ID_KEY);
 		const items = devices
@@ -79,7 +79,7 @@ export async function handleRemoveDevice(context: vscode.ExtensionContext) {
 				headers: { Authorization: `Bearer ${access}` },
 			}
 		);
-		const dj = await del.json();
+		const dj: any = await del.json();
 		if (!del.ok || !dj?.ok) throw new Error(dj?.error || `Failed (${del.status})`);
 		vscode.window.showInformationMessage("Device removed");
 		await computeAndSetDeviceContexts(context);
@@ -180,7 +180,7 @@ export async function handleInviteMember(context: vscode.ExtensionContext) {
 				headers: { Authorization: `Bearer ${access}` },
 			}
 		);
-		const j = await res.json();
+		const j: any = await res.json();
 		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
 		await vscode.env.clipboard.writeText(j.token);
 		vscode.window.showInformationMessage("Invitation token copied to clipboard");
@@ -204,7 +204,7 @@ export async function handleAcceptInvitation(context: vscode.ExtensionContext, t
 				headers: { Authorization: `Bearer ${access}` },
 			}
 		);
-		const j = await res.json();
+		const j: any = await res.json();
 		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
 		vscode.window.showInformationMessage("Joined team successfully");
 		// refresh the team view
@@ -238,7 +238,7 @@ export async function handleViewSnippet(context: vscode.ExtensionContext, id?: s
 				headers: { Authorization: `Bearer ${access}` },
 			}
 		);
-		const j = await res.json();
+		const j: any = await res.json();
 		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
 		const text = await tryDecryptSnippet(context, j);
 		const fileExt = (j?.metadata?.fileExt as string | undefined)?.toLowerCase();
@@ -277,7 +277,7 @@ export async function handleApplyDiff(context: vscode.ExtensionContext, snippetI
 			throw new Error(`Failed to fetch snippet (${res.status}): ${errorText}`);
 		}
 
-		const j = await res.json();
+		const j: any = await res.json();
 		console.log("Snippet metadata:", j?.metadata);
 
 		const text = await tryDecryptSnippet(context, j);
@@ -344,7 +344,7 @@ export async function handleRemoveTeamMember(
 				headers: { Authorization: `Bearer ${access}` },
 			}
 		);
-		const j = await res.json().catch(() => ({}));
+		const j: any = await res.json().catch(() => ({}));
 		if (!res.ok || !j?.ok) {
 			vscode.window.showErrorMessage(j?.error || "Failed to remove member");
 			return;
