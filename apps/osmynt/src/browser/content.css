@@ -1,0 +1,36 @@
+/* Browser extension content script styles */
+
+#osmynt-floating-button {
+	font-family:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+#osmynt-quick-share {
+	font-family:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Ensure the floating button doesn't interfere with page content */
+#osmynt-floating-button * {
+	box-sizing: border-box;
+}
+
+/* Hide the floating button on certain pages where it might interfere */
+body[data-osmynt-hide="true"] #osmynt-floating-button {
+	display: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+	#osmynt-floating-button {
+		width: 50px !important;
+		height: 50px !important;
+		bottom: 15px !important;
+		right: 15px !important;
+	}
+
+	#osmynt-floating-button img {
+		width: 20px !important;
+		height: 20px !important;
+	}
+}

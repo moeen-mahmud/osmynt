@@ -1,0 +1,41 @@
+{
+	"manifest_version": 3,
+	"name": "Osmynt Browser Extension",
+	"version": "1.3.3",
+	"description": "Secure, E2EE, Realtime DM for code snippets ⚡",
+	"permissions": ["storage", "activeTab", "scripting"],
+	"host_permissions": ["https://github.com/*", "https://api.github.com/*", "*://localhost/*", "*://127.0.0.1/*"],
+	"action": {
+		"default_popup": "popup.html",
+		"default_title": "Osmynt",
+		"default_icon": {
+			"16": "resources/osmynt-16x.png",
+			"32": "resources/osmynt-32x.png",
+			"48": "resources/osmynt-48x.png",
+			"128": "resources/osmynt-128x.png"
+		}
+	},
+	"icons": {
+		"16": "resources/osmynt-16x.png",
+		"32": "resources/osmynt-32x.png",
+		"48": "resources/osmynt-48x.png",
+		"128": "resources/osmynt-128x.png"
+	},
+	"content_scripts": [
+		{
+			"matches": ["<all_urls>"],
+			"js": ["content.js"],
+			"css": ["content.css"],
+			"run_at": "document_end"
+		}
+	],
+	"background": {
+		"service_worker": "background.js"
+	},
+	"web_accessible_resources": [
+		{
+			"resources": ["resources/*", "*.js", "*.css"],
+			"matches": ["<all_urls>"]
+		}
+	]
+}

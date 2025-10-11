@@ -1,5 +1,6 @@
 {
 	"main": "dist/extension.cjs",
+	"browser": "dist/browser/extension.cjs",
 	"dependencies": {
 		"@supabase/supabase-js": "^2.58.0",
 		"@types/bun": "^1.1.13",
@@ -17,13 +18,18 @@
 	},
 	"license": "BSL1.1",
 	"devDependencies": {
-		"@types/bun": "1.1.13",
 		"@osmynt-core/api": "workspace:*",
 		"@osmynt-core/library": "workspace:*",
-		"bun": "1.1.34",
+		"@types/bun": "1.1.13",
+		"@types/chrome": "^0.0.254",
+		"@types/node": "^24.7.1",
 		"@types/ws": "^8.5.12",
+		"@vscode/test-web": "^0.0.74",
 		"@vscode/vsce": "^3.2.1",
-		"esbuild": "^0.20.0"
+		"bun": "1.1.34",
+		"esbuild": "^0.20.0",
+		"vite": "^5.0.0",
+		"playwright": "*"
 	},
 	"peerDependencies": {
 		"typescript": "^5.0.0"
@@ -32,9 +38,21 @@
 	"scripts": {
 		"dev": "echo 'Open this directory in VSCode and then run your extension with F5 or `Run and Debug > Run Extension`!'",
 		"build": "bun run ./scripts/build-with-esbuild.ts",
+		"build:browser": "bun run ./scripts/build-browser.ts",
+		"build:web": "bun run ./scripts/build-browser.ts",
+		"build:all": "bun run build && bun run build:browser",
 		"watch": "bun run ./scripts/watch-with-esbuild.ts",
+		"watch:browser": "bun run ./scripts/watch-browser.ts",
+		"watch:web": "bun run ./scripts/watch-browser.ts",
 		"vsce-package": "bun run vsce package --no-dependencies",
 		"package": "bun run build && bun run vsce-package",
+		"package:browser": "bun run build:browser && bun run ./scripts/package-browser.ts",
+		"package:web": "bun run build:web && bun run vsce-package",
+		"test:web": "bun run ./scripts/test-web.ts",
+		"dev:web": "bun run ./scripts/dev-web.ts",
+		"simple:web": "bun run ./scripts/simple-web-test.ts",
+		"test:load": "bun run ./scripts/test-extension-load.ts",
+		"open-in-browser": "bun run test:load",
 		"clean": "rm -r ./dist"
 	},
 	"publisher": "Osmynt",
