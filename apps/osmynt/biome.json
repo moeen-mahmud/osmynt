@@ -13,7 +13,8 @@
 			"!out/**/*",
 			"!temp/**/*",
 			"!tmp",
-			"!mocks/**/*"
+			"!mocks/**/*",
+			"!.vscode-test-web/**/*"
 		]
 	}
 }

@@ -46,6 +46,8 @@ export const Routes = {
 		me: "/me",
 		teamDefault: "/team/default",
 		teamById: "/team/:teamId",
+		deviceRemove: "/device/:deviceId",
+		deviceForceRemove: "/device/:deviceId/force",
 	},
 
 	// code share

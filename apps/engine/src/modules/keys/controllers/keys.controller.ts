@@ -173,4 +173,29 @@ export class KeysController {
 		logger.info("Device removed", { userId: user.id, deviceId });
 		return c.json({ ok: true }, 200);
 	}
+
+	static async deviceForceRemove(c: Context) {
+		const user = c.get("user") as { id: string } | undefined;
+		if (!user) {
+			logger.error("Unauthorized");
+			return c.json({ error: "Unauthorized" }, 401);
+		}
+		const deviceId = c.req.param("deviceId");
+		if (!deviceId) return c.json({ error: "Invalid device" }, 400);
+
+		// Force remove any device, including primary
+		await prisma.deviceKey.deleteMany({ where: { userId: user.id, deviceId } });
+		await prisma.auditLog.create({
+			data: {
+				action: KEYS_AUDIT_LOG_ACTIONS.DEVICE_KEY_REGISTERED,
+				userId: user.id,
+				metadata: { forceRemoved: deviceId },
+			},
+		});
+		try {
+			await publishBroadcast("keys:changed", { userId: user.id });
+		} catch {}
+		logger.info("Device force removed", { userId: user.id, deviceId });
+		return c.json({ ok: true }, 200);
+	}
 }

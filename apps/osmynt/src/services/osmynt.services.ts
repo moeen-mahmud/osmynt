@@ -2,7 +2,13 @@ import * as vscode from "vscode";
 import { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY, DEVICE_ID_KEY, ENC_KEYPAIR_JWK_KEY } from "@/constants/osmynt.constant";
 import { b64uToBytes, b64url } from "@/utils/osmynt.utils";
 import { ENDPOINTS } from "@/constants/endpoints.constant";
-import type { DeviceState, ShareTarget } from "@/types/osmynt.types";
+import type {
+	DeviceState,
+	ShareTarget,
+	AuthLoginResponse,
+	KeysMeResponse,
+	DeviceKeySummary,
+} from "@/types/osmynt.types";
 
 export async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessToken: string) {
 	const base = ENDPOINTS.engineBaseUrl?.replace(/\/$/, "");
@@ -33,7 +39,7 @@ export async function nativeSecureLogin(context: vscode.ExtensionContext, github
 		vscode.window.showErrorMessage(`Engine login failed (${res.status})`);
 		throw new Error(`Engine login failed (${res.status})`);
 	}
-	const j: any = await res.json();
+	const j: AuthLoginResponse = await res.json();
 
 	const serverPub: any = await subtle.importKey(
 		"jwk",
@@ -119,10 +125,26 @@ export async function ensureDeviceKeys(context: vscode.ExtensionContext) {
 				const stillRegistered = await verifySelfDeviceRegistered(context);
 				if (!stillRegistered) {
 					await clearLocalDeviceSecrets(context);
-					vscode.window.showInformationMessage("Osmynt: This device was removed.", {
-						modal: true,
-						detail: "Pair again to reconnect.",
-					});
+					await vscode.window
+						.showInformationMessage(
+							"Osmynt: This device was removed.",
+							{
+								modal: true,
+								detail: "Pair again to reconnect. However, if this device was your primary device, you can repair it using 'Repair this device'.",
+							},
+							"List Devices",
+							"Repair This Device",
+							"Force Remove Device"
+						)
+						.then(action => {
+							if (action === "List Devices") {
+								vscode.commands.executeCommand("osmynt.listDevices");
+							} else if (action === "Repair This Device") {
+								vscode.commands.executeCommand("osmynt.repairDevice");
+							} else if (action === "Force Remove Device") {
+								vscode.commands.executeCommand("osmynt.forceRemoveDevice");
+							}
+						});
 				} else {
 					await registerDeviceKey(context, deviceId, parsed.publicKeyJwk);
 				}
@@ -177,8 +199,8 @@ export async function getDeviceState(context: vscode.ExtensionContext): Promise<
 		const res = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const j: any = await res.json();
-		const devices: Array<{ deviceId: string }> = Array.isArray(j?.devices) ? j.devices : [];
+		const j: KeysMeResponse = await res.json();
+		const devices: DeviceKeySummary[] = Array.isArray(j?.devices) ? j.devices : [];
 		const idx = devices.findIndex(d => d.deviceId === localId);
 		if (idx === -1) return { kind: "removed" };
 		return idx === 0

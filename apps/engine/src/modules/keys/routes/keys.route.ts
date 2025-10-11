@@ -232,6 +232,28 @@ export const route_deviceRemove = createRoute({
 	},
 });
 
+export const route_deviceForceRemove = createRoute({
+	tags: ["Keys"],
+	operationId: "deviceForceRemove",
+	summary: "Force remove a device (including primary)",
+	method: "delete",
+	path: `/device/:deviceId/force`,
+	responses: {
+		200: {
+			description: "Force removed",
+			content: { "application/json": { schema: z.object({ ok: z.literal(true) }) } },
+		},
+		400: {
+			description: "Bad Request",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+		401: {
+			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+	},
+});
+
 export type KeysRoutes = {
 	keysRegister: typeof route_keysRegister;
 	keysMe: typeof route_keysMe;
@@ -240,4 +262,5 @@ export type KeysRoutes = {
 	pairingInit: typeof route_pairingInit;
 	pairingClaim: typeof route_pairingClaim;
 	deviceRemove: typeof route_deviceRemove;
+	deviceForceRemove: typeof route_deviceForceRemove;
 };

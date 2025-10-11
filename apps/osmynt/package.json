@@ -174,6 +174,30 @@
 				"title": "Apply Diff",
 				"category": "Osmynt",
 				"icon": "$(diff)"
+			},
+			{
+				"command": "osmynt.listDevices",
+				"title": "List Devices",
+				"category": "Osmynt",
+				"icon": "$(list-tree)"
+			},
+			{
+				"command": "osmynt.repairDevice",
+				"title": "Repair This Device",
+				"category": "Osmynt",
+				"icon": "$(tools)"
+			},
+			{
+				"command": "osmynt.forceRemoveDevice",
+				"title": "Force Remove Device",
+				"category": "Osmynt",
+				"icon": "$(trash)"
+			},
+			{
+				"command": "osmynt.clearLocalCache",
+				"title": "Clear Local Cache",
+				"category": "Osmynt",
+				"icon": "$(clear-all)"
 			}
 		],
 		"viewsContainers": {
@@ -213,22 +237,22 @@
 			],
 			"view/item/context": [
 				{
-					"command": "osmynt.snippet.copy",
+					"command": "osmynt.snippet.openToSide",
 					"when": "view == osmyntView && viewItem == snippetItem",
 					"group": "inline@1"
 				},
 				{
-					"command": "osmynt.snippet.openToSide",
+					"command": "osmynt.applyDiff",
 					"when": "view == osmyntView && viewItem == snippetItem",
 					"group": "inline@2"
 				},
 				{
-					"command": "osmynt.snippet.insertAtCursor",
+					"command": "osmynt.snippet.copy",
 					"when": "view == osmyntView && viewItem == snippetItem",
 					"group": "inline@3"
 				},
 				{
-					"command": "osmynt.applyDiff",
+					"command": "osmynt.snippet.insertAtCursor",
 					"when": "view == osmyntView && viewItem == snippetItem",
 					"group": "inline@4"
 				},

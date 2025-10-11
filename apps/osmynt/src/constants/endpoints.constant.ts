@@ -13,6 +13,7 @@ export const ENDPOINTS = {
 		pairingInit: "protected/keys/pairing/init",
 		pairingClaim: "protected/keys/pairing/claim",
 		deviceRemove: (deviceId: string) => `protected/keys/device/${deviceId}`,
+		deviceForceRemove: (deviceId: string) => `protected/keys/device/${deviceId}/force`,
 	},
 	teams: {
 		me: "protected/teams/me",

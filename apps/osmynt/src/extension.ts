@@ -17,6 +17,10 @@ import {
 	handleRemoveDevice,
 	handleBackfillCompanion,
 	handleApplyDiff,
+	handleListDevices,
+	handleRepairDevice,
+	handleForceRemoveDevice,
+	handleClearLocalCache,
 } from "@/commands/osmynt.commands";
 
 import { getBaseAndAccess } from "@/services/osmynt.services";
@@ -45,6 +49,10 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand("osmynt.addDeviceCompanion", () => handleAddDeviceCompanion(context)),
 		vscode.commands.registerCommand("osmynt.removeDevice", () => handleRemoveDevice(context)),
 		vscode.commands.registerCommand("osmynt.backfillCompanion", () => handleBackfillCompanion(context)),
+		vscode.commands.registerCommand("osmynt.listDevices", () => handleListDevices(context)),
+		vscode.commands.registerCommand("osmynt.repairDevice", () => handleRepairDevice(context)),
+		vscode.commands.registerCommand("osmynt.forceRemoveDevice", () => handleForceRemoveDevice(context)),
+		vscode.commands.registerCommand("osmynt.clearLocalCache", () => handleClearLocalCache(context)),
 		vscode.commands.registerCommand("osmynt.snippet.copy", async (item?: any) => {
 			if (!item?.data?.id) return;
 			const { base, access } = await getBaseAndAccess(context);

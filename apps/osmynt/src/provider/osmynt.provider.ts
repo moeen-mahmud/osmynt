@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import type { OsmyntNodeKind } from "@/types/osmynt.types";
+import type { OsmyntNodeKind, TeamsMeResponse, UserPublic, Team } from "@/types/osmynt.types";
 import { getBaseAndAccess, getDeviceState } from "@/services/osmynt.services";
 import { ENDPOINTS } from "@/constants/endpoints.constant";
 import { ACCESS_SECRET_KEY } from "@/constants/osmynt.constant";
@@ -11,7 +11,7 @@ class OsmyntItem extends vscode.TreeItem {
 		kind: OsmyntNodeKind,
 		label: string,
 		collapsible: vscode.TreeItemCollapsibleState,
-		data?: any,
+		data?: any, // Keep as any for flexibility with different data types
 		icon?: string
 	) {
 		super(label, collapsible);
@@ -27,10 +27,10 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 	private _onDidChangeTreeData: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
 	readonly onDidChangeTreeData: vscode.Event<void> = this._onDidChangeTreeData.event;
 
-	private cachedTeams: any[] = [];
-	private cachedMembersByTeam: Record<string, any[]> = {};
-	private cachedRecentByTeam: Record<string, any[]> = {};
-	private cachedDmByUserId: Record<string, any[]> = {};
+	private cachedTeams: Team[] = [];
+	private cachedMembersByTeam: Record<string, UserPublic[]> = {};
+	private cachedRecentByTeam: Record<string, any[]> = {}; // Keep as any for flexibility
+	private cachedDmByUserId: Record<string, any[]> = {}; // Keep as any for flexibility
 	private currentUserId: string | undefined;
 
 	constructor(private readonly context: vscode.ExtensionContext) {}
@@ -221,13 +221,13 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`,
 			{ headers: { Authorization: `Bearer ${access}` } }
 		);
-		const j: any = await res.json();
+		const j: TeamsMeResponse = await res.json();
 		if (!res.ok || !Array.isArray(j?.teams)) {
 			this.cachedTeams = [];
 			this.cachedMembersByTeam = {};
 			return;
 		}
-		this.cachedTeams = j.teams ?? [];
+		this.cachedTeams = (j.teams ?? []) as Team[];
 		this.cachedMembersByTeam = j.membersByTeam ?? {};
 		this.currentUserId = (j?.user?.id as string | undefined) ?? undefined;
 	}
