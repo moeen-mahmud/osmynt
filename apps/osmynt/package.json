@@ -40,12 +40,12 @@
 	"publisher": "Osmynt",
 	"name": "osmynt",
 	"version": "1.3.3",
-	"displayName": "Osmynt Beta",
-	"description": "Secure, E2EE, Realtime DM for code snippets ⚡",
+	"displayName": "Osmynt",
+	"description": "Secure, Git-powered, Realtime DM for code blocks ⚡",
 	"categories": [
-		"Snippets",
-		"Other",
-		"Chat"
+		"Code blocks",
+		"Chat",
+		"Other"
 	],
 	"icon": "resources/osmynt-128x.png",
 	"pricing": "Free",
@@ -54,7 +54,7 @@
 			{
 				"view": "osmyntView",
 				"when": "!osmynt.isLoggedIn || !osmynt",
-				"contents": "Welcome to Osmynt! \n\n[Get Started](command:osmynt.login) \nSecure, E2EE, Realtime DM for code snippets ⚡ \nFeatures: \n    ◘ Real-Time Code Sharing: Share your code snippets in real-time with your team members.\n    ◘ End-to-End Encryption: All the code snippets are encrypted end-to-end. No one can read the code snippets except the intended recipients.\n    ◘ Team Collaboration: Share the code within your team members.\n    ◘ Versatile Use Cases: Whether you're pair programming, debugging or maybe doing a trial and error; just share the code or get the code from your team members, make necessary changes and share the code back!! You can even use it for sharing environment variables, API keys, etc.\n    ◘ Git-like Diff Application: Apply code changes directly to your files using Osmynt's diff application feature. \n    ◘ Multiple Devices: You can add multiple devices to your team and share the code with them.\n\n[How to use](https://docs.osmynt.dev/getting-started/how-to-use) | [Documentation](https://docs.osmynt.dev) | [Support](https://discord.gg/osmynt)"
+				"contents": "Welcome to Osmynt! \n\n[Get Started](command:osmynt.login) \nSecure, Git-powered, Realtime DM for code blocks ⚡ \nFeatures: \n    ◘ Real-Time Code Sharing: Share your code blocks in real-time with your team members.\n    ◘ End-to-End Encryption: All the code blocks are encrypted end-to-end. No one can read the code blocks except the intended recipients.\n    ◘ Team Collaboration: Share the code within your team members.\n    ◘ Versatile Use Cases: Whether you're pair programming, debugging or maybe doing a trial and error; just share the code or get the code from your team members, make necessary changes and share the code back!! You can even use it for sharing environment variables, API keys, etc.\n    ◘ Git-like Diff Application: Apply code changes directly to your files using Osmynt's diff application feature. \n    ◘ Multiple Devices: You can add multiple devices to your team and share the code with them.\n\n[How to use](https://docs.osmynt.dev/getting-started/how-to-use) | [Documentation](https://docs.osmynt.dev) | [Support](https://discord.gg/osmynt)"
 			}
 		],
 		"commands": [
@@ -129,7 +129,7 @@
 			},
 			{
 				"command": "osmynt.viewSnippet",
-				"title": "View Snippet",
+				"title": "View Code blocks",
 				"category": "Osmynt",
 				"icon": "$(code)"
 			},
@@ -141,31 +141,31 @@
 			},
 			{
 				"command": "osmynt.snippet.copy",
-				"title": "Copy Snippet",
+				"title": "Copy Code blocks",
 				"category": "Osmynt",
 				"icon": "$(copy)"
 			},
 			{
 				"command": "osmynt.snippet.openToSide",
-				"title": "Open Snippet to Side",
+				"title": "Open Code blocks to Side",
 				"category": "Osmynt",
 				"icon": "$(file-code)"
 			},
 			{
 				"command": "osmynt.snippet.insertAtCursor",
-				"title": "Insert Snippet at Cursor",
+				"title": "Insert Code blocks at Cursor",
 				"category": "Osmynt",
 				"icon": "$(insert)"
 			},
 			{
 				"command": "osmynt.filterRecentsByMember",
-				"title": "Filter Recents by This Member",
+				"title": "Filter Shared items by This Member",
 				"category": "Osmynt",
 				"icon": "$(filter)"
 			},
 			{
 				"command": "osmynt.clearRecentsFilter",
-				"title": "Clear Recents Filter",
+				"title": "Clear Shared items Filter",
 				"category": "Osmynt",
 				"icon": "$(clear-all)"
 			},

@@ -1,47 +1,135 @@
-# Osmynt - Secure, E2EE, Realtime DM for code snippets ⚡
+# Osmynt ⚡
 
-> 🚨 This extension is still in development and closed beta
+> **Secure, Git-powered, Realtime DM for code blocks ⚡**
 
-## The Problem We're Trying to Solve
+[![VS Code Marketplace](https://img.shields.io/badge/VS%20Code-Marketplace-blue?logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=osmynt.osmynt)
+[![Open VSX](https://img.shields.io/badge/Open%20VSX-Marketplace-blue?logo=visual-studio-code)](https://open-vsx.org/extension/osmynt/osmynt)
+[![Beta](https://img.shields.io/badge/Status-Beta-orange.svg)](https://github.com/moeen-mahmud/osmynt)
 
-As a software developer, team work is the go-to way to build software solutions. There's a saying that goes "A delivery of a software solution is a team effort". But, when it comes to sharing code snippets, it's a bit of a hassle. Traditional methods like screen-sharing, emailing or sending code snippets or snippet link over Slack, Microsoft Teams is not efficient. Sometimes, using the third-party collaboration platforms can be cumbersome, unproductive and time-consuming. It disrupts the development workflow and never focuses on the DX (Developer Experience).
+> 🚨 **Currently in closed beta** - Join our waitlist for early access!
 
-## The Solution
+## 🎯 The Problem
 
-This is where **Osmynt** comes in. We addresses these challenges by providing a seamless, integrated solution within the VSCode ecosystem. It focuses on solving only one problem: sharing codes with ease. There are many collaboration tools out there, but Osmynt is different. It helps you to share the codes you need to share. No distractions, no unnecessary features. Just share the code and get the job done. It's that simple. You don't even need to leave your editor 😎
+Software development is inherently collaborative, but sharing code blocks with your team remains a frustrating experience. Traditional methods like:
 
-## Features
+- 📧 **Emailing code snippets** - Context gets lost, formatting breaks
+- 💬 **Slack/Teams messages** - No syntax highlighting, poor readability
+- 📺 **Screen sharing** - Disrupts workflow, requires scheduling
+- 🔗 **Third-party platforms** - Complex setup, context switching
 
-- **Real-Time Code Sharing**: Share your code snippets in real-time with your team members.
-- **End-to-End Encryption**: All the code snippets are encrypted end-to-end. No one can read the code snippets except the intended recipients.
-- **Team Collaboration**: Share the code within your team members.
-- **Versatile Use Cases**: Whether you're pair programming, debugging or maybe doing a trial and error; just share the code or get the code from your team members, make necessary changes and share the code back!! You can even use it for sharing environment variables, API keys, etc.
-- **Offline Support**: You can share the code snippets even when you're offline. The code snippets are stored in the local storage of the extension and will be synced when you're online. Additionally, we can view the previous code snippets which you shared or received.
+These approaches break your development flow and hurt productivity. **There has to be a better way.**
 
-🔥 **AND MUCH MORE POSSIBILITIES. STAY TUNED FOR MORE FEATURES** 🔥
+## ✨ The Solution
 
-## Getting Started
+**Osmynt** is a VSCode extension that brings seamless, secure, end-to-end encrypted code sharing directly into your editor. No context switching, no workflow disruption - just pure developer experience.
 
-1. **Install the Extension**: Install the Osmynt extension from the VSCode Marketplace.
-2. **Sign In with GitHub**: Sign in with your GitHub account.
-3. **Invite Team Members**: Invite your team members to join your team.
-4. **Join a Team**: Join an existing team.
-5. **Start Sharing**: Start sharing your code snippets with your team members in real-time.
+### Why Osmynt?
 
-### How to Use
+- 🎯 **Focused**: Solves one problem exceptionally well - code sharing
+- 🔒 **Secure**: End-to-end encryption for all shared code
+- ⚡ **Fast**: Real-time sharing without leaving your editor
+- 👥 **Team-first**: Built for developer teams, not general collaboration
+- 🚀 **Git-powered**: Apply changes directly to your files
 
-1. Open the **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`).
-2. Search for the desired command (e.g., "Osmynt: Login").
-3. Execute the command to perform the desired action.
+## 🚀 Features
 
-> You can only share the code snippets with your team members.
+### 🔐 **Security First**
 
-## Feedback
+- **End-to-End Encryption**: Your code is encrypted before leaving your machine
+- **Team-only Sharing**: Code can only be shared with verified team members
+- **Secure Handshake**: Cryptographic verification ensures you're sharing with the right people
 
-Since the extension is in closed beta, please follow the email instruction above. We'll be happy to have you on board. Don't forget to share with your friends and colleagues. The more the merrier 🎉
+### ⚡ **Real-time Collaboration**
 
-We're exciting to get your feedback and suggestions. Please feel free to drop an email on [hi@osmynt.dev](mailto:hi@osmynt.dev) with your thoughts. We're looking forward to hearing from you 🙏
+- **Instant Sharing**: Share code blocks in real-time with your team
+- **Real-time Updates**: See real-time updates from your team members
+- **Multi-device Support**: Share across all your development devices
 
-## Author
+### 🛠 **Developer Experience**
 
-[Moeen Mahmud](https://github.com/moeen-mahmud)
+- **Git-like Diff Application**: Apply shared code changes directly to your files
+- **Syntax Highlighting**: Preserve code formatting and readability
+- **Command Palette Integration**: Access all features via `Ctrl+Shift+P` or `Cmd+Shift+P`
+
+### 🎯 **Versatile Use Cases**
+
+- **Pair Programming**: Share code during live coding sessions
+- **Code Reviews**: Share specific code blocks for review. Super powered while working on same project, you don't need Git at all!
+- **Debugging**: Get help with problematic code snippets
+- **Environment Setup**: Share configuration files, API keys, and environment variables
+- **Knowledge Sharing**: Share code patterns and solutions with your team
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Visual Studio Code
+- GitHub account
+- [Beta access](#-beta-access) to unlock all features
+
+### Installation
+
+1. **Install the Extension**
+   - Via VS Code Marketplace, Open VSX Registry or install from VSIX file
+2. **Sign In with GitHub**
+   - Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) or click on the `Get Started` button in the Osmynt sidebar
+   - Run `Osmynt: Login`
+   - Authenticate with GitHub
+3. **Join a team or Invite team members**
+   - Run `Osmynt: Join Team` to join an existing team
+   - Or run `Osmynt: Invite Team Member` to invite a team member
+4. **Start Sharing Code**
+   - Select code in your editor
+   - Run `Osmynt: Share Code Block`
+   - Choose team members to share with
+
+### Quick Commands
+
+| Command                      | Description                    |
+| ---------------------------- | ------------------------------ |
+| `Osmynt: Login`            | Authenticate with GitHub       |
+| `Osmynt: Share Code Block` | Share selected code            |
+| `Osmynt: View Shared Code` | See code shared with you       |
+| `Osmynt: Apply Changes`    | Apply shared code to your file |
+| `Osmynt: Team Settings`    | Manage team and members        |
+
+## 🔒 Security & Privacy
+
+- **Zero-knowledge architecture**: We can't read your code
+- **End-to-end encryption**: Code is encrypted before transmission
+- **Team verification**: Cryptographic handshakes ensure secure sharing
+- **No data retention**: Shared code is not stored on our servers
+- **Open source**: Full transparency in our security implementation
+
+## 🚀 Beta Access
+
+- We'd love to have you in our beta program. Just send an email to [hi@osmynt.dev](mailto:hi@osmynt.dev) after installing the extension with subject `Beta Access Request` and attach your GitHub profile link.
+
+## 🤝 Contributing (Coming soon)
+
+## 📞 Support & Feedback
+
+- **Email**: [support@osmynt.dev](mailto:support@osmynt.dev)
+- **GitHub Issues**: [Report bugs and feature requests](https://github.com/moeen-mahmud/osmynt/issues)
+- **Documentation**: [Full documentation](https://docs.osmynt.dev) (coming soon)
+
+## 📄 License
+
+This project is licensed under the BSL1.1 License - see the [LICENSE](./LICENSE.txt) file for details.
+
+## 👨‍💻 Author
+
+**Moeen Mahmud**
+
+- GitHub: [@moeen-mahmud](https://github.com/moeen-mahmud)
+- Email: [moeen@osmynt.dev](mailto:moeen@osmynt.dev)
+
+---
+
+<div align="center">
+
+**Made with ❤️ for the developers, by the developers**
+
+[⭐ Star us on GitHub](https://github.com/moeen-mahmud/osmynt) • [🐛 Report Issues](https://github.com/moeen-mahmud/osmynt/issues) • [📧 Contact Us](mailto:support@osmynt.dev)
+
+</div>

@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ACCESS_SECRET_KEY, DEVICE_ID_KEY } from "@/constants/osmynt.constant";
+import { ACCESS_SECRET_KEY, DEVICE_ID_KEY, REALTIME_CHANNEL, SNIPPET_CREATED_EVENT } from "@/constants/osmynt.constant";
 import { OsmyntTreeProvider } from "@/provider/osmynt.provider";
 import { ensureDeviceKeys, tryDecryptSnippet, computeAndSetDeviceContexts } from "@/services/osmynt.services";
 import { ENDPOINTS } from "@/constants/endpoints.constant";
@@ -65,7 +65,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			const j = await res.json();
 			const text = await tryDecryptSnippet(context, j);
 			if (text) await vscode.env.clipboard.writeText(text);
-			vscode.window.showInformationMessage("Snippet copied to clipboard");
+			vscode.window.showInformationMessage("Code blocks copied to clipboard");
 		}),
 		vscode.commands.registerCommand("osmynt.snippet.openToSide", async (item?: any) => {
 			await vscode.commands.executeCommand("osmynt.viewSnippet", item?.data?.id);
@@ -161,13 +161,13 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 	}
 	redisSubscriber = new Redis(url);
 	await new Promise<void>((resolve, reject) => {
-		redisSubscriber!.subscribe("osmynt-recent-snippets", err => {
+		redisSubscriber!.subscribe(REALTIME_CHANNEL, err => {
 			if (err) reject(err);
 			else resolve();
 		});
 	});
 	redisSubscriber.on("message", async (channel: string, message: string) => {
-		if (channel !== "osmynt-recent-snippets") return;
+		if (channel !== REALTIME_CHANNEL) return;
 		let payload: any;
 		try {
 			payload = JSON.parse(message);
@@ -177,7 +177,7 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 		const event = payload?.event as string | undefined;
 		const data = payload?.payload;
 		if (!event) return;
-		if (event === "snippet:created") {
+		if (event === SNIPPET_CREATED_EVENT) {
 			try {
 				const { base, access } = await getBaseAndAccess(_context);
 				const id = data?.id as string | undefined;
@@ -185,12 +185,12 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 					// Short-circuit: if this device is no longer registered, ignore notification
 					try {
 						const localDeviceId = await _context.secrets.get(DEVICE_ID_KEY);
-						const dres = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
+						const deviceResponse = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
 							headers: { Authorization: `Bearer ${access}` },
 						});
-						const dj: any = await dres.json();
-						const isRegistered = Array.isArray(dj?.devices)
-							? (dj.devices as any[]).some(d => d?.deviceId === localDeviceId)
+						const deviceData: any = await deviceResponse.json();
+						const isRegistered = Array.isArray(deviceData?.devices)
+							? (deviceData.devices as any[]).some(d => d?.deviceId === localDeviceId)
 							: false;
 						if (!isRegistered) return;
 					} catch {}
@@ -200,13 +200,15 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 							headers: { Authorization: `Bearer ${access}` },
 						}
 					);
-					const j: any = await res.json();
-					const canDecrypt = (await tryDecryptSnippet(_context, j)) !== null;
+					const snippetResponse: any = await res.json();
+					const canDecrypt = (await tryDecryptSnippet(_context, snippetResponse)) !== null;
 					const title =
-						(data?.title as string | undefined) || (j?.metadata?.title as string | undefined) || "Snippet";
-					const authorName = (data?.authorName as string | undefined) || j?.authorName;
+						(data?.title as string | undefined) ||
+						(snippetResponse?.metadata?.title as string | undefined) ||
+						"Code blocks";
+					const authorName = (data?.authorName as string | undefined) || snippetResponse?.authorName;
 					const firstRecipientName = data?.firstRecipientName as string | undefined;
-					const authorId = (data?.authorId as string | undefined) || j?.authorId;
+					const authorId = (data?.authorId as string | undefined) || snippetResponse?.authorId;
 					let currentUserId: string | undefined;
 
 					try {
@@ -218,7 +220,9 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 					} catch {}
 
 					const localDeviceForWrap = await _context.secrets.get(DEVICE_ID_KEY);
-					const wraps: any[] = Array.isArray(j?.wrappedKeys) ? (j.wrappedKeys as any[]) : [];
+					const wraps: any[] = Array.isArray(snippetResponse?.wrappedKeys)
+						? (snippetResponse.wrappedKeys as any[])
+						: [];
 					const addressedToThisDevice = localDeviceForWrap
 						? wraps.some(w => w?.recipientDeviceId === localDeviceForWrap)
 						: false;
@@ -228,13 +232,15 @@ export async function connectRealtime(_context: vscode.ExtensionContext, treePro
 					if (authorId !== currentUserId && (canDecrypt || addressedToThisDevice || addressedToUser)) {
 						// Receiver toast
 						vscode.window.showInformationMessage(
-							`A NEW SNIPPET ${title} ARRIVED FROM ${authorName ?? "someone"}`
+							// `A new blocks |${title}| arrived from "${authorName ?? "someone"}"`
+							`${authorName ?? "someone"} : ${title}`
 						);
 						treeProvider.refresh();
 					} else if (currentUserId && authorId === currentUserId) {
 						// Sender toast
 						vscode.window.showInformationMessage(
-							`SNIPPET ${title} SHARED TO ${firstRecipientName ?? data?.teamName ?? "team"}`
+							// `Code blocks |${title}| shared to ${firstRecipientName ?? data?.teamName ?? "team"}`
+							`${title} : ${firstRecipientName ?? data?.teamName ?? "team"}`
 						);
 						treeProvider.refresh();
 					}

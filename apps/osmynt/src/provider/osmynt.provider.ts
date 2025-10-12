@@ -85,7 +85,7 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 				);
 				const recentRoot = new OsmyntItem(
 					"recentRoot",
-					unread > 0 ? `Recent Snippets (${unread} new)` : "Recent Snippets",
+					unread > 0 ? `Shared items (${unread} new)` : "Shared items",
 					vscode.TreeItemCollapsibleState.Collapsed,
 					{ teamId },
 					"symbol-snippet"
@@ -122,7 +122,7 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			if (element.kind === "member") {
 				const teamId = element.data?.teamId as string;
 				const authorId = element.data?.id as string;
-				const labelText = `Recent Snippets from ${element.label}`;
+				const labelText = `Shared items from ${element.label}`;
 				const node = new OsmyntItem(
 					"recentRoot",
 					labelText,
@@ -142,7 +142,7 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					// Show only messages authored by the selected member for "Recent from {User}"
 					const incoming = dms.filter((s: any) => s.authorId === dmUserId);
 					return incoming.map(s => {
-						const baseLabel = s.metadata?.title ? `${s.metadata.title}` : `Snippet ${s.id.slice(0, 6)}`;
+						const baseLabel = s.metadata?.title ? `${s.metadata.title}` : `Code blocks ${s.id.slice(0, 6)}`;
 						const by = s.authorName ? ` by ${s.authorName}` : "";
 						const badges: string[] = [];
 						if (s.metadata?.fileExt) badges.push(s.metadata.fileExt);
@@ -151,7 +151,7 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 						const label = `${baseLabel}${by}${badgeStr}`;
 						const item = new OsmyntItem("action", label, vscode.TreeItemCollapsibleState.None, s);
 						item.contextValue = "snippetItem";
-						item.command = { command: "osmynt.viewSnippet", title: "View Snippet", arguments: [s.id] };
+						item.command = { command: "osmynt.viewSnippet", title: "View Code blocks", arguments: [s.id] };
 						item.description = new Date(s.createdAt).toLocaleString();
 						item.iconPath = new vscode.ThemeIcon("code");
 						return item;
@@ -165,7 +165,7 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					s => !authorId || s.authorId === authorId
 				);
 				return recents.map(s => {
-					const baseLabel = s.metadata?.title ? `${s.metadata.title}` : `Snippet ${s.id.slice(0, 6)}`;
+					const baseLabel = s.metadata?.title ? `${s.metadata.title}` : `Code blocks ${s.id.slice(0, 6)}`;
 					const by = s.authorName ? ` by ${s.authorName}` : "";
 					const badges: string[] = [];
 					if (s.metadata?.fileExt) badges.push(s.metadata.fileExt);
@@ -174,7 +174,7 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 					const label = `${baseLabel}${by}${badgeStr}`;
 					const item = new OsmyntItem("action", label, vscode.TreeItemCollapsibleState.None, s);
 					item.contextValue = "snippetItem";
-					item.command = { command: "osmynt.viewSnippet", title: "View Snippet", arguments: [s.id] };
+					item.command = { command: "osmynt.viewSnippet", title: "View Code blocks", arguments: [s.id] };
 					item.description = new Date(s.createdAt).toLocaleString();
 					item.iconPath = new vscode.ThemeIcon("code");
 					return item;
@@ -221,15 +221,15 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`,
 			{ headers: { Authorization: `Bearer ${access}` } }
 		);
-		const j: TeamsMeResponse = await res.json();
-		if (!res.ok || !Array.isArray(j?.teams)) {
+		const data: TeamsMeResponse = await res.json();
+		if (!res.ok || !Array.isArray(data?.teams)) {
 			this.cachedTeams = [];
 			this.cachedMembersByTeam = {};
 			return;
 		}
-		this.cachedTeams = (j.teams ?? []) as Team[];
-		this.cachedMembersByTeam = j.membersByTeam ?? {};
-		this.currentUserId = (j?.user?.id as string | undefined) ?? undefined;
+		this.cachedTeams = (data.teams ?? []) as Team[];
+		this.cachedMembersByTeam = data.membersByTeam ?? {};
+		this.currentUserId = (data?.user?.id as string | undefined) ?? undefined;
 	}
 
 	private async ensureRecent(teamId: string, authorId?: string) {
@@ -254,8 +254,8 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 		const res = await fetch(url, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const j: any = await res.json();
-		this.cachedRecentByTeam[teamId] = Array.isArray(j.items) ? j.items : [];
+		const data: any = await res.json();
+		this.cachedRecentByTeam[teamId] = Array.isArray(data?.items) ? data?.items : [];
 		// update last seen and unread
 		const latest = this.cachedRecentByTeam[teamId][0]?.createdAt as string | undefined;
 		if (latest) {
@@ -266,8 +266,8 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 	private async ensureDm(otherUserId: string) {
 		// Do not fetch or render DM snippets if device is unregistered (server check)
 		{
-			const ds = await getDeviceState(this.context);
-			if (ds.kind === "removed" || ds.kind === "unpaired") {
+			const deviceState = await getDeviceState(this.context);
+			if (deviceState.kind === "removed" || deviceState.kind === "unpaired") {
 				this.cachedDmByUserId[otherUserId] = [];
 				return;
 			}
@@ -284,8 +284,8 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 				headers: { Authorization: `Bearer ${access}` },
 			}
 		);
-		const j: any = await res.json();
-		this.cachedDmByUserId[otherUserId] = Array.isArray(j.items) ? j.items : [];
+		const data: any = await res.json();
+		this.cachedDmByUserId[otherUserId] = Array.isArray(data?.items) ? data?.items : [];
 	}
 
 	private async getUnreadCount(teamId: string): Promise<number> {

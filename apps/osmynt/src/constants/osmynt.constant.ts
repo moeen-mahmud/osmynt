@@ -4,6 +4,9 @@ export const DEVICE_ID_KEY = "osmynt.deviceId";
 export const ENC_KEYPAIR_JWK_KEY = "osmynt.encKeypair.jwk";
 export const SIGN_KEYPAIR_JWK_KEY = "osmynt.signKeypair.jwk";
 
+export const REALTIME_CHANNEL = "osmynt-recent-snippets";
+export const SNIPPET_CREATED_EVENT = "snippet:created";
+
 export const LANGUAGE_BY_EXT: Record<string, string> = {
 	js: "javascript",
 	ts: "typescript",

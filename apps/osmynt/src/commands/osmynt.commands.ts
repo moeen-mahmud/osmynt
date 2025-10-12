@@ -57,11 +57,12 @@ export async function handleRemoveDevice(context: vscode.ExtensionContext) {
 	// Replace raw input with picker of available devices (companion only removable)
 	try {
 		const { base, access } = await getBaseAndAccess(context);
-		const res = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const j: KeysMeResponse = await res.json();
-		const devices: DeviceKeySummary[] = Array.isArray(j?.devices) ? j.devices : [];
+		const response: KeysMeResponse = await res.json();
+		const devices: DeviceKeySummary[] = Array.isArray(response?.devices) ? response.devices : [];
+
 		const localId = await context.secrets.get(DEVICE_ID_KEY);
 		const items = devices
 			.filter(d => !d.isPrimary)
@@ -72,17 +73,20 @@ export async function handleRemoveDevice(context: vscode.ExtensionContext) {
 		}
 		const pick = await vscode.window.showQuickPick(items, { placeHolder: "Select companion device to remove" });
 		if (!pick) return;
-		const r = await vscode.window.showWarningMessage(`Remove device ${pick.id}?`, { modal: true }, "Remove");
-		if (r !== "Remove") return;
-		const del = await fetch(
+
+		const removed = await vscode.window.showWarningMessage(`Remove device ${pick.id}?`, { modal: true }, "Remove");
+		if (removed !== "Remove") return;
+		const deleteResponse = await fetch(
 			`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.deviceRemove(encodeURIComponent(pick.id))}`,
 			{
 				method: "DELETE",
 				headers: { Authorization: `Bearer ${access}` },
 			}
 		);
-		const dj: any = await del.json();
-		if (!del.ok || !dj?.ok) throw new Error(dj?.error || `Failed (${del.status})`);
+		const deleteResponseData: any = await deleteResponse.json();
+		if (!deleteResponse.ok || !deleteResponseData?.ok) {
+			throw new Error(deleteResponseData?.error || `Failed (${deleteResponse.status})`);
+		}
 		vscode.window.showInformationMessage("Device removed");
 		await computeAndSetDeviceContexts(context);
 	} catch (e) {
@@ -97,11 +101,11 @@ export async function handleBackfillCompanion(context: vscode.ExtensionContext) 
 export async function handleListDevices(context: vscode.ExtensionContext) {
 	try {
 		const { base, access } = await getBaseAndAccess(context);
-		const res = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const j: KeysMeResponse = await res.json();
-		const devices: DeviceKeySummary[] = Array.isArray(j?.devices) ? j.devices : [];
+		const keysResponse: KeysMeResponse = await res.json();
+		const devices: DeviceKeySummary[] = Array.isArray(keysResponse?.devices) ? keysResponse.devices : [];
 		const localId = await context.secrets.get(DEVICE_ID_KEY);
 
 		if (devices.length === 0) {
@@ -156,11 +160,11 @@ export async function handleRepairDevice(context: vscode.ExtensionContext) {
 		const { base, access } = await getBaseAndAccess(context);
 
 		// Check if device is registered on server
-		const res = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const j: KeysMeResponse = await res.json();
-		const devices: DeviceKeySummary[] = Array.isArray(j?.devices) ? j.devices : [];
+		const keysResponse: KeysMeResponse = await res.json();
+		const devices: DeviceKeySummary[] = Array.isArray(keysResponse?.devices) ? keysResponse.devices : [];
 		const isRegistered = devices.some(d => d.deviceId === localId);
 
 		if (isRegistered) {
@@ -170,9 +174,10 @@ export async function handleRepairDevice(context: vscode.ExtensionContext) {
 
 		// Device is not registered, offer to re-register
 		const action = await vscode.window.showWarningMessage(
-			"This device is not registered on the server. This can happen after clearing browser cache. Would you like to re-register this device?",
-			"Re-register Device",
-			"Cancel"
+			"This device is not registered on the server. This can happen after clearing extension cache. Would you like to re-register this device?",
+			{ modal: true },
+			"Re-register Device"
+			// "Cancel"
 		);
 
 		if (action === "Re-register Device") {
@@ -190,11 +195,11 @@ export async function handleRepairDevice(context: vscode.ExtensionContext) {
 export async function handleForceRemoveDevice(context: vscode.ExtensionContext) {
 	try {
 		const { base, access } = await getBaseAndAccess(context);
-		const res = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const j: KeysMeResponse = await res.json();
-		const devices: DeviceKeySummary[] = Array.isArray(j?.devices) ? j.devices : [];
+		const keysResponse: KeysMeResponse = await res.json();
+		const devices: DeviceKeySummary[] = Array.isArray(keysResponse?.devices) ? keysResponse.devices : [];
 		const localId = await context.secrets.get(DEVICE_ID_KEY);
 
 		if (devices.length === 0) {
@@ -237,8 +242,8 @@ export async function handleForceRemoveDevice(context: vscode.ExtensionContext) 
 		const confirm = await vscode.window.showWarningMessage(
 			confirmMessage,
 			{ modal: true },
-			"Force Remove",
-			"Cancel"
+			"Force Remove"
+			// "Cancel"
 		);
 
 		if (confirm !== "Force Remove") return;
@@ -275,8 +280,8 @@ export async function handleClearLocalCache(context: vscode.ExtensionContext) {
 		const action = await vscode.window.showWarningMessage(
 			"This will clear all local device keys and require re-registration. This is useful when you're getting 'device removed' errors after clearing browser cache. Continue?",
 			{ modal: true },
-			"Clear Cache",
-			"Cancel"
+			"Clear Cache"
+			// "Cancel"
 		);
 
 		if (action !== "Clear Cache") return;
@@ -293,7 +298,11 @@ export async function handleClearLocalCache(context: vscode.ExtensionContext) {
 
 		vscode.window
 			.showInformationMessage(
-				"Local cache cleared. Please use 'Add Device (Primary)' or 'Add Device (Companion)' to re-register this device.",
+				"Local cache cleared.",
+				{
+					modal: true,
+					detail: "Please use 'Add Device (Primary)' or 'Add Device (Companion)' to re-register this device.",
+				},
 				"Add Primary Device",
 				"Add Companion Device"
 			)
@@ -327,7 +336,7 @@ export async function handleLogout(
 export async function handleShareCode(context: vscode.ExtensionContext, treeProvider: OsmyntTreeProvider) {
 	const editor = vscode.window.activeTextEditor;
 	if (!editor || editor.selection.isEmpty) {
-		vscode.window.showWarningMessage("Select some code to share.");
+		vscode.window.showWarningMessage("Select some code blocks to share.");
 		return;
 	}
 	const selected = editor.document.getText(editor.selection);
@@ -337,14 +346,16 @@ export async function handleShareCode(context: vscode.ExtensionContext, treeProv
 			{ label: "Include full file context for diff application", value: "full" },
 			{ label: "Don't include" },
 		],
-		{ canPickMany: false, placeHolder: "Include file context in snippet metadata?" }
+		{ canPickMany: false, placeHolder: "Include file context in code blocks metadata?" }
 	);
-	const title = await vscode.window.showInputBox({ prompt: "Snippet title (required)" });
+	const title = await vscode.window.showInputBox({ prompt: "Code blocks title (required)" });
 	if (!title || title.trim().length === 0) {
-		vscode.window.showWarningMessage("Snippet title is required.");
+		vscode.window.showWarningMessage("Code blocks title is required.");
 		return;
 	}
+
 	const target = await pickShareTarget(context);
+	vscode.window.showInformationMessage("Sharing code blocks...");
 	try {
 		await ensureDeviceKeys(context);
 		const editorFile = editor.document.uri.fsPath || "";
@@ -375,7 +386,7 @@ export async function handleShareCode(context: vscode.ExtensionContext, treeProv
 
 		await shareSelectedCode(context, selected, title.trim(), target, metadataExtra);
 		treeProvider.refresh();
-		vscode.window.showInformationMessage("Osmynt: Snippet shared securely");
+		vscode.window.showInformationMessage("Osmynt: Code blocks shared securely");
 	} catch (e) {
 		vscode.window.showErrorMessage(`Share failed: ${e}`);
 	}
@@ -446,7 +457,7 @@ export async function handleRefreshTeam(treeProvider: OsmyntTreeProvider) {
 export async function handleViewSnippet(context: vscode.ExtensionContext, id?: string) {
 	try {
 		const { base, access } = await getBaseAndAccess(context);
-		const snippetId = id ?? (await vscode.window.showInputBox({ prompt: "Enter snippet id" }));
+		const snippetId = id ?? (await vscode.window.showInputBox({ prompt: "Enter code blocks id" }));
 		if (!snippetId) return;
 		const res = await fetch(
 			// `${base}/protected/code-share/${encodeURIComponent(snippetId)}`,
@@ -463,7 +474,7 @@ export async function handleViewSnippet(context: vscode.ExtensionContext, id?: s
 		const language = (fileExt && languageByExt[fileExt]) || "plaintext";
 		const doc = await vscode.workspace.openTextDocument({
 			language,
-			content: text ?? "[Encrypted snippet opened. Decrypt failed or not addressed to this device.]",
+			content: text ?? "[Encrypted code blocks opened. Decrypt failed or not addressed to this device.]",
 		});
 		await vscode.window.showTextDocument(doc, { preview: false });
 	} catch (e) {
@@ -474,13 +485,13 @@ export async function handleViewSnippet(context: vscode.ExtensionContext, id?: s
 export async function handleApplyDiff(context: vscode.ExtensionContext, snippetId?: string) {
 	try {
 		const { base, access } = await getBaseAndAccess(context);
-		const id = snippetId ?? (await vscode.window.showInputBox({ prompt: "Enter snippet id" }));
+		const id = snippetId ?? (await vscode.window.showInputBox({ prompt: "Enter code blocks id" }));
 		if (!id) {
-			vscode.window.showWarningMessage("No snippet ID provided.");
+			vscode.window.showWarningMessage("No code blocks ID provided.");
 			return;
 		}
 
-		console.log("Applying diff for snippet ID:", id);
+		console.log("Applying diff for code blocks ID:", id);
 
 		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.getById(encodeURIComponent(id))}`, {
 			headers: { Authorization: `Bearer ${access}` },
@@ -491,21 +502,23 @@ export async function handleApplyDiff(context: vscode.ExtensionContext, snippetI
 		if (!res.ok) {
 			const errorText = await res.text();
 			console.log("Error response:", errorText);
-			throw new Error(`Failed to fetch snippet (${res.status}): ${errorText}`);
+			throw new Error(`Failed to fetch code blocks (${res.status}): ${errorText}`);
 		}
 
-		const j: CodeShareGetByIdResponse | ApiError = await res.json();
-		console.log("Snippet metadata:", (j as CodeShareGetByIdResponse)?.metadata);
+		const response: CodeShareGetByIdResponse | ApiError = await res.json();
+		console.log("Code blocks metadata:", (response as CodeShareGetByIdResponse)?.metadata);
 
-		const text = await tryDecryptSnippet(context, j as CodeShareGetByIdResponse);
+		const text = await tryDecryptSnippet(context, response as CodeShareGetByIdResponse);
 		if (!text) {
-			vscode.window.showErrorMessage("Failed to decrypt snippet or snippet not addressed to this device.");
+			vscode.window.showErrorMessage(
+				"Failed to decrypt code blocks or code blocks not addressed to this device."
+			);
 			return;
 		}
 
-		const metadata = (j as CodeShareGetByIdResponse)?.metadata;
+		const metadata = (response as CodeShareGetByIdResponse)?.metadata;
 		if (!metadata?.isDiffApplicable) {
-			vscode.window.showWarningMessage("This snippet is not configured for diff application.", {
+			vscode.window.showWarningMessage("This code blocks is not configured for diff application.", {
 				modal: true,
 			});
 			return;
@@ -515,7 +528,7 @@ export async function handleApplyDiff(context: vscode.ExtensionContext, snippetI
 		const currentWorkspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || "";
 		if (metadata?.projectRoot && currentWorkspaceRoot !== metadata.projectRoot) {
 			const proceed = await vscode.window.showWarningMessage(
-				`Project root mismatch. Snippet was created in "${metadata.projectRoot}" but current workspace is "${currentWorkspaceRoot}". Do you want to proceed anyway?`,
+				`Project root mismatch. Code blocks was created in "${metadata.projectRoot}" but current workspace is "${currentWorkspaceRoot}". Do you want to proceed anyway?`,
 				{ modal: true },
 				"Yes",
 				"No"
@@ -564,9 +577,9 @@ export async function handleRemoveTeamMember(
 				headers: { Authorization: `Bearer ${access}` },
 			}
 		);
-		const j: any = await res.json().catch(() => ({}));
-		if (!res.ok || !j?.ok) {
-			vscode.window.showErrorMessage(j?.error || "Failed to remove member");
+		const response: any = await res.json().catch(() => ({}));
+		if (!res.ok || !response?.ok) {
+			vscode.window.showErrorMessage(response?.error || "Failed to remove member");
 			return;
 		}
 		vscode.window.showInformationMessage("Member removed");
