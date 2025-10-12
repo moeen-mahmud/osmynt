@@ -447,13 +447,6 @@ export async function handleAcceptInvitation(context: vscode.ExtensionContext, t
 	}
 }
 
-export async function handleRefreshTeam(treeProvider: OsmyntTreeProvider) {
-	try {
-		await vscode.commands.executeCommand("workbench.view.extension.osmynt");
-		treeProvider?.refresh();
-	} catch {}
-}
-
 export async function handleViewSnippet(context: vscode.ExtensionContext, id?: string) {
 	try {
 		const { base, access } = await getBaseAndAccess(context);
@@ -551,6 +544,13 @@ export async function handleApplyDiff(context: vscode.ExtensionContext, snippetI
 		console.error("Apply diff error:", e);
 		vscode.window.showErrorMessage(`Apply diff failed: ${e}`);
 	}
+}
+
+export async function handleRefreshEntry(treeProvider: OsmyntTreeProvider) {
+	try {
+		await vscode.commands.executeCommand("workbench.view.extension.osmynt");
+		treeProvider?.refresh();
+	} catch {}
 }
 
 export async function handleRemoveTeamMember(

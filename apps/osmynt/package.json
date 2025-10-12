@@ -134,12 +134,6 @@
 				"icon": "$(code)"
 			},
 			{
-				"command": "osmynt.refreshTeam",
-				"title": "Refresh Team",
-				"icon": "$(refresh)",
-				"category": "Osmynt"
-			},
-			{
 				"command": "osmynt.snippet.copy",
 				"title": "Copy Code blocks",
 				"category": "Osmynt",
@@ -230,7 +224,7 @@
 			],
 			"view/title": [
 				{
-					"command": "osmynt.refreshTeam",
+					"command": "osmynt.refreshEntry",
 					"when": "view == osmyntView",
 					"group": "navigation@-1"
 				}

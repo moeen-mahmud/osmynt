@@ -9,7 +9,7 @@ import {
 	handleShareCode,
 	handleInviteMember,
 	handleAcceptInvitation,
-	handleRefreshTeam,
+	handleRefreshEntry,
 	handleViewSnippet,
 	handleRemoveTeamMember,
 	handleAddDevicePrimary,
@@ -40,7 +40,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand("osmynt.shareCode", () => handleShareCode(context, tree)),
 		vscode.commands.registerCommand("osmynt.inviteMember", () => handleInviteMember(context)),
 		vscode.commands.registerCommand("osmynt.acceptInvitation", () => handleAcceptInvitation(context, tree)),
-		vscode.commands.registerCommand("osmynt.refreshTeam", () => handleRefreshTeam(tree)),
+		vscode.commands.registerCommand("osmynt.refreshEntry", () => handleRefreshEntry(tree)),
 		vscode.commands.registerCommand("osmynt.viewSnippet", (id?: string) => handleViewSnippet(context, id)),
 		vscode.commands.registerCommand("osmynt.removeTeamMember", async (item?: any) =>
 			handleRemoveTeamMember(context, tree, item)
