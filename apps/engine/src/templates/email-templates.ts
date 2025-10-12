@@ -1,4 +1,9 @@
-export const BetaUserEmailTemplate = (user: { name: string; email: string }) => `
+export type User = {
+	name: string;
+	email: string;
+};
+
+export const BetaUserEmailTemplate = (user: User) => `
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -195,7 +200,7 @@ export const BetaUserEmailTemplate = (user: { name: string; email: string }) => 
 </html>
   `;
 
-export const SignupUserEmailTemplate = (user: { name: string; email: string }) => `
+export const SignupUserEmailTemplate = (user: User) => `
 <!DOCTYPE html>
 <html lang="en">
   <head>
