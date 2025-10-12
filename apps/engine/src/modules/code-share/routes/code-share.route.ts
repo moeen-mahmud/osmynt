@@ -205,25 +205,25 @@ export const route_listDmWith = createRoute({
 	},
 });
 
-export const route_realtimeConfig = createRoute({
-	tags: ["CodeShare"],
-	operationId: "codeShareRealtimeConfig",
-	summary: "Realtime config (public anon)",
-	method: "get",
-	path: "/realtime-config",
-	responses: {
-		200: {
-			description: "Realtime config (public anon)",
-			content: {
-				"application/json": { schema: z.object({ url: z.string(), anonKey: z.string(), channel: z.string() }) },
-			},
-		},
-		401: {
-			description: "Unauthorized",
-			content: { "application/json": { schema: z.object({ error: z.string() }) } },
-		},
-	},
-});
+// export const route_realtimeConfig = createRoute({
+// 	tags: ["CodeShare"],
+// 	operationId: "codeShareRealtimeConfig",
+// 	summary: "Realtime config (public anon)",
+// 	method: "get",
+// 	path: "/realtime-config",
+// 	responses: {
+// 		200: {
+// 			description: "Realtime config (public anon)",
+// 			content: {
+// 				"application/json": { schema: z.object({ url: z.string(), anonKey: z.string(), channel: z.string() }) },
+// 			},
+// 		},
+// 		401: {
+// 			description: "Unauthorized",
+// 			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+// 		},
+// 	},
+// });
 
 export type CodeShareRoutes = {
 	codeShareShare: typeof route_share;
@@ -232,5 +232,5 @@ export type CodeShareRoutes = {
 	codeShareAddWrappedKeys: typeof route_addWrappedKeys;
 	codeShareListTeamByAuthor: typeof route_listTeamByAuthor;
 	codeShareListDmWith: typeof route_listDmWith;
-	codeShareRealtimeConfig: typeof route_realtimeConfig;
+	// codeShareRealtimeConfig: typeof route_realtimeConfig;
 };

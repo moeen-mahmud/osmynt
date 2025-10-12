@@ -1,8 +1,8 @@
 import { createClient, type RealtimeChannel } from "@supabase/supabase-js";
 import { ENV } from "@/config/env.config";
 import { logger } from "@osmynt-core/library";
+import { SUPABASE_CHANNEL_ERROR, SUPABASE_CHANNEL_SUBSCRIBED } from "@/config/constants";
 
-// Lazily initialize Supabase at runtime; do not exit process on missing envs
 let supabaseClient: ReturnType<typeof createClient> | null = null;
 
 function ensureSupabase() {
@@ -18,7 +18,6 @@ function ensureSupabase() {
 	return supabaseClient;
 }
 
-// Initialize the broadcast channel for snippets
 let broadcastChannel: RealtimeChannel | null = null;
 
 export async function getBroadcastChannel(): Promise<RealtimeChannel> {
@@ -32,18 +31,16 @@ export async function getBroadcastChannel(): Promise<RealtimeChannel> {
 		return broadcastChannel;
 	}
 
-	// Create channel with self: true so sender also receives broadcasts
 	broadcastChannel = client.channel("osmynt-recent-snippets", {
 		config: { broadcast: { self: true, ack: true } },
 	});
 
-	// Subscribe to the channel
 	return new Promise((resolve, reject) => {
 		broadcastChannel!.subscribe(status => {
-			if (status === "SUBSCRIBED") {
+			if (status === SUPABASE_CHANNEL_SUBSCRIBED) {
 				logger.info("Subscribed to broadcast channel");
 				resolve(broadcastChannel!);
-			} else if (status === "CHANNEL_ERROR") {
+			} else if (status === SUPABASE_CHANNEL_ERROR) {
 				logger.error("Failed to subscribe to broadcast channel");
 				reject(new Error("Failed to subscribe to broadcast channel"));
 			}

@@ -34,7 +34,6 @@ export const ENV = {
 		REST_TOKEN: Bun.env.UPSTASH_REDIS_REST_TOKEN,
 	},
 
-	// Validation flag for environment variables
 	isConfigValid: function () {
 		const requiredVars = [
 			this.SUPABASE.URL,

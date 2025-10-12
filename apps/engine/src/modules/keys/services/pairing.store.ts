@@ -1,5 +1,6 @@
 import Redis from "ioredis";
 import { ENV } from "@/config/env.config";
+import { OSMYNT_PAIR } from "@/config/constants";
 
 type StoredPairing = {
 	userId: string;
@@ -9,7 +10,7 @@ type StoredPairing = {
 	expiresAt: number;
 };
 
-const KEY = (token: string) => `osmynt:pair:${token}`;
+const KEY = (token: string) => `${OSMYNT_PAIR}:${token}`;
 
 if (!ENV.REDIS.URL) {
 	throw new Error("Pairing storage requires Redis. Set SUPABASE_REDIS_URL.");

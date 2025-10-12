@@ -1,4 +1,5 @@
 import prisma from "@/config/database.config";
+import { logger } from "@osmynt-core/library";
 
 export class KeysService {
 	static async upsertDeviceKey(data: {
@@ -15,6 +16,7 @@ export class KeysService {
 		if (!existing) {
 			const count = await prisma.deviceKey.count({ where: { userId: data.userId } });
 			if (count >= 2) {
+				logger.error("Device limit reached (2)");
 				throw new Error("Device limit reached (2)");
 			}
 		}

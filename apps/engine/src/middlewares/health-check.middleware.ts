@@ -17,7 +17,6 @@ export const healthCheckMiddleware = async (c: Context, next: Next) => {
 	await next();
 	const end = performance.now();
 
-	// Use more precise performance.now() for timing in Bun
 	const responseTime = (end - start).toFixed(2);
 	c.res.headers.set("X-Response-Time", `${responseTime}ms`);
 	logger.info("Request completed", {

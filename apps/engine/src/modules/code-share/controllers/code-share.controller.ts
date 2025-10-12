@@ -4,8 +4,7 @@ import { CodeShareService } from "@/modules/code-share/services/code-share.servi
 import { logger } from "@osmynt-core/library";
 import { codeShareSchema } from "@/modules/code-share/schemas/code-share.schema";
 import { CODE_SHARE_ALGORITHM, CODE_SHARE_AUDIT_LOG_ACTIONS } from "@/modules/code-share/constants/code-share.constant";
-import { publishBroadcast } from "@/config/realtime.config";
-import { ENV } from "@/config/env.config";
+import { publishBroadcast, SNIPPET_CREATED_EVENT } from "@/config/realtime.config";
 export class CodeShareController {
 	static async share(c: Context) {
 		const user = c.get("user") as { id: string } | undefined;
@@ -16,7 +15,10 @@ export class CodeShareController {
 		const body = await c.req.json().catch(() => ({}));
 		const schema = codeShareSchema;
 		const parsed = schema.safeParse(body);
-		if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
+		if (!parsed.success) {
+			logger.error("Invalid body");
+			return c.json({ error: "Invalid body" }, 400);
+		}
 		const created = await CodeShareService.share({
 			authorId: user.id,
 			ciphertextB64u: parsed.data.ciphertextB64u,
@@ -53,7 +55,7 @@ export class CodeShareController {
 				const team = await prisma.team.findUnique({ where: { id: meta.teamId }, select: { name: true } });
 				teamName = team?.name ?? undefined;
 			}
-			await publishBroadcast("snippet:created", {
+			await publishBroadcast(SNIPPET_CREATED_EVENT, {
 				id: created.id,
 				title: meta?.title,
 				authorId: user.id,
@@ -80,13 +82,19 @@ export class CodeShareController {
 		const teamId = q.get("teamId");
 		if (teamId) {
 			const isMember = await prisma.teamMember.findFirst({ where: { userId: user.id, teamId } });
-			if (!isMember) return c.json({ error: "Forbidden" }, 403);
+			if (!isMember) {
+				logger.error("Forbidden");
+				return c.json({ error: "Forbidden" }, 403);
+			}
 			const items = await CodeShareService.listTeamRecent(teamId);
 			logger.info("Listed team recent snippets", { items });
 			return c.json({ items }, 200);
 		}
 		const membership = await prisma.teamMember.findFirst({ where: { userId: user.id } });
-		if (!membership) return c.json({ items: [] }, 200);
+		if (!membership) {
+			logger.info("No membership");
+			return c.json({ items: [] }, 200);
+		}
 		const items = await CodeShareService.listTeamRecent(membership.teamId);
 		logger.info("Listed team recent snippets", { items });
 		return c.json({ items }, 200);
@@ -116,9 +124,15 @@ export class CodeShareController {
 		}
 		const id = c.req.param("id");
 		const item = await CodeShareService.getById(id);
-		if (!item) return c.json({ error: "Not Found" }, 404);
+		if (!item) {
+			logger.error("Not Found");
+			return c.json({ error: "Not Found" }, 404);
+		}
 		// Only author can add more wrapped keys (prevents others from tampering)
-		if (item.authorId !== user.id) return c.json({ error: "Forbidden" }, 403);
+		if (item.authorId !== user.id) {
+			logger.error("Forbidden");
+			return c.json({ error: "Forbidden" }, 403);
+		}
 		const body = await c.req.json().catch(() => ({}));
 		const incoming = Array.isArray(body?.wrappedKeys) ? body.wrappedKeys : [];
 		const existing = (item.wrappedKeys as unknown as any[]) || [];
@@ -137,7 +151,10 @@ export class CodeShareController {
 		const teamId = c.req.param("teamId");
 		const authorId = c.req.param("userId");
 		const isMember = await prisma.teamMember.findFirst({ where: { teamId, userId: user.id } });
-		if (!isMember) return c.json({ error: "Forbidden" }, 403);
+		if (!isMember) {
+			logger.error("Forbidden");
+			return c.json({ error: "Forbidden" }, 403);
+		}
 		const items = await CodeShareService.listTeamByAuthor(teamId, authorId);
 		logger.info("Listed team recent by author", { teamId, authorId });
 		return c.json({ items }, 200);
@@ -155,9 +172,9 @@ export class CodeShareController {
 		return c.json({ items }, 200);
 	}
 
-	static async realtimeConfig(c: Context) {
-		const url = ENV.SUPABASE.URL ?? "";
-		const anonKey = ENV.SUPABASE.ANON_KEY ?? "";
-		return c.json({ url, anonKey, channel: "osmynt-recent-snippets" }, 200);
-	}
+	// static async realtimeConfig(c: Context) {
+	// 	const url = ENV.SUPABASE.URL ?? "";
+	// 	const anonKey = ENV.SUPABASE.ANON_KEY ?? "";
+	// 	return c.json({ url, anonKey, channel: "osmynt-recent-snippets" }, 200);
+	// }
 }

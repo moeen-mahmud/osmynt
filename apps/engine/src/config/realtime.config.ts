@@ -1,6 +1,9 @@
 import { ENV } from "@/config/env.config";
 
 export const REALTIME_CHANNEL = "osmynt-recent-snippets";
+export const SNIPPET_CREATED_EVENT = "snippet:created";
+export const KEYS_CHANGED_EVENT = "keys:changed";
+export const TEAM_MEMBER_JOINED_EVENT = "team:memberJoined";
 
 export async function publishBroadcast(event: string, payload: unknown) {
 	const url = `${ENV.UPSTASH?.REST_URL}/publish/${encodeURIComponent(REALTIME_CHANNEL)}`;

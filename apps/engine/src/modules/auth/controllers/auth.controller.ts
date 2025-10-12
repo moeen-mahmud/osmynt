@@ -11,6 +11,8 @@ import {
 	importEcPublicKeyFromJwk,
 } from "@/utils/crypto.util";
 import type { StoredHandshake } from "@/modules/auth/types/auth.types";
+import { GITHUB_AUTH_SCOPE, GITHUB_AUTH_URL } from "@/modules/auth/constants/auth.constant";
+import { logger } from "@osmynt-core/library";
 
 export class AuthController {
 	static async githubAuthorize(c: Context) {
@@ -18,17 +20,20 @@ export class AuthController {
 		const params = new URLSearchParams({
 			client_id: ENV.GITHUB.CLIENT_ID ?? "",
 			redirect_uri: ENV.GITHUB.REDIRECT_URI ?? "",
-			scope: "read:user user:email",
+			scope: GITHUB_AUTH_SCOPE,
 			state: handshakeId,
 		});
-		const url = `https://github.com/login/oauth/authorize?${params.toString()}`;
+		const url = `${GITHUB_AUTH_URL}?${params.toString()}`;
 		return c.json({ url }, 200);
 	}
 
 	static async githubCallback(c: Context) {
 		const code = c.req.query("code");
 		const handshakeId = c.req.query("hid") ?? c.req.query("state");
-		if (!code) return c.json({ error: "Missing code" }, 400);
+		if (!code) {
+			logger.error("Missing code");
+			return c.json({ error: "Missing code" }, 400);
+		}
 		try {
 			const token = await AuthService.exchangeCodeForToken(code);
 			const { user, email } = await AuthService.fetchGithubUser(token);
@@ -42,12 +47,16 @@ export class AuthController {
 
 			if (handshakeId) {
 				const hs = await AuthService.getHandshake(handshakeId);
-				if (!hs) return c.json({ error: "Invalid handshake" }, 400);
+				if (!hs) {
+					logger.error("Invalid handshake");
+					return c.json({ error: "Invalid handshake" }, 400);
+				}
 				const server = await generateServerKeyPairP256();
 				const serverPriv = await importEcPrivateKeyFromJwk(server.serverPrivateKeyJwk);
 				const clientPub = await importEcPublicKeyFromJwk(hs.clientPublicKeyJwk);
 				const aesKey = await deriveAesGcmKey(serverPriv, clientPub);
 				const encrypted = await aesGcmEncryptJson(aesKey, { tokens });
+
 				const stored: StoredHandshake = {
 					id: hs.id,
 					clientPublicKeyJwk: hs.clientPublicKeyJwk,
@@ -77,7 +86,10 @@ export class AuthController {
 		const body = await c.req.json().catch(() => ({}));
 		const schema = z.object({ clientPublicKeyJwk: z.any() });
 		const parsed = schema.safeParse(body);
-		if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
+		if (!parsed.success) {
+			logger.error("Invalid body");
+			return c.json({ error: "Invalid body" }, 400);
+		}
 		const id = crypto.randomUUID();
 		const record: StoredHandshake = {
 			id,
@@ -92,13 +104,23 @@ export class AuthController {
 	// Retrieve handshake result
 	static async handshakeRetrieve(c: Context) {
 		const id = c.req.query("id");
-		if (!id) return c.json({ error: "Missing id" }, 400);
+		if (!id) {
+			logger.error("Missing id");
+			return c.json({ error: "Missing id" }, 400);
+		}
 		const rec = await AuthService.getHandshake(id);
-		if (!rec) return c.json({ error: "Not found" }, 404);
+		if (!rec) {
+			logger.error("Not found");
+			return c.json({ error: "Not found" }, 404);
+		}
 		if (Date.now() > rec.expiresAt) {
+			logger.error("Handshake expired");
 			return c.json({ error: "Expired" }, 410);
 		}
-		if (!rec.encryptedPayload || !rec.serverPublicKeyJwk) return c.json({ ready: false }, 200);
+		if (!rec.encryptedPayload || !rec.serverPublicKeyJwk) {
+			logger.info("Not ready");
+			return c.json({ ready: false }, 200);
+		}
 		return c.json({ ready: true, serverPublicKeyJwk: rec.serverPublicKeyJwk, payload: rec.encryptedPayload }, 200);
 	}
 
@@ -111,7 +133,10 @@ export class AuthController {
 			handshake: z.object({ clientPublicKeyJwk: z.any() }),
 		});
 		const parsed = schema.safeParse(body);
-		if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
+		if (!parsed.success) {
+			logger.error("Invalid body");
+			return c.json({ error: "Invalid body" }, 400);
+		}
 		const { accessToken, handshake } = parsed.data;
 		try {
 			const { user, email } = await AuthService.fetchGithubUser(accessToken);
