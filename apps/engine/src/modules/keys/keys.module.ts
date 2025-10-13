@@ -10,6 +10,7 @@ import {
 	route_pairingInit,
 	route_pairingClaim,
 	route_deviceRemove,
+	route_deviceForceRemove,
 } from "@/modules/keys/routes/keys.route";
 
 const KeysAPIModule = new OpenAPIHono<Env>();
@@ -22,5 +23,6 @@ KeysAPIModule.openapi(route_keysTeamById, KeysController.teamById);
 KeysAPIModule.openapi(route_pairingInit, KeysController.pairingInit);
 KeysAPIModule.openapi(route_pairingClaim, KeysController.pairingClaim);
 KeysAPIModule.openapi(route_deviceRemove, KeysController.deviceRemove);
+KeysAPIModule.openapi(route_deviceForceRemove, KeysController.deviceForceRemove);
 
 export { KeysAPIModule };

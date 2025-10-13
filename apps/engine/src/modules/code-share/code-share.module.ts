@@ -8,7 +8,7 @@ import {
 	route_share,
 	route_listTeamByAuthor,
 	route_listDmWith,
-	route_realtimeConfig,
+	// route_realtimeConfig,
 	route_addWrappedKeys,
 	type CodeShareRoutes,
 } from "@/modules/code-share/routes/code-share.route";
@@ -22,6 +22,6 @@ CodeShareAPIModule.openapi(route_getById, CodeShareController.getById as any); /
 CodeShareAPIModule.openapi(route_addWrappedKeys, CodeShareController.addWrappedKeys);
 CodeShareAPIModule.openapi(route_listTeamByAuthor, CodeShareController.listTeamByAuthor);
 CodeShareAPIModule.openapi(route_listDmWith, CodeShareController.listDmWith);
-CodeShareAPIModule.openapi(route_realtimeConfig, CodeShareController.realtimeConfig);
+// CodeShareAPIModule.openapi(route_realtimeConfig, CodeShareController.realtimeConfig);
 
 export { CodeShareAPIModule };

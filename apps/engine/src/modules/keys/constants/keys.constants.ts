@@ -1,5 +1,7 @@
-export const USER_KEYS = (userId: string) => `osmynt:keys:${userId}`;
-export const DEVICE_KEY = (userId: string, deviceId: string) => `osmynt:key:${userId}:${deviceId}`;
+import { OSMYNT_KEYS } from "@/config/constants";
+
+export const USER_KEYS = (userId: string) => `${OSMYNT_KEYS}:${userId}`;
+export const DEVICE_KEY = (userId: string, deviceId: string) => `${OSMYNT_KEYS}:${userId}:${deviceId}`;
 
 export const KEYS_AUDIT_LOG_ACTIONS = {
 	DEVICE_KEY_REGISTERED: "DEVICE_KEY_REGISTERED",

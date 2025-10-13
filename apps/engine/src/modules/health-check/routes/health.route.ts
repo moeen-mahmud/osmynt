@@ -14,11 +14,11 @@ export const HealthCheckResponse = z
 export const route_healthCheck = createRoute({
 	tags: ["Health Check"],
 	method: "get",
-	description: "Health check endpoint",
 	path: Routes.health,
+	summary: "Get health status",
 	responses: {
 		200: {
-			description: "Health check",
+			description: "Health check successful",
 			content: {
 				"application/json": {
 					schema: HealthCheckResponse,

@@ -46,6 +46,8 @@ export const Routes = {
 		me: "/me",
 		teamDefault: "/team/default",
 		teamById: "/team/:teamId",
+		deviceRemove: "/device/:deviceId",
+		deviceForceRemove: "/device/:deviceId/force",
 	},
 
 	// code share
@@ -69,15 +71,15 @@ export const Routes = {
 		removeTeamMember: "/:teamId/remove-member/:userId",
 	},
 
-	codeSnippet: {
-		base: "/protected/code-snippet",
-		upload: "/upload",
-		search: "/search",
-		getAll: "/get-all",
-		getById: "/:id",
-		getPresignedUrl: "/:id/get-presigned-url",
-		delete: "delete/:fileKey",
-	},
+	// codeSnippet: {
+	// 	base: "/protected/code-snippet",
+	// 	upload: "/upload",
+	// 	search: "/search",
+	// 	getAll: "/get-all",
+	// 	getById: "/:id",
+	// 	getPresignedUrl: "/:id/get-presigned-url",
+	// 	delete: "delete/:fileKey",
+	// },
 
 	// socket
 	socket: "/socket",

@@ -2,7 +2,13 @@ import * as vscode from "vscode";
 import { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY, DEVICE_ID_KEY, ENC_KEYPAIR_JWK_KEY } from "@/constants/osmynt.constant";
 import { b64uToBytes, b64url } from "@/utils/osmynt.utils";
 import { ENDPOINTS } from "@/constants/endpoints.constant";
-import type { DeviceState, ShareTarget } from "@/types/osmynt.types";
+import type {
+	DeviceState,
+	ShareTarget,
+	AuthLoginResponse,
+	KeysMeResponse,
+	DeviceKeySummary,
+} from "@/types/osmynt.types";
 
 export async function nativeSecureLogin(context: vscode.ExtensionContext, githubAccessToken: string) {
 	const base = ENDPOINTS.engineBaseUrl?.replace(/\/$/, "");
@@ -33,11 +39,11 @@ export async function nativeSecureLogin(context: vscode.ExtensionContext, github
 		vscode.window.showErrorMessage(`Engine login failed (${res.status})`);
 		throw new Error(`Engine login failed (${res.status})`);
 	}
-	const j = await res.json();
+	const data: AuthLoginResponse = await res.json();
 
 	const serverPub: any = await subtle.importKey(
 		"jwk",
-		j.serverPublicKeyJwk,
+		data.serverPublicKeyJwk,
 		{ name: "ECDH", namedCurve: "P-256" },
 		true,
 		[]
@@ -54,8 +60,8 @@ export async function nativeSecureLogin(context: vscode.ExtensionContext, github
 		const padded = s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4);
 		return Uint8Array.from(Buffer.from(padded, "base64"));
 	};
-	const iv = b64uToBytes(j.payload.ivB64u);
-	const ciphertext = b64uToBytes(j.payload.ciphertextB64u);
+	const iv = b64uToBytes(data.payload.ivB64u);
+	const ciphertext = b64uToBytes(data.payload.ciphertextB64u);
 	const plaintext = await subtle.decrypt({ name: "AES-GCM", iv }, aesKey, ciphertext);
 	const tokens = JSON.parse(Buffer.from(new Uint8Array(plaintext)).toString("utf-8")).tokens;
 
@@ -83,11 +89,11 @@ export async function ensureDeviceKeys(context: vscode.ExtensionContext) {
 	let devicesCount = 0;
 	try {
 		const { base, access } = await getBaseAndAccess(context);
-		const dm = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+		const dm = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const dj = await dm.json();
-		devicesCount = Array.isArray(dj?.devices) ? dj.devices.length : 0;
+		const data: any = await dm.json();
+		devicesCount = Array.isArray(data?.devices) ? data?.devices.length : 0;
 	} catch {}
 
 	let encKeypairJwk = await context.secrets.get(ENC_KEYPAIR_JWK_KEY);
@@ -98,9 +104,26 @@ export async function ensureDeviceKeys(context: vscode.ExtensionContext) {
 				await vscode.commands.executeCommand("setContext", "osmynt.isRegisteredDevice", false);
 				await vscode.commands.executeCommand("setContext", "osmynt.canPastePairing", true);
 			} catch {}
-			vscode.window.showInformationMessage(
-				"Osmynt: Pair this device using 'Add Device (Companion - paste code)'."
-			);
+			vscode.window
+				.showInformationMessage(
+					"Osmynt: Pair this device using 'Add Device (Companion - paste code)'.",
+					{
+						modal: true,
+						detail: "If this is your primary device, you can repair it using 'Repair this device'.",
+					},
+					"List Devices",
+					"Repair This Device",
+					"Force Remove Device"
+				)
+				.then(action => {
+					if (action === "List Devices") {
+						vscode.commands.executeCommand("osmynt.listDevices");
+					} else if (action === "Repair This Device") {
+						vscode.commands.executeCommand("osmynt.repairDevice");
+					} else if (action === "Force Remove Device") {
+						vscode.commands.executeCommand("osmynt.forceRemoveDevice");
+					}
+				});
 			return { deviceId };
 		}
 		const kp: any = await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, [
@@ -119,7 +142,26 @@ export async function ensureDeviceKeys(context: vscode.ExtensionContext) {
 				const stillRegistered = await verifySelfDeviceRegistered(context);
 				if (!stillRegistered) {
 					await clearLocalDeviceSecrets(context);
-					vscode.window.showInformationMessage("Osmynt: This device was removed. Pair again to reconnect.");
+					await vscode.window
+						.showInformationMessage(
+							"Osmynt: This device was removed.",
+							{
+								modal: true,
+								detail: "Pair again to reconnect. However, if this device was your primary device, you can repair it using 'Repair this device'.",
+							},
+							"List Devices",
+							"Repair This Device",
+							"Force Remove Device"
+						)
+						.then(action => {
+							if (action === "List Devices") {
+								vscode.commands.executeCommand("osmynt.listDevices");
+							} else if (action === "Repair This Device") {
+								vscode.commands.executeCommand("osmynt.repairDevice");
+							} else if (action === "Force Remove Device") {
+								vscode.commands.executeCommand("osmynt.forceRemoveDevice");
+							}
+						});
 				} else {
 					await registerDeviceKey(context, deviceId, parsed.publicKeyJwk);
 				}
@@ -145,11 +187,11 @@ export async function verifySelfDeviceRegistered(context: vscode.ExtensionContex
 		const { base, access } = await getBaseAndAccess(context);
 		const localId = await context.secrets.get(DEVICE_ID_KEY);
 		if (!localId) return false;
-		const res = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const j = await res.json();
-		const devices: Array<{ deviceId: string }> = Array.isArray(j?.devices) ? j.devices : [];
+		const data: any = await res.json();
+		const devices: Array<{ deviceId: string }> = Array.isArray(data?.devices) ? data?.devices : [];
 		return devices.some(d => d.deviceId === localId);
 	} catch {
 		return true;
@@ -171,11 +213,11 @@ export async function getDeviceState(context: vscode.ExtensionContext): Promise<
 		const localId = await context.secrets.get(DEVICE_ID_KEY);
 		const enc = await context.secrets.get(ENC_KEYPAIR_JWK_KEY);
 		if (!localId || !enc) return { kind: "unpaired" };
-		const res = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const j = await res.json();
-		const devices: Array<{ deviceId: string }> = Array.isArray(j?.devices) ? j.devices : [];
+		const data: KeysMeResponse = await res.json();
+		const devices: DeviceKeySummary[] = Array.isArray(data?.devices) ? data.devices : [];
 		const idx = devices.findIndex(d => d.deviceId === localId);
 		if (idx === -1) return { kind: "removed" };
 		return idx === 0
@@ -217,9 +259,9 @@ export async function initiateDevicePairing(context: vscode.ExtensionContext): P
 				ciphertextB64u: b64url(new Uint8Array(ciphertext as ArrayBuffer)),
 			}),
 		});
-		const j = await res.json();
-		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
-		const token = j?.token as string;
+		const data: any = await res.json();
+		if (!res.ok) throw new Error(data?.error || `Failed (${res.status})`);
+		const token = data?.token as string;
 		// Show both token and pairingKey to user to transfer. !IMPORTANT
 		const pairingKeyB64 = Buffer.from(pairingKey).toString("base64");
 		await vscode.env.clipboard.writeText(`${token}#${pairingKeyB64}`);
@@ -249,10 +291,10 @@ export async function claimDevicePairing(context: vscode.ExtensionContext): Prom
 			headers: { "Content-Type": "application/json", Authorization: `Bearer ${access}` },
 			body: JSON.stringify({ token }),
 		});
-		const j = await res.json();
-		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
-		const iv = b64uToBytes(j.ivB64u);
-		const ciphertext = b64uToBytes(j.ciphertextB64u);
+		const data: any = await res.json();
+		if (!res.ok) throw new Error(data?.error || `Failed (${res.status})`);
+		const iv = b64uToBytes(data.ivB64u);
+		const ciphertext = b64uToBytes(data.ciphertextB64u);
 		const key = await subtle.importKey("raw", pairingKey, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
 		const plaintext = await subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
 		const msg = JSON.parse(Buffer.from(new Uint8Array(plaintext)).toString("utf-8"));
@@ -295,7 +337,7 @@ export async function removeDevice(context: vscode.ExtensionContext): Promise<vo
 				headers: { Authorization: `Bearer ${access}` },
 			}
 		);
-		const j = await res.json();
+		const j: any = await res.json();
 		if (!res.ok || !j?.ok) throw new Error(j?.error || `Failed (${res.status})`);
 		vscode.window.showInformationMessage("Device removed");
 	} catch (e) {
@@ -307,10 +349,10 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 	try {
 		const { base, access } = await getBaseAndAccess(context);
 		// Determine companion device id. !IMPORTANT
-		const meRes = await fetch(`${base}/${ENDPOINTS.base}/protected/keys/me`, {
+		const meRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const me = await meRes.json();
+		const me: any = await meRes.json();
 		const devices: Array<{ deviceId: string; encryptionPublicKeyJwk: any; isPrimary?: boolean }> = Array.isArray(
 			me?.devices
 		)
@@ -341,7 +383,7 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 		const listRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.codeShare.listTeam}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const list = await listRes.json();
+		const list: any = await listRes.json();
 		const items: Array<{ id: string; wrappedKeys?: any[] }> = Array.isArray(list?.items) ? list.items : [];
 
 		const nodeCrypto = await import("crypto");
@@ -380,7 +422,7 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 						headers: { Authorization: `Bearer ${access}` },
 					}
 				);
-				const full = await itemRes.json();
+				const full: any = await itemRes.json();
 				if (!itemRes.ok) continue;
 				const already = (full?.wrappedKeys ?? []).some(
 					(wk: any) => wk?.recipientDeviceId === companion.deviceId
@@ -393,7 +435,7 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 				const meTeamsRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 					headers: { Authorization: `Bearer ${access}` },
 				});
-				const meTeams = await meTeamsRes.json();
+				const meTeams: any = await meTeamsRes.json();
 				const meUserId: string | undefined = meTeams?.user?.id;
 				if (!meUserId || full?.authorId !== meUserId) continue;
 
@@ -470,7 +512,7 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 					false,
 					["encrypt"]
 				);
-				const wrapIv2 = (await import("crypto")).randomBytes(12);
+				const wrapIv2 = nodeCrypto.randomBytes(12);
 				const wrapped2 = await subtle.encrypt({ name: "AES-GCM", iv: wrapIv2 }, kek2, cekRaw);
 				const payload = {
 					wrappedKeys: [
@@ -528,17 +570,17 @@ export async function promptTeamId(context: vscode.ExtensionContext): Promise<st
 		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const j = await res.json();
+		const data: any = await res.json();
 		// Prefer owned team; fallback to first team
-		const teams: Array<{ id: string; ownerId: string }> = Array.isArray(j?.teams) ? j.teams : [];
-		const meOwned = teams.find(t => t.ownerId && j?.user?.id && t.ownerId === j.user.id)?.id;
+		const teams: Array<{ id: string; ownerId: string }> = Array.isArray(data?.teams) ? data.teams : [];
+		const meOwned = teams.find(t => t.ownerId && data?.user?.id && t.ownerId === data.user.id)?.id;
 		return (meOwned || teams[0]?.id) as string | undefined;
 	} catch {
 		return undefined;
 	}
 }
 
-export async function tryDecryptSnippet(context: vscode.ExtensionContext, j: any): Promise<string | null> {
+export async function tryDecryptSnippet(context: vscode.ExtensionContext, data: any): Promise<string | null> {
 	try {
 		const nodeCrypto = await import("crypto");
 		const subtle: any = (globalThis as any).crypto?.subtle ?? (nodeCrypto as any).webcrypto?.subtle;
@@ -555,7 +597,7 @@ export async function tryDecryptSnippet(context: vscode.ExtensionContext, j: any
 					true,
 					["deriveKey", "deriveBits"]
 				);
-				for (const wk of j.wrappedKeys ?? []) {
+				for (const wk of data.wrappedKeys ?? []) {
 					if (!wk?.senderEphemeralPublicKeyJwk || !wk?.wrappedCekB64u || !wk?.wrapIvB64u) continue;
 					try {
 						const senderPub = await subtle.importKey(
@@ -578,8 +620,8 @@ export async function tryDecryptSnippet(context: vscode.ExtensionContext, j: any
 						const cek = await subtle.importKey("raw", cekRaw, { name: "AES-GCM", length: 256 }, false, [
 							"decrypt",
 						]);
-						const iv = b64uToBytes(j.ivB64u);
-						const ciphertext = b64uToBytes(j.ciphertextB64u);
+						const iv = b64uToBytes(data.ivB64u);
+						const ciphertext = b64uToBytes(data.ciphertextB64u);
 						const plaintext = await subtle.decrypt({ name: "AES-GCM", iv }, cek, ciphertext);
 						return Buffer.from(new Uint8Array(plaintext)).toString("utf-8");
 					} catch {
@@ -593,7 +635,7 @@ export async function tryDecryptSnippet(context: vscode.ExtensionContext, j: any
 		try {
 			const config = vscode.workspace.getConfiguration("osmynt");
 			const teamKeyMode = config.get<boolean>("teamKeyMode") ?? false;
-			if (teamKeyMode && (j?.metadata?.teamId as string | undefined)) {
+			if (teamKeyMode && (data?.metadata?.teamId as string | undefined)) {
 				const teamKeyNamespace = config.get<string>("teamKeyNamespace") ?? "default";
 				const teamKeyStorageKey = `osmynt.teamKey.${teamKeyNamespace}`;
 				const teamKeyRawB64 = await context.secrets.get(teamKeyStorageKey);
@@ -602,7 +644,7 @@ export async function tryDecryptSnippet(context: vscode.ExtensionContext, j: any
 					const teamKey = await subtle.importKey("raw", teamKeyRaw, { name: "AES-GCM", length: 256 }, false, [
 						"decrypt",
 					]);
-					const wk = (j.wrappedKeys ?? [])[0];
+					const wk = (data.wrappedKeys ?? [])[0];
 					if (wk?.wrappedCekB64u && wk?.wrapIvB64u) {
 						const wrappedBytes = b64uToBytes(wk.wrappedCekB64u);
 						const wrapIv = b64uToBytes(wk.wrapIvB64u);
@@ -610,8 +652,8 @@ export async function tryDecryptSnippet(context: vscode.ExtensionContext, j: any
 						const cek = await subtle.importKey("raw", cekRaw, { name: "AES-GCM", length: 256 }, false, [
 							"decrypt",
 						]);
-						const iv = b64uToBytes(j.ivB64u);
-						const ciphertext = b64uToBytes(j.ciphertextB64u);
+						const iv = b64uToBytes(data.ivB64u);
+						const ciphertext = b64uToBytes(data.ciphertextB64u);
 						const plaintext = await subtle.decrypt({ name: "AES-GCM", iv }, cek, ciphertext);
 						return Buffer.from(new Uint8Array(plaintext)).toString("utf-8");
 					}
@@ -630,7 +672,7 @@ export async function pickShareTarget(context: vscode.ExtensionContext): Promise
 	const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 		headers: { Authorization: `Bearer ${access}` },
 	});
-	const j = await res.json();
+	const j: any = await res.json();
 	const teams: Array<{ id: string; name: string }> = Array.isArray(j?.teams) ? j.teams : [];
 	const membersByTeam: Record<string, any[]> = j?.membersByTeam ?? {};
 	const currentUserId: string | undefined = j?.user?.id as string | undefined;
@@ -699,14 +741,14 @@ export async function shareSelectedCode(
 				headers: { Authorization: `Bearer ${access}` },
 			}
 		);
-		const j = await recipientsRes.json();
+		const j: any = await recipientsRes.json();
 		recipients = Array.isArray(j?.recipients) ? j.recipients : [];
 		// get current user id for self-wrapping
 		try {
 			const meRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 				headers: { Authorization: `Bearer ${access}` },
 			});
-			const me = await meRes.json();
+			const me: any = await meRes.json();
 			meUserId = me?.user?.id as string | undefined;
 		} catch {}
 	} else {
@@ -714,7 +756,7 @@ export async function shareSelectedCode(
 		const tmRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const tm = await tmRes.json();
+		const tm: any = await tmRes.json();
 		const teams: Array<{ id: string }> = Array.isArray(tm?.teams) ? tm.teams : [];
 		let all: any[] = [];
 		for (const t of teams) {
@@ -725,7 +767,7 @@ export async function shareSelectedCode(
 					headers: { Authorization: `Bearer ${access}` },
 				}
 			);
-			const rj = await rRes.json();
+			const rj: any = await rRes.json();
 			const arr = Array.isArray(rj?.recipients) ? rj.recipients : [];
 			all = all.concat(arr);
 		}
@@ -735,7 +777,7 @@ export async function shareSelectedCode(
 			const meRes = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`, {
 				headers: { Authorization: `Bearer ${access}` },
 			});
-			const me = await meRes.json();
+			const me: any = await meRes.json();
 			meUserId = me?.user?.id as string | undefined;
 		} catch {}
 	}
@@ -1095,7 +1137,7 @@ async function showGitWorkingTreeView(diffData: {
 	const originalUri = vscode.Uri.file(diffData.filePath);
 
 	// Use VS Code's built-in diff with snippet on LEFT, original on RIGHT
-	await vscode.commands.executeCommand("vscode.diff", snippetUri, originalUri, "Snippet ↔ Original File");
+	await vscode.commands.executeCommand("vscode.diff", snippetUri, originalUri, `Incoming changes ↔ Original file`);
 
 	// Set up a listener to monitor when the diff editor is closed
 	// This ensures we clean up properly and don't save the snippet file
@@ -1111,13 +1153,13 @@ async function showGitWorkingTreeView(diffData: {
 		}
 	});
 
-	// Show instructions
+	// Show instructions | configurable from config -> DO not show this message again
 	vscode.window.showInformationMessage(`You are now in the Git Working Tree View`, {
 		modal: true,
 		detail: `
-• LEFT: Snippet content (new changes)
+• LEFT: Code blocks content (new changes)
 • RIGHT: Original file (your current file)
-• Use VS Code's diff controls to apply changes from snippet to original file.
+• Use VS Code's diff controls to apply changes from code blocks to original file.
 • Save the changes to the original file to apply the changes.
 		`,
 	});
@@ -1154,7 +1196,7 @@ async function showSnippetView(diffData: {
 	const doc = await vscode.workspace.openTextDocument(tempUri);
 	await vscode.window.showTextDocument(doc);
 
-	vscode.window.showInformationMessage("Snippet view opened! This is the new content from the snippet.");
+	vscode.window.showInformationMessage("Code blocks view opened! This is the new content from the code blocks.");
 
 	// Set up cleanup when the snippet editor is closed
 	const closeDisposable = vscode.workspace.onDidCloseTextDocument(async document => {

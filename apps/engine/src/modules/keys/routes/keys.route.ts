@@ -5,6 +5,7 @@ import { DeviceKeySummarySchema } from "@/schemas/models";
 export const route_keysRegister = createRoute({
 	tags: ["Keys"],
 	operationId: "keysRegister",
+	summary: "Register a new device key",
 	method: "post",
 	path: `${Routes.keys.register}`,
 	request: {
@@ -42,6 +43,7 @@ export const route_keysRegister = createRoute({
 export const route_keysMe = createRoute({
 	tags: ["Keys"],
 	operationId: "keysMe",
+	summary: "Get my device keys",
 	method: "get",
 	path: `${Routes.keys.me}`,
 	responses: {
@@ -67,6 +69,7 @@ export const route_keysMe = createRoute({
 export const route_keysTeamDefault = createRoute({
 	tags: ["Keys"],
 	operationId: "keysTeamDefault",
+	summary: "Get default team members device keys",
 	method: "get",
 	path: `${Routes.keys.teamDefault}`,
 	responses: {
@@ -97,6 +100,7 @@ export const route_keysTeamDefault = createRoute({
 export const route_keysTeamById = createRoute({
 	tags: ["Keys"],
 	operationId: "keysTeamById",
+	summary: "Get team members device keys by teamId",
 	method: "get",
 	path: `${Routes.keys.teamById}`,
 	responses: {
@@ -131,6 +135,7 @@ export const route_keysTeamById = createRoute({
 export const route_pairingInit = createRoute({
 	tags: ["Keys"],
 	operationId: "pairingInit",
+	summary: "Initialize pairing",
 	method: "post",
 	path: `/pairing/init`,
 	request: {
@@ -175,6 +180,7 @@ export const route_pairingInit = createRoute({
 export const route_pairingClaim = createRoute({
 	tags: ["Keys"],
 	operationId: "pairingClaim",
+	summary: "Claim pairing",
 	method: "post",
 	path: `/pairing/claim`,
 	request: {
@@ -210,10 +216,33 @@ export const route_pairingClaim = createRoute({
 export const route_deviceRemove = createRoute({
 	tags: ["Keys"],
 	operationId: "deviceRemove",
+	summary: "Remove a device",
 	method: "delete",
 	path: `/device/:deviceId`,
 	responses: {
 		200: { description: "Removed", content: { "application/json": { schema: z.object({ ok: z.literal(true) }) } } },
+		400: {
+			description: "Bad Request",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+		401: {
+			description: "Unauthorized",
+			content: { "application/json": { schema: z.object({ error: z.string() }) } },
+		},
+	},
+});
+
+export const route_deviceForceRemove = createRoute({
+	tags: ["Keys"],
+	operationId: "deviceForceRemove",
+	summary: "Force remove a device (including primary)",
+	method: "delete",
+	path: `/device/:deviceId/force`,
+	responses: {
+		200: {
+			description: "Force removed",
+			content: { "application/json": { schema: z.object({ ok: z.literal(true) }) } },
+		},
 		400: {
 			description: "Bad Request",
 			content: { "application/json": { schema: z.object({ error: z.string() }) } },
@@ -233,4 +262,5 @@ export type KeysRoutes = {
 	pairingInit: typeof route_pairingInit;
 	pairingClaim: typeof route_pairingClaim;
 	deviceRemove: typeof route_deviceRemove;
+	deviceForceRemove: typeof route_deviceForceRemove;
 };

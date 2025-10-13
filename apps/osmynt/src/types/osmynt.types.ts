@@ -7,3 +7,5 @@ export type DeviceState =
 	| { kind: "registeredPrimary"; deviceId: string }
 	| { kind: "registeredCompanion"; deviceId: string }
 	| { kind: "removed" };
+
+export * from "./api.types";

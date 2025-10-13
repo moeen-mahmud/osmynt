@@ -6,7 +6,7 @@ import { logger } from "@osmynt-core/library";
 import { KEYS_AUDIT_LOG_ACTIONS } from "@/modules/keys/constants/keys.constants";
 import { PairingStore } from "@/modules/keys/services/pairing.store";
 import { nanoid } from "nanoid";
-import { publishBroadcast } from "@/config/realtime.config";
+import { KEYS_CHANGED_EVENT, publishBroadcast } from "@/config/realtime.config";
 
 export class KeysController {
 	static async register(c: Context) {
@@ -37,8 +37,10 @@ export class KeysController {
 			},
 		});
 		try {
-			await publishBroadcast("keys:changed", { userId: user.id });
-		} catch {}
+			await publishBroadcast(KEYS_CHANGED_EVENT, { userId: user.id });
+		} catch {
+			logger.error("Failed to publish broadcast", { userId: user.id });
+		}
 		logger.info("Registered", { userId: user.id });
 		return c.json({ ok: true }, 200);
 	}
@@ -88,6 +90,7 @@ export class KeysController {
 		const teamId = c.req.param("teamId");
 		const membership = await prisma.teamMember.findFirst({ where: { teamId, userId: user.id } });
 		if (!membership) {
+			logger.error("Forbidden");
 			return c.json({ error: "Forbidden" }, 403);
 		}
 		const recipients = await KeysService.listTeamRecipients(teamId);
@@ -106,14 +109,20 @@ export class KeysController {
 		const ivB64u = body?.ivB64u as string | undefined;
 		const ciphertextB64u = body?.ciphertextB64u as string | undefined;
 		const ttlMs = Math.min(Math.max(Number(body?.ttlMs ?? 1000 * 60 * 5), 1000), 1000 * 60 * 10);
-		if (!deviceId || !ivB64u || !ciphertextB64u) return c.json({ error: "Invalid body" }, 400);
+		if (!deviceId || !ivB64u || !ciphertextB64u) {
+			logger.error("Invalid body");
+			return c.json({ error: "Invalid body" }, 400);
+		}
 		const devices = await KeysService.listUserDevices(user.id);
 		const sorted = [...devices].sort(
 			(a: any, b: any) => new Date(a.createdAt as any).getTime() - new Date(b.createdAt as any).getTime()
 		);
 		const primaryId = sorted[0]?.deviceId as string | undefined;
 		const isPrimary = devices.length === 0 || (primaryId && primaryId === deviceId);
-		if (!isPrimary) return c.json({ error: "Only primary device can initiate pairing" }, 403);
+		if (!isPrimary) {
+			logger.error("Only primary device can initiate pairing");
+			return c.json({ error: "Only primary device can initiate pairing" }, 403);
+		}
 		const token = nanoid(24);
 		await PairingStore.save(
 			token,
@@ -139,10 +148,19 @@ export class KeysController {
 		}
 		const body = await c.req.json().catch(() => ({}));
 		const token = body?.token as string | undefined;
-		if (!token) return c.json({ error: "Invalid body" }, 400);
+		if (!token) {
+			logger.error("Invalid body");
+			return c.json({ error: "Invalid body" }, 400);
+		}
 		const rec = await PairingStore.get(token);
-		if (!rec) return c.json({ error: "Not found" }, 404);
-		if (rec.userId !== user.id) return c.json({ error: "Forbidden" }, 403);
+		if (!rec) {
+			logger.error("Not found");
+			return c.json({ error: "Not found" }, 404);
+		}
+		if (rec.userId !== user.id) {
+			logger.error("Forbidden");
+			return c.json({ error: "Forbidden" }, 403);
+		}
 		await PairingStore.del(token);
 		logger.info("Pairing claim", { userId: user.id });
 		return c.json({ ivB64u: rec.ivB64u, ciphertextB64u: rec.ciphertextB64u }, 200);
@@ -155,10 +173,16 @@ export class KeysController {
 			return c.json({ error: "Unauthorized" }, 401);
 		}
 		const deviceId = c.req.param("deviceId");
-		if (!deviceId) return c.json({ error: "Invalid device" }, 400);
+		if (!deviceId) {
+			logger.error("Invalid device");
+			return c.json({ error: "Invalid device" }, 400);
+		}
 		const devices = await KeysService.listUserDevices(user.id);
 		const primaryId = devices[0]?.deviceId;
-		if (deviceId === primaryId) return c.json({ error: "Cannot remove primary device" }, 400);
+		if (deviceId === primaryId) {
+			logger.error("Cannot remove primary device");
+			return c.json({ error: "Cannot remove primary device" }, 400);
+		}
 		await prisma.deviceKey.deleteMany({ where: { userId: user.id, deviceId } });
 		await prisma.auditLog.create({
 			data: {
@@ -168,9 +192,34 @@ export class KeysController {
 			},
 		});
 		try {
-			await publishBroadcast("keys:changed", { userId: user.id });
+			await publishBroadcast(KEYS_CHANGED_EVENT, { userId: user.id });
 		} catch {}
 		logger.info("Device removed", { userId: user.id, deviceId });
+		return c.json({ ok: true }, 200);
+	}
+
+	static async deviceForceRemove(c: Context) {
+		const user = c.get("user") as { id: string } | undefined;
+		if (!user) {
+			logger.error("Unauthorized");
+			return c.json({ error: "Unauthorized" }, 401);
+		}
+		const deviceId = c.req.param("deviceId");
+		if (!deviceId) return c.json({ error: "Invalid device" }, 400);
+
+		// Force remove any device, including primary
+		await prisma.deviceKey.deleteMany({ where: { userId: user.id, deviceId } });
+		await prisma.auditLog.create({
+			data: {
+				action: KEYS_AUDIT_LOG_ACTIONS.DEVICE_KEY_REGISTERED,
+				userId: user.id,
+				metadata: { forceRemoved: deviceId },
+			},
+		});
+		try {
+			await publishBroadcast(KEYS_CHANGED_EVENT, { userId: user.id });
+		} catch {}
+		logger.info("Device force removed", { userId: user.id, deviceId });
 		return c.json({ ok: true }, 200);
 	}
 }
