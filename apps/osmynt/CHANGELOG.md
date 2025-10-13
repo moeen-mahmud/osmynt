@@ -1,5 +1,11 @@
 # @osmynt-core/osmynt
 
+## 1.3.5
+
+### Patch Changes
+
+- [`f76a2ae`](https://github.com/moeen-mahmud/osmynt/commit/f76a2ae47396afc4c0fa142dff13d2d7e265393b) Thanks [@moeen-mahmud](https://github.com/moeen-mahmud)! - updates redis pub/sub paths
+
 ## 1.3.4
 
 ### Patch Changes
