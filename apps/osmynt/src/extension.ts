@@ -269,3 +269,5 @@ export async function disconnectRealtime(_context?: vscode.ExtensionContext) {
 	} catch {}
 	redisSubscriber = null;
 }
+
+// triggering release
