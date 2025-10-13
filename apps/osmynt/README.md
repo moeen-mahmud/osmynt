@@ -85,13 +85,17 @@ These approaches break your development flow and hurt productivity. **There has 
 
 ### Quick Commands
 
-| Command                      | Description                    |
-| ---------------------------- | ------------------------------ |
-| `Osmynt: Login`            | Authenticate with GitHub       |
-| `Osmynt: Share Code Block` | Share selected code            |
-| `Osmynt: View Shared Code` | See code shared with you       |
-| `Osmynt: Apply Changes`    | Apply shared code to your file |
-| `Osmynt: Team Settings`    | Manage team and members        |
+| Command                           | Description                    |
+| ----------------------------      | ------------------------------ |
+| `Osmynt: Login`                   | Authenticate with GitHub       |
+| `Osmynt: Logout`                  | Logout from Osmynt             |
+| `Osmynt: Refresh`                 | Refresh the team list          |
+| `Osmynt: Join Team`               | Join an existing team          |
+| `Osmynt: Invite Team Member`      | Invite a team member           |
+| `Osmynt: Remove Team Member`      | Remove a team member           |
+| `Osmynt: Share Selected Code`     | Share selected code            |
+| `Osmynt: View Code Blocks`        | See code shared with you       |
+| `Osmynt: Apply Diff`              | Apply shared code to your file |
 
 ## 🔒 Security & Privacy
 
