@@ -1,5 +1,15 @@
 # @osmynt-core/osmynt
 
+## 1.3.4
+
+### Patch Changes
+
+- [#25](https://github.com/moeen-mahmud/osmynt/pull/25) [`33aa685`](https://github.com/moeen-mahmud/osmynt/commit/33aa685c407d0a2052bfd2e61c4212ffbf69e728) Thanks [@moeen-mahmud](https://github.com/moeen-mahmud)! - - Added support for repair, remove, and force remove device option with local cache clear
+  - Updated the views/welcome message
+  - Updated readme, replaced snippet with "code blocks"
+  - Added welcome email for new registration
+  - Replaced "refreshTeam" command with "refreshEntry"
+
 ## 1.3.3
 
 ### Patch Changes
