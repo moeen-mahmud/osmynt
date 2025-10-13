@@ -1137,7 +1137,7 @@ async function showGitWorkingTreeView(diffData: {
 	const originalUri = vscode.Uri.file(diffData.filePath);
 
 	// Use VS Code's built-in diff with snippet on LEFT, original on RIGHT
-	await vscode.commands.executeCommand("vscode.diff", snippetUri, originalUri, "Code blocks ↔ Original File");
+	await vscode.commands.executeCommand("vscode.diff", snippetUri, originalUri, `Incoming changes ↔ Original file`);
 
 	// Set up a listener to monitor when the diff editor is closed
 	// This ensures we clean up properly and don't save the snippet file
@@ -1153,7 +1153,7 @@ async function showGitWorkingTreeView(diffData: {
 		}
 	});
 
-	// Show instructions
+	// Show instructions | configurable from config -> DO not show this message again
 	vscode.window.showInformationMessage(`You are now in the Git Working Tree View`, {
 		modal: true,
 		detail: `
