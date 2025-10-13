@@ -43,8 +43,6 @@
 	"displayName": "Osmynt",
 	"description": "Secure, Git-powered, Realtime DM for code blocks ⚡",
 	"categories": [
-		"Code blocks",
-		"Chat",
 		"Other"
 	],
 	"icon": "resources/osmynt-128x.png",
