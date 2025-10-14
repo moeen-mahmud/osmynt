@@ -10,6 +10,7 @@ const Configuration: UserConfig = {
 				"@osmynt-core/engine",
 				"@osmynt-core/osmynt",
 				"@osmynt-core/webapp",
+				"@osmynt-core/docs",
 				"osmynt-core",
 				"@osmynt-core/api",
 				"@osmynt-core/database",

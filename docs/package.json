@@ -1,0 +1,10 @@
+{
+	"name": "@osmynt-core/docs",
+	"author": {
+		"name": "Moeen Mahmud",
+		"email": "moeen@osmynt.dev"
+	},
+	"version": "0.0.1",
+	"private": true,
+	"dependencies": {}
+}

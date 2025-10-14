@@ -1,0 +1,19 @@
+# Gemfile for Osmynt Documentation
+# This file is used by Jekyll to manage dependencies for GitHub Pages
+
+source "https://rubygems.org"
+
+# Use GitHub Pages gem which includes Jekyll and all necessary plugins
+gem "github-pages", "~> 228"
+
+# Required for Ruby 3.0+ compatibility
+gem "webrick", "~> 1.7"
+gem "csv", "~> 3.2"
+
+# Development dependencies
+group :development do
+  gem "jekyll-watch", "~> 2.2"
+end
+
+# Windows compatibility
+gem "wdm", "~> 0.1.1", :platforms => [:windows]
