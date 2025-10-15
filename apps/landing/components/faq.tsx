@@ -40,7 +40,7 @@ const faqs = [
 	},
 	{
 		question: "What programming languages does Osmynt support?",
-		answer: "Osmynt supports all programming languages and file types. We provide syntax highlighting for over 200 languages, including JavaScript, Python, Java, C++, Go, Rust, TypeScript, and more. The system preserves original formatting, indentation, and encoding for optimal code readability.",
+		answer: "Osmynt supports all programming languages and file types. We provide syntax highlighting for over 20 languages, including JavaScript, Python, Java, C++, Go, Rust, TypeScript, and more. The system preserves original formatting, indentation, and encoding for optimal code readability.",
 	},
 	{
 		question: "How does device management work in Osmynt?",
@@ -90,7 +90,16 @@ export function FAQ() {
 					<h2 id="faq-heading" className="text-3xl sm:text-4xl font-bold mb-4">
 						Frequently Asked Questions
 					</h2>
-					<p className="text-lg text-muted-foreground">Everything you need to know about Osmynt</p>
+					<p className="text-lg text-muted-foreground">
+						Everything you need to know about Osmynt. Don't see your question?{" "}
+						<a
+							href="mailto:support@osmynt.dev"
+							className="text-primary hover:text-primary/80 transition-colors"
+						>
+							Contact us
+						</a>
+						.
+					</p>
 				</motion.div>
 
 				<motion.div

@@ -75,12 +75,12 @@ export function Hero() {
 								<ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
 							</a>
 						</Button>
-						<Button size="lg" variant="outline" className="gap-2 bg-transparent group" asChild>
+						{/* <Button size="lg" variant="outline" className="gap-2 bg-transparent group" asChild>
 							<a href="https://github.com/moeen-mahmud/osmynt">
 								<Github className="h-4 w-4 group-hover:rotate-12 transition-transform" />
 								View on GitHub
 							</a>
-						</Button>
+						</Button> */}
 					</motion.div>
 
 					<motion.div

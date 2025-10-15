@@ -1,9 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Code2, Menu } from "lucide-react";
+import { Book, BookOpen, Code2, Menu } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { OsmyntLogo } from "@/components/osmynt-logo";
 
 export function Header() {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -36,7 +37,7 @@ export function Header() {
 			<div className="container mx-auto px-4 sm:px-6 lg:px-8">
 				<div className="flex h-16 items-center justify-between">
 					<div className="flex items-center gap-2">
-						<Code2 className="h-6 w-6 text-primary" />
+						<OsmyntLogo />
 						<span className="text-xl font-bold">Osmynt</span>
 					</div>
 
@@ -62,18 +63,13 @@ export function Header() {
 						<a href="#faq" className="text-sm text-muted-foreground hover:text-primary transition-colors">
 							FAQ
 						</a>
-						<a
-							href="https://docs.osmynt.dev"
-							className="text-sm text-muted-foreground hover:text-primary transition-colors"
-						>
-							Docs
-						</a>
 					</nav>
 
 					<div className="flex items-center gap-4">
-						<Button className="hidden md:inline-flex" asChild>
-							<a href="https://marketplace.visualstudio.com/items?itemName=osmynt.osmynt">
-								Install Extension
+						<Button variant="outline" className="hidden md:inline-flex" asChild>
+							<a href="https://docs.osmynt.dev">
+								<BookOpen className="h-4 w-4" />
+								Docs
 							</a>
 						</Button>
 
@@ -123,17 +119,19 @@ export function Header() {
 							>
 								<a href="#faq">FAQ</a>
 							</button>
-							<a
-								href="https://docs.osmynt.dev"
-								className="text-sm text-muted-foreground hover:text-primary transition-colors"
-							>
-								Docs
-							</a>
-							<Button className="w-full" asChild>
+							<button type="button" onClick={() => setMobileMenuOpen(false)}>
+								<a
+									href="https://docs.osmynt.dev"
+									className="text-sm text-muted-foreground hover:text-primary transition-colors"
+								>
+									Docs
+								</a>
+							</button>
+							{/* <Button className="w-full" asChild>
 								<a href="https://marketplace.visualstudio.com/items?itemName=osmynt.osmynt">
 									Install Extension
 								</a>
-							</Button>
+							</Button> */}
 						</nav>
 					</motion.div>
 				)}
