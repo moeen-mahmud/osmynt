@@ -178,7 +178,7 @@ export function Comparison() {
 				>
 					<div className="min-w-[900px]">
 						{/* Header */}
-						<div className="grid grid-cols-7 gap-4 mb-6">
+						<div className="grid grid-cols-6 gap-4 mb-6">
 							<div className="text-sm font-medium text-muted-foreground">Feature</div>
 							{solutions.map((solution, index) => (
 								<div
@@ -198,7 +198,7 @@ export function Comparison() {
 							{Object.entries(featureLabels).map(([key, label]) => (
 								<div
 									key={key}
-									className="grid grid-cols-7 gap-4 items-center py-3 border-b border-border/50"
+									className="grid grid-cols-6 gap-4 items-center py-3 border-b border-border/50"
 								>
 									<div className="text-sm font-medium">{label}</div>
 									{solutions.map((solution, solutionIndex) => {

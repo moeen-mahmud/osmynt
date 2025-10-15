@@ -3,17 +3,35 @@
 import { Button } from "@/components/ui/button";
 import { Code2, Menu } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export function Header() {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+	const [bannerVisible, setBannerVisible] = useState(false);
+
+	useEffect(() => {
+		// Check if banner is visible by looking at body padding
+		const checkBanner = () => {
+			const bodyPaddingTop = document.body.style.paddingTop;
+			setBannerVisible(bodyPaddingTop === "48px");
+		};
+
+		// Check initially
+		checkBanner();
+
+		// Watch for changes
+		const observer = new MutationObserver(checkBanner);
+		observer.observe(document.body, { attributes: true, attributeFilter: ["style"] });
+
+		return () => observer.disconnect();
+	}, []);
 
 	return (
 		<motion.header
 			initial={{ y: -100 }}
 			animate={{ y: 0 }}
 			transition={{ duration: 0.5 }}
-			className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm"
+			className={`fixed left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm transition-all duration-300 ${bannerVisible ? "top-12" : "top-0"}`}
 		>
 			<div className="container mx-auto px-4 sm:px-6 lg:px-8">
 				<div className="flex h-16 items-center justify-between">

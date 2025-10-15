@@ -3,12 +3,32 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Github } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 export function Hero() {
+	const [bannerVisible, setBannerVisible] = useState(false);
+
+	useEffect(() => {
+		// Check if banner is visible by looking at body padding
+		const checkBanner = () => {
+			const bodyPaddingTop = document.body.style.paddingTop;
+			setBannerVisible(bodyPaddingTop === "48px");
+		};
+
+		// Check initially
+		checkBanner();
+
+		// Watch for changes
+		const observer = new MutationObserver(checkBanner);
+		observer.observe(document.body, { attributes: true, attributeFilter: ["style"] });
+
+		return () => observer.disconnect();
+	}, []);
+
 	return (
-		<section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+		<section className={`${bannerVisible ? "pt-40" : "pt-32"} pb-20 px-4 sm:px-6 lg:px-8`} role="banner">
 			<div className="container mx-auto max-w-5xl">
-				<div className="text-center space-y-8">
+				<header className="text-center space-y-8">
 					<motion.div
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
@@ -92,7 +112,7 @@ const shareCode = async () => {
 							</pre>
 						</div>
 					</motion.div>
-				</div>
+				</header>
 			</div>
 		</section>
 	);

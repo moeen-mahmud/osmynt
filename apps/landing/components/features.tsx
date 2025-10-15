@@ -8,37 +8,37 @@ import { useRef } from "react";
 const features = [
 	{
 		icon: Shield,
-		title: "Military-Grade Encryption",
+		title: "Enterprise-Grade Encryption",
 		description:
 			"AES-256 encryption with zero-knowledge architecture. Your code is encrypted on your device before transmission, and we can never access your unencrypted content.",
 	},
 	{
 		icon: Zap,
-		title: "Lightning-Fast Sharing",
+		title: "Real-Time Sharing",
 		description:
 			"Share code blocks in milliseconds with real-time updates. See changes as they happen without refreshing or context switching between tools.",
 	},
 	{
 		icon: GitBranch,
-		title: "Native Git Integration",
+		title: "Git-Like Diff Application",
 		description:
 			"Apply shared code changes directly to your files using Git's three-way merge algorithm. Maintain your commit history and workflow integrity.",
 	},
 	{
 		icon: Users,
-		title: "Enterprise Team Features",
+		title: "Team Management",
 		description:
 			"Advanced team management with role-based permissions, audit logs, and compliance reporting. Built for teams of any size.",
 	},
 	{
 		icon: Code,
-		title: "Universal Language Support",
+		title: "Language Support",
 		description:
-			"Syntax highlighting for 200+ programming languages with preserved formatting, indentation, and encoding. Works with any file type.",
+			"Syntax highlighting for 200+ languages with preserved formatting, indentation, and encoding. Works with any file type.",
 	},
 	{
 		icon: Bell,
-		title: "Intelligent Notifications",
+		title: "Notifications",
 		description:
 			"Smart notifications that respect your focus time. Get notified about relevant code shares without interrupting your deep work.",
 	},
@@ -49,7 +49,13 @@ export function Features() {
 	const isInView = useInView(ref, { once: true, margin: "-100px" });
 
 	return (
-		<section id="features" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-border" ref={ref}>
+		<section
+			id="features"
+			className="py-20 px-4 sm:px-6 lg:px-8 border-t border-border"
+			ref={ref}
+			aria-label="Features"
+			aria-labelledby="features-heading"
+		>
 			<div className="container mx-auto max-w-6xl">
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
@@ -57,7 +63,9 @@ export function Features() {
 					transition={{ duration: 0.5 }}
 					className="text-center mb-16"
 				>
-					<h2 className="text-3xl sm:text-4xl font-bold mb-4">Built for the modern development team</h2>
+					<h2 id="features-heading" className="text-3xl sm:text-4xl font-bold mb-4">
+						Built for the modern development team
+					</h2>
 					<p className="text-lg text-muted-foreground max-w-3xl mx-auto">
 						Stop compromising between security and productivity. Osmynt delivers enterprise-grade encryption
 						with developer-friendly features that keep you in your flow.

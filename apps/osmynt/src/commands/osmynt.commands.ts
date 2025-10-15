@@ -60,7 +60,7 @@ export async function handleRemoveDevice(context: vscode.ExtensionContext) {
 		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const response: KeysMeResponse = await res.json();
+		const response = (await res.json()) as KeysMeResponse;
 		const devices: DeviceKeySummary[] = Array.isArray(response?.devices) ? response.devices : [];
 
 		const localId = await context.secrets.get(DEVICE_ID_KEY);
@@ -104,7 +104,7 @@ export async function handleListDevices(context: vscode.ExtensionContext) {
 		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const keysResponse: KeysMeResponse = await res.json();
+		const keysResponse = (await res.json()) as KeysMeResponse;
 		const devices: DeviceKeySummary[] = Array.isArray(keysResponse?.devices) ? keysResponse.devices : [];
 		const localId = await context.secrets.get(DEVICE_ID_KEY);
 
@@ -163,7 +163,7 @@ export async function handleRepairDevice(context: vscode.ExtensionContext) {
 		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const keysResponse: KeysMeResponse = await res.json();
+		const keysResponse = (await res.json()) as KeysMeResponse;
 		const devices: DeviceKeySummary[] = Array.isArray(keysResponse?.devices) ? keysResponse.devices : [];
 		const isRegistered = devices.some(d => d.deviceId === localId);
 
@@ -198,7 +198,7 @@ export async function handleForceRemoveDevice(context: vscode.ExtensionContext) 
 		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const keysResponse: KeysMeResponse = await res.json();
+		const keysResponse = (await res.json()) as KeysMeResponse;
 		const devices: DeviceKeySummary[] = Array.isArray(keysResponse?.devices) ? keysResponse.devices : [];
 		const localId = await context.secrets.get(DEVICE_ID_KEY);
 
@@ -408,7 +408,7 @@ export async function handleInviteMember(context: vscode.ExtensionContext) {
 				headers: { Authorization: `Bearer ${access}` },
 			}
 		);
-		const j: any = await res.json();
+		const j = (await res.json()) as any;
 		if (!res.ok) throw new Error(j?.error || `Failed (${res.status})`);
 		await vscode.env.clipboard.writeText(j.token);
 		vscode.window.showInformationMessage("Invitation token copied to clipboard");
@@ -459,7 +459,7 @@ export async function handleViewSnippet(context: vscode.ExtensionContext, id?: s
 				headers: { Authorization: `Bearer ${access}` },
 			}
 		);
-		const j: CodeShareGetByIdResponse | ApiError = await res.json();
+		const j = (await res.json()) as CodeShareGetByIdResponse | ApiError;
 		if (!res.ok) throw new Error((j as ApiError)?.error || `Failed (${res.status})`);
 		const text = await tryDecryptSnippet(context, j as CodeShareGetByIdResponse);
 		const fileExt = ((j as CodeShareGetByIdResponse)?.metadata?.fileExt as string | undefined)?.toLowerCase();
@@ -498,7 +498,7 @@ export async function handleApplyDiff(context: vscode.ExtensionContext, snippetI
 			throw new Error(`Failed to fetch code blocks (${res.status}): ${errorText}`);
 		}
 
-		const response: CodeShareGetByIdResponse | ApiError = await res.json();
+		const response = (await res.json()) as CodeShareGetByIdResponse | ApiError;
 		console.log("Code blocks metadata:", (response as CodeShareGetByIdResponse)?.metadata);
 
 		const text = await tryDecryptSnippet(context, response as CodeShareGetByIdResponse);

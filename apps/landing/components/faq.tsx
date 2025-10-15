@@ -73,7 +73,13 @@ export function FAQ() {
 	const isInView = useInView(ref, { once: true, margin: "-100px" });
 
 	return (
-		<section id="faq" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-border" ref={ref}>
+		<section
+			id="faq"
+			className="py-20 px-4 sm:px-6 lg:px-8 border-t border-border"
+			ref={ref}
+			aria-label="Frequently Asked Questions"
+			aria-labelledby="faq-heading"
+		>
 			<div className="container mx-auto max-w-3xl">
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
@@ -81,7 +87,9 @@ export function FAQ() {
 					transition={{ duration: 0.5 }}
 					className="text-center mb-12"
 				>
-					<h2 className="text-3xl sm:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
+					<h2 id="faq-heading" className="text-3xl sm:text-4xl font-bold mb-4">
+						Frequently Asked Questions
+					</h2>
 					<p className="text-lg text-muted-foreground">Everything you need to know about Osmynt</p>
 				</motion.div>
 

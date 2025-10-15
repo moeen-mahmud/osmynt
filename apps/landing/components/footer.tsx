@@ -29,7 +29,12 @@ export function Footer() {
 								</a>
 							</li>
 							<li>
-								<a href="https://docs.osmynt.dev" className="hover:text-foreground transition-colors">
+								<a
+									href="https://docs.osmynt.dev"
+									className="hover:text-foreground transition-colors"
+									target="_blank"
+									rel="noopener noreferrer"
+								>
 									Documentation
 								</a>
 							</li>
@@ -39,7 +44,7 @@ export function Footer() {
 					<div>
 						<h3 className="font-semibold mb-4">Resources</h3>
 						<ul className="space-y-2 text-sm text-muted-foreground">
-							<li>
+							{/* <li>
 								<a
 									href="https://github.com/moeen-mahmud/osmynt"
 									className="hover:text-foreground transition-colors"
@@ -54,13 +59,25 @@ export function Footer() {
 								>
 									Report Issues
 								</a>
-							</li>
+							</li> */}
 							<li>
 								<a
 									href="https://marketplace.visualstudio.com/items?itemName=osmynt.osmynt"
 									className="hover:text-foreground transition-colors"
+									target="_blank"
+									rel="noopener noreferrer"
 								>
 									VS Code Marketplace
+								</a>
+							</li>
+							<li>
+								<a
+									href="https://open-vsx.org/extension/osmynt/osmynt"
+									className="hover:text-foreground transition-colors"
+									target="_blank"
+									rel="noopener noreferrer"
+								>
+									Open VSX Marketplace
 								</a>
 							</li>
 						</ul>
@@ -92,7 +109,7 @@ export function Footer() {
 				</div>
 
 				<div className="pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-					<p>© 2025 Osmynt. Licensed under BSL1.1.</p>
+					<p>© {new Date().getFullYear()} Osmynt. Licensed under BSL1.1.</p>
 					<p>Made with ❤️ for developers, by developers</p>
 				</div>
 			</div>

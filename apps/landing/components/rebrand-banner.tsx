@@ -44,11 +44,11 @@ export function RebrandBanner() {
 				>
 					<div className="container mx-auto px-4 py-3 flex items-center justify-center relative">
 						<p className="text-sm text-white/90 text-center">
-							<span className="font-medium">TurboGist is now Osmynt</span>
-							<span className="mx-2 text-white/50">•</span>
+							<span className="font-medium">TurboGist is now Osmynt 🚀</span>
+							{/* <span className="mx-2 text-white/50">•</span>
 							<span className="text-white/70">
 								Same powerful code sharing, new name and enhanced security
-							</span>
+							</span> */}
 						</p>
 						<button
 							type="button"
