@@ -20,10 +20,11 @@ export function CTA() {
 					className="text-center space-y-8 p-12 rounded-2xl border border-primary/30 bg-card hover:border-primary/50 transition-colors duration-300"
 				>
 					<h2 className="text-3xl sm:text-4xl font-bold text-balance">
-						Ready to transform your code sharing workflow?
+						Stop compromising between security and productivity
 					</h2>
 					<p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-						Join developer teams who are already sharing code securely without leaving their editor.
+						Join thousands of developers who've already upgraded their code sharing workflow. Install Osmynt
+						and experience the difference in minutes.
 					</p>
 					<div className="flex flex-col sm:flex-row items-center justify-center gap-4">
 						<Button size="lg" className="gap-2 group" asChild>

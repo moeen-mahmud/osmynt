@@ -35,6 +35,12 @@ export function Header() {
 						>
 							Security
 						</a>
+						<a
+							href="#comparison"
+							className="text-sm text-muted-foreground hover:text-primary transition-colors"
+						>
+							Comparison
+						</a>
 						<a href="#faq" className="text-sm text-muted-foreground hover:text-primary transition-colors">
 							FAQ
 						</a>
@@ -84,6 +90,13 @@ export function Header() {
 								onClick={() => setMobileMenuOpen(false)}
 							>
 								<a href="#security">Security</a>
+							</button>
+							<button
+								type="button"
+								className="text-sm text-muted-foreground hover:text-primary transition-colors"
+								onClick={() => setMobileMenuOpen(false)}
+							>
+								<a href="#comparison">Comparison</a>
 							</button>
 							<button
 								type="button"

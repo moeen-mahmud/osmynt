@@ -28,19 +28,19 @@ export function Hero() {
 						transition={{ duration: 0.5, delay: 0.1 }}
 						className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-balance"
 					>
-						Secure code sharing,
+						Share code securely,
 						<br />
-						<span className="text-primary">without leaving your editor</span>
+						<span className="text-primary">without breaking your flow</span>
 					</motion.h1>
 
 					<motion.p
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.5, delay: 0.2 }}
-						className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty"
+						className="text-xl text-muted-foreground max-w-3xl mx-auto text-pretty"
 					>
-						End-to-end encrypted, real-time code sharing for developer teams. Share code blocks instantly
-						with Git-powered diff application.
+						The only code sharing tool that combines end-to-end encryption, real-time collaboration, and
+						native editor integration. No more context switching, no more security compromises.
 					</motion.p>
 
 					<motion.div
