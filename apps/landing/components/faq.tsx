@@ -8,67 +8,63 @@ import { useRef } from "react";
 const faqs = [
 	{
 		question: "How does end-to-end encryption work in Osmynt?",
-		answer: "Osmynt uses industry-standard AES-256 encryption to encrypt your code on your machine before it's transmitted. The encryption keys are generated locally using your device's secure random number generator and never leave your device. We implement a zero-knowledge architecture, meaning we cannot access your unencrypted code even if we wanted to. Each code share uses a unique encryption key, and only the intended recipients can decrypt the content.",
+		answer: "Osmynt uses industry-standard encryption to encrypt your code on your machine before it's transmitted. The encryption keys are generated locally and never leave your device. We implement a zero-knowledge architecture, meaning we cannot access your unencrypted code even if we wanted to. Only the intended team members can decrypt the content.",
 	},
 	{
-		question: "What encryption protocols and standards does Osmynt use?",
-		answer: "Osmynt implements multiple layers of security: AES-256-GCM for symmetric encryption of code content, RSA-4096 for key exchange, and TLS 1.3 for transport security. We use industry-standard libraries like WebCrypto API and follow OWASP security guidelines. All cryptographic operations happen client-side, ensuring your private keys never leave your device.",
-	},
-	{
-		question: "Is Osmynt free to use? What's the pricing model?",
-		answer: "Yes, Osmynt is completely free during the beta period with no usage limits. We're focused on building the best possible experience for developer teams. Future pricing will include a free tier for individual developers with core features, and paid plans for teams and enterprises with advanced collaboration features, priority support, and enhanced security options.",
+		question: "Is Osmynt free to use?",
+		answer: "Yes, Osmynt is completely free during the beta period with no usage limits. We're focused on building the best possible experience for developer teams. Future pricing will include a free tier for individual developers with core features, and paid plans for teams and enterprises with advanced collaboration features.",
 	},
 	{
 		question: "Which editors and IDEs does Osmynt support?",
 		answer: "Currently, Osmynt is available as a VS Code extension with full feature support. We're actively developing extensions for JetBrains IDEs (IntelliJ, WebStorm, PyCharm), Sublime Text, and Vim/Neovim. The roadmap also includes support for Visual Studio, Atom, and other popular editors. Each extension will maintain feature parity with the VS Code version.",
 	},
 	{
-		question: "How do I set up a team and invite members?",
-		answer: "Creating a team is simple: use the 'Osmynt: Create Team' command in VS Code, give your team a name, and you'll receive a secure invite link. Share this link with your colleagues, and they can join using 'Osmynt: Join Team' command. Team admins can manage member permissions, view activity logs, and configure team-specific settings like code retention policies.",
+		question: "How do I get started with Osmynt?",
+		answer: "Getting started is simple: 1) Install the Osmynt extension from the VS Code Marketplace, 2) Use 'Osmynt: Login' to authenticate with GitHub, 3) Use 'Osmynt: Accept Invitation' to join an existing team or 'Osmynt: Invite Member' to invite others, 4) Select code in your editor and use 'Osmynt: Share Selected Code' to share with your team.",
 	},
 	{
-		question: "Can I share code with people outside my team?",
-		answer: "Absolutely! You can share code with anyone using secure share links, even if they're not part of your team. Recipients need to have Osmynt installed to view and apply the shared code. You can set expiration times, require authentication, and even add password protection for sensitive code. All sharing maintains the same end-to-end encryption regardless of team membership.",
+		question: "How does team collaboration work in Osmynt?",
+		answer: "Osmynt is built for team collaboration. You can invite team members using 'Osmynt: Invite Member' which generates an invitation token. Team members join using 'Osmynt: Accept Invitation'. Once in a team, you can share code with specific team members or the entire team. All sharing is encrypted and secure.",
 	},
 	{
-		question: "What happens to my shared code? How long is it stored?",
-		answer: "Shared code is stored encrypted on our servers for a configurable period (default 7 days, maximum 30 days). After expiration, the encrypted data is permanently deleted using secure deletion methods. You can manually delete shared code anytime from the Osmynt dashboard. We never store unencrypted code, and our servers can't decrypt your content even if compromised.",
+		question: "What happens to my shared code?",
+		answer: "Shared code is stored encrypted on our servers temporarily to enable real-time collaboration. The data is encrypted and we cannot read it. You can view shared code using 'Osmynt: View Code blocks' and apply changes using 'Osmynt: Apply Diff'. The system maintains your code's security while enabling seamless team collaboration.",
 	},
 	{
 		question: "Does Osmynt work offline? What about low-connectivity environments?",
 		answer: "Osmynt requires an internet connection for real-time sharing and receiving new code. However, you can view previously received code snippets offline, and we're developing offline-first features for future releases. This includes local caching of recent shares, offline diff viewing, and sync capabilities when connectivity is restored.",
 	},
 	{
-		question: "How does Osmynt's Git integration work?",
-		answer: "Osmynt provides native Git integration that allows you to apply shared code changes directly to your files using Git's three-way merge algorithm. When you receive shared code, you can preview the diff, choose which changes to apply, and commit them to your repository. This maintains your Git history and allows for proper code review workflows.",
+		question: "How does Osmynt's diff application work?",
+		answer: "Osmynt provides Git-like diff application that allows you to apply shared code changes directly to your files. When you receive shared code with full context, you can use 'Osmynt: Apply Diff' to preview and apply changes. This maintains your development workflow while enabling seamless code collaboration.",
 	},
 	{
-		question: "What programming languages and file types does Osmynt support?",
-		answer: "Osmynt supports all programming languages and file types. We provide syntax highlighting for over 200 languages, including JavaScript, Python, Java, C++, Go, Rust, TypeScript, and more. The system preserves original formatting, indentation, and encoding. Binary files are also supported with base64 encoding for secure transmission.",
+		question: "What programming languages does Osmynt support?",
+		answer: "Osmynt supports all programming languages and file types. We provide syntax highlighting for over 200 languages, including JavaScript, Python, Java, C++, Go, Rust, TypeScript, and more. The system preserves original formatting, indentation, and encoding for optimal code readability.",
 	},
 	{
-		question: "How does Osmynt handle large codebases and performance?",
-		answer: "Osmynt is optimized for performance with large codebases. We support files up to 10MB per share, with intelligent chunking for larger files. The system uses delta compression to minimize bandwidth usage, and we implement smart caching to reduce repeated transfers. For very large shares, we provide progress indicators and resume capabilities.",
+		question: "How does device management work in Osmynt?",
+		answer: "Osmynt supports multiple devices per team member. You can add devices using 'Osmynt: Add Device (Primary)' or 'Osmynt: Add Device (Companion)', list devices with 'Osmynt: List Devices', and remove devices with 'Osmynt: Remove Device'. This enables sharing code across all your development devices securely. In beta, you can add up to 2 devices at a time. We're working on increasing the limit in the future.",
 	},
 	{
-		question: "What security measures protect against data breaches?",
-		answer: "Osmynt implements multiple security layers: end-to-end encryption, zero-knowledge architecture, secure key exchange, and regular security audits. We use industry-standard practices like secure coding, dependency scanning, and penetration testing. Our infrastructure follows SOC 2 compliance standards, and we're working towards ISO 27001 certification.",
+		question: "What security measures protect my code?",
+		answer: "Osmynt implements multiple security layers: end-to-end encryption, zero-knowledge architecture, secure key exchange, and team-only sharing. We use industry-standard practices and all cryptographic operations happen client-side. Your code is encrypted before transmission and only intended recipients can decrypt it.",
 	},
 	{
 		question: "How does Osmynt compare to GitHub Gists, Slack, and other solutions?",
 		answer: "Unlike GitHub Gists (public, no encryption), Slack (transport encryption only), or email (no real-time collaboration), Osmynt provides end-to-end encryption, real-time collaboration, and native editor integration. We're the only solution that combines security, real-time features, and seamless workflow integration without context switching.",
 	},
 	{
-		question: "Can I use Osmynt in enterprise environments with compliance requirements?",
-		answer: "Yes, Osmynt is designed for enterprise use with features like audit logs, compliance reporting, and administrative controls. We support SSO integration, LDAP authentication, and can be deployed in private cloud environments. Our enterprise plans include dedicated support, custom retention policies, and compliance documentation for SOC 2, HIPAA, and other standards.",
+		question: "Can I use Osmynt for pair programming?",
+		answer: "Absolutely! Osmynt is perfect for pair programming. You can share code blocks in real-time with your team members, see their changes instantly, and apply diffs directly to your files. The real-time collaboration features make it ideal for live coding sessions and collaborative debugging.",
 	},
 	{
-		question: "What happens if I lose access to my device or forget my encryption keys?",
-		answer: "Osmynt uses a secure key recovery system that allows you to regenerate access to your shares without compromising security. You can set up recovery codes during initial setup, and team admins can help restore access to team shares. However, we cannot recover your private keys, so it's important to securely store your recovery information.",
+		question: "What if I need to troubleshoot device issues?",
+		answer: "Osmynt provides several troubleshooting commands: 'Osmynt: Repair This Device' to fix device registration issues, 'Osmynt: Clear Local Cache' to reset local settings, and 'Osmynt: Force Remove Device' for advanced device management. These tools help resolve connectivity and authentication issues.",
 	},
 	{
-		question: "How does Osmynt handle version control and code history?",
-		answer: "Osmynt maintains a complete history of all code shares with version tracking. You can view previous versions, see who made changes, and track the evolution of shared code. The system integrates with your existing Git workflow, allowing you to see how shared code fits into your commit history and branch structure.",
+		question: "How do I manage team members in Osmynt?",
+		answer: "Team management is straightforward: use 'Osmynt: Invite Member' to add new team members, 'Osmynt: Remove Member' to remove team members, and 'Osmynt: Accept Invitation' to join teams. The system maintains secure team relationships and enables seamless collaboration between team members.",
 	},
 ];
 

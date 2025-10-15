@@ -15,8 +15,9 @@ const solutions = [
 			editorIntegration: "native",
 			teamCollaboration: "built-in",
 			gitLikeDiffSupport: "full",
+			deviceManagement: "multi-device",
 			offlineSupport: "limited",
-			cost: "free",
+			cost: "free-beta",
 			setup: "instant",
 		},
 	},
@@ -27,8 +28,9 @@ const solutions = [
 			encryption: "none",
 			realTime: "no",
 			editorIntegration: "none",
-			teamCollaboration: "basic",
-			gitLikeDiffSupport: "yes",
+			teamCollaboration: "none",
+			gitLikeDiffSupport: "basic",
+			deviceManagement: "none",
 			offlineSupport: "yes",
 			cost: "free",
 			setup: "account required",
@@ -43,6 +45,7 @@ const solutions = [
 			editorIntegration: "none",
 			teamCollaboration: "basic",
 			gitLikeDiffSupport: "none",
+			deviceManagement: "none",
 			offlineSupport: "limited",
 			cost: "paid",
 			setup: "complex",
@@ -55,8 +58,9 @@ const solutions = [
 			encryption: "optional",
 			realTime: "no",
 			editorIntegration: "none",
-			teamCollaboration: "basic",
+			teamCollaboration: "none",
 			gitLikeDiffSupport: "none",
+			deviceManagement: "none",
 			offlineSupport: "yes",
 			cost: "free",
 			setup: "simple",
@@ -71,6 +75,7 @@ const solutions = [
 			editorIntegration: "none",
 			teamCollaboration: "basic",
 			gitLikeDiffSupport: "none",
+			deviceManagement: "none",
 			offlineSupport: "no",
 			cost: "paid",
 			setup: "complex",
@@ -84,8 +89,9 @@ const featureLabels = {
 	editorIntegration: "Editor Integration",
 	teamCollaboration: "Team Features",
 	gitLikeDiffSupport: "Git-diff Support",
+	deviceManagement: "Device Management",
 	offlineSupport: "Offline Support",
-	// cost: "Cost",
+	cost: "Cost",
 	setup: "Setup Complexity",
 };
 
@@ -97,7 +103,9 @@ const getFeatureIcon = (value: string) => {
 		value === "built-in" ||
 		value === "native" ||
 		value === "free" ||
-		value === "instant"
+		value === "free-beta" ||
+		value === "instant" ||
+		value === "multi-device"
 	) {
 		return <Check className="h-4 w-4 text-green-500" />;
 	}
@@ -131,11 +139,13 @@ const getFeatureText = (value: string) => {
 		basic: "Basic",
 		full: "Full",
 		free: "Free",
+		"free-beta": "Free (Beta)",
 		paid: "Paid",
 		instant: "Instant",
 		simple: "Simple",
 		complex: "Complex",
 		"account required": "Account Required",
+		"multi-device": "Multi-Device",
 	};
 	return textMap[value] || value;
 };
@@ -153,10 +163,10 @@ export function Comparison() {
 					transition={{ duration: 0.5 }}
 					className="text-center mb-16"
 				>
-					<h2 className="text-3xl sm:text-4xl font-bold mb-4">How Osmynt compares to other solutions</h2>
-					<p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-						Compare Osmynt to other solutions for code sharing.
-						{/* See why developer teams are choosing Osmynt over traditional code sharing methods. */}
+					<h2 className="text-3xl sm:text-4xl font-bold mb-4">Osmynt vs. The Alternatives</h2>
+					<p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+						See how Osmynt stacks up against traditional and modern code sharing solutions. Experience
+						superior security, integration, and collaboration.
 					</p>
 				</motion.div>
 
@@ -166,9 +176,9 @@ export function Comparison() {
 					transition={{ duration: 0.5, delay: 0.2 }}
 					className="overflow-x-auto"
 				>
-					<div className="min-w-[800px]">
+					<div className="min-w-[900px]">
 						{/* Header */}
-						<div className="grid grid-cols-6 gap-4 mb-6">
+						<div className="grid grid-cols-7 gap-4 mb-6">
 							<div className="text-sm font-medium text-muted-foreground">Feature</div>
 							{solutions.map((solution, index) => (
 								<div
@@ -188,7 +198,7 @@ export function Comparison() {
 							{Object.entries(featureLabels).map(([key, label]) => (
 								<div
 									key={key}
-									className="grid grid-cols-6 gap-4 items-center py-3 border-b border-border/50"
+									className="grid grid-cols-7 gap-4 items-center py-3 border-b border-border/50"
 								>
 									<div className="text-sm font-medium">{label}</div>
 									{solutions.map((solution, solutionIndex) => {
@@ -222,12 +232,12 @@ export function Comparison() {
 					transition={{ duration: 0.5, delay: 0.4 }}
 					className="mt-12 text-center"
 				>
-					<div className="bg-primary/5 border border-primary/20 rounded-lg p-6 max-w-2xl mx-auto">
+					<div className="bg-primary/5 border border-primary/20 rounded-lg p-6 max-w-3xl mx-auto">
 						<h3 className="text-xl font-semibold mb-2 text-primary">Why choose Osmynt?</h3>
 						<p className="text-muted-foreground">
 							Osmynt is the only solution that combines end-to-end encryption, real-time collaboration,
-							and native editor integration. Built specifically for developer teams who value security and
-							productivity.
+							native editor integration, and multi-device support. Built specifically for developer teams
+							who value security, productivity, and seamless workflow integration.
 						</p>
 					</div>
 				</motion.div>
