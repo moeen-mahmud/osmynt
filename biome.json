@@ -19,16 +19,25 @@
 			"recommended": true,
 			"suspicious": {
 				"noExplicitAny": "off",
-				"useErrorMessage": "warn"
+				"useErrorMessage": "warn",
+				"noArrayIndexKey": "warn",
+				"noUnknownAtRules": "warn"
 			},
 			"correctness": {
-				"noUnusedImports": "warn"
+				"noUnusedImports": "warn",
+				"useUniqueElementIds": "off",
+				"noNestedComponentDefinitions": "off"
 			},
 			"style": {
 				"noNonNullAssertion": "off"
 			},
 			"complexity": {
 				"noStaticOnlyClass": "off"
+			},
+			"a11y": {
+				"useSemanticElements": "off",
+				"useAriaPropsForRole": "off",
+				"useFocusableInteractive": "off"
 			}
 		}
 	},

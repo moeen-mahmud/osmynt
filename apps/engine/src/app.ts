@@ -4,7 +4,6 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import type { Env } from "hono";
 import { poweredBy } from "hono/powered-by";
 import { logger } from "hono/logger";
-import { logger as osmyntLogger } from "@osmynt-core/library";
 import { healthCheckMiddleware } from "@/middlewares/health-check.middleware";
 import { cors } from "hono/cors";
 import { ENV } from "@/config/env.config";
@@ -19,6 +18,7 @@ import { API_DOC_CONFIG } from "@/config/api-doc.config";
 import { scalarHeaderMiddleware } from "@/middlewares/scalar.middleware";
 import { scalarConfig } from "@/config/scalar.config";
 import { HealthCheckAPIModule } from "@/modules/health-check/health-check.module";
+import type { BunWebSocketData } from "hono/bun";
 
 const app = new OpenAPIHono<Env>().basePath(Routes.basePath);
 
@@ -72,7 +72,7 @@ app.route(Routes.teams.base, TeamsAPIModule);
 // main server
 export default {
 	port: ENV.PORT,
-	fetch(req: Request, server: Server) {
+	fetch(req: Request, server: Server<BunWebSocketData>) {
 		return app.fetch(req, { ip: server.requestIP(req), server });
 	},
 };

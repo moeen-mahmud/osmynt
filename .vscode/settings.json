@@ -4,5 +4,5 @@
 	"editor.formatOnPaste": true,
 	"editor.formatOnSave": true,
 	"editor.formatOnType": true,
-	"cSpell.words": ["osmynt"]
+	"cSpell.words": ["Focusable", "osmynt"]
 }
