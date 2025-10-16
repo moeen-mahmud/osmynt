@@ -135,7 +135,7 @@ export function Footer() {
 				</div>
 
 				<div className="pt-8 mt-8 text-sm text-center border-t border-border text-muted-foreground">
-					<p>&copy; 2024 Osmynt. All rights reserved.</p>
+					<p>&copy; {new Date().getFullYear()} Osmynt. All rights reserved.</p>
 					<p className="mt-2">Made with ❤️ for the developers, by the developers</p>
 				</div>
 			</div>

@@ -3,8 +3,9 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
-import { Navigation } from "@/components/navigation";
+import { DocsSidebar } from "@/components/sidebar";
 import { Footer } from "@/components/footer";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 const inter = Inter({
 	subsets: ["latin"],
@@ -77,7 +78,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="en" className="dark" suppressHydrationWarning>
+		<html lang="en" suppressHydrationWarning>
 			<head>
 				<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 				<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
@@ -87,18 +88,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 			</head>
 			<body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
 				<ThemeProvider>
-					<div className="min-h-screen bg-background">
-						<Header />
-						<div className="flex">
-							<Navigation />
-							<div className="flex-1">
-								<main style={{ border: "1px solid red" }} className="container px-4 py-8">
-									{children}
-								</main>
-								<Footer />
-							</div>
-						</div>
-					</div>
+					<SidebarProvider>
+						<DocsSidebar />
+						<SidebarInset>
+							<Header />
+							<main className="container px-4 py-8">{children}</main>
+							<Footer />
+						</SidebarInset>
+					</SidebarProvider>
 				</ThemeProvider>
 			</body>
 		</html>

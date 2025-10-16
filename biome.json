@@ -20,8 +20,8 @@
 			"suspicious": {
 				"noExplicitAny": "off",
 				"useErrorMessage": "warn",
-				"noArrayIndexKey": "warn",
-				"noUnknownAtRules": "warn"
+				"noArrayIndexKey": "off",
+				"noUnknownAtRules": "off"
 			},
 			"correctness": {
 				"noUnusedImports": "warn",
