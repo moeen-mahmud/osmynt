@@ -9,6 +9,7 @@ import { RebrandBanner } from "@/components/rebrand-banner";
 import { StructuredData } from "@/components/structured-data";
 import { PerformanceOptimizer } from "@/components/performance";
 import { ThemeProvider } from "@/components/theme-provider";
+import { GoogleTagManager, GTMNoScript } from "@/components/gtm";
 
 export const metadata: Metadata = {
 	title: {
@@ -87,12 +88,17 @@ export default function RootLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
+	// Get GTM ID from environment variable, fallback to your current GA ID
+	const gtmId = process.env.NEXT_PUBLIC_GTM_ID || "G-5W3B8H1SR1";
+
 	return (
 		<html lang="en">
 			<head>
+				<GoogleTagManager gtmId={gtmId} />
 				<StructuredData />
 			</head>
 			<body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+				<GTMNoScript gtmId={gtmId} />
 				<ThemeProvider>
 					<PerformanceOptimizer />
 					<RebrandBanner />

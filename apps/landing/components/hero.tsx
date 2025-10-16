@@ -1,9 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Github } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { gtmEvent, gtmEngagement } from "@/components/gtm";
 
 export function Hero() {
 	const [bannerVisible, setBannerVisible] = useState(false);
@@ -24,6 +25,18 @@ export function Hero() {
 
 		return () => observer.disconnect();
 	}, []);
+
+	const handleInstallClick = () => {
+		// Track the main CTA click
+		gtmEvent("cta_click", {
+			cta_type: "install_extension",
+			cta_location: "hero_section",
+			cta_text: "Install for VS Code",
+		});
+
+		// Track user engagement
+		gtmEngagement("click", "cta", "install_button", 1);
+	};
 
 	return (
 		<section className={`${bannerVisible ? "pt-40" : "pt-32"} pb-20 px-4 sm:px-6 lg:px-8`} role="banner">
@@ -70,7 +83,10 @@ export function Hero() {
 						className="flex flex-col sm:flex-row items-center justify-center gap-4"
 					>
 						<Button size="lg" className="gap-2 group" asChild>
-							<a href="https://marketplace.visualstudio.com/items?itemName=osmynt.osmynt">
+							<a
+								href="https://marketplace.visualstudio.com/items?itemName=osmynt.osmynt"
+								onClick={handleInstallClick}
+							>
 								Install for VS Code
 								<ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
 							</a>
