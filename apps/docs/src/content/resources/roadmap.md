@@ -158,35 +158,11 @@ This document outlines Osmynt's development roadmap, including completed feature
 4. **Advanced Analytics** - Detailed analytics and reporting
 5. **Customization** - Advanced customization options
 
-## Development Timeline
-
-### Q1 2024
-- **File Sharing** - Complete file sharing functionality
-- **Walkthroughs** - Interactive user tutorials
-- **Performance Optimization** - Improve performance and reliability
-- **Security Enhancements** - Additional security features
-
-### Q2 2024
-- **GitHub Integration** - GitHub Gist export and repository integration
-- **Badges and Status** - Visual indicators for shared code
-- **Team Organization** - Advanced team management features
-- **Analytics** - Usage analytics and insights
-
-### Q3 2024
-- **Integrations** - Third-party service integrations
-- **Documentation** - Comprehensive documentation
-- **Enterprise Features** - SSO and enterprise security
-- **Advanced Integrations** - Custom integrations and plugins
-
-### Q4 2024
-- **Marketing Features** - Growth and engagement features
-- **Advanced Analytics** - Detailed analytics and reporting
-- **Customization** - Advanced customization options
-- **Community Features** - Community-driven features
-
 ## Contributing to the Roadmap
 
-### Feature Requests
+> Feature requests, development contributions, community involvement are coming soon...
+
+<!-- ### Feature Requests
 
 - **GitHub Issues** - Submit feature requests via GitHub Issues
 - **Community Feedback** - Share feedback in our Discord community
@@ -205,22 +181,18 @@ This document outlines Osmynt's development roadmap, including completed feature
 - **Discord Community** - Join our Discord community for discussions
 - **GitHub Discussions** - Participate in GitHub Discussions
 - **User Groups** - Join local user groups and meetups
-- **Conferences** - Attend and speak at conferences
+- **Conferences** - Attend and speak at conferences -->
 
 ## Release Schedule
 
-### Major Releases
-- **v2.0** - File sharing and walkthroughs (Q1 2024)
-- **v3.0** - GitHub integration and team organization (Q2 2024)
-- **v4.0** - Enterprise features and advanced integrations (Q3 2024)
-- **v5.0** - Marketing features and community tools (Q4 2024)
-
 ### Minor Releases
+
 - **Monthly** - Bug fixes and minor improvements
 - **Quarterly** - New features and major improvements
 - **As Needed** - Security updates and critical fixes
 
 ### Beta Releases
+
 - **Weekly** - Beta releases for testing new features
 - **Monthly** - Beta releases for major features
 - **As Needed** - Beta releases for critical updates
@@ -229,19 +201,8 @@ This document outlines Osmynt's development roadmap, including completed feature
 
 ### How to Provide Feedback
 
-1. **GitHub Issues** - Submit issues and feature requests
-2. **Discord Community** - Share feedback in our Discord server
-3. **Email** - Send feedback to [feedback@osmynt.dev](mailto:feedback@osmynt.dev)
-4. **User Surveys** - Participate in user surveys
-5. **Beta Testing** - Join beta testing programs
-
-### What We're Looking For
-
-- **Feature Requests** - New features and improvements
-- **Bug Reports** - Issues and problems you encounter
-- **User Experience** - Feedback on user experience
-- **Performance** - Performance issues and improvements
-- **Security** - Security concerns and suggestions
+For now we are only accepting feedback via email 
+- **Email** - Send feedback to [feedback@osmynt.dev](mailto:feedback@osmynt.dev)
 
 ## Next Steps
 
@@ -249,5 +210,4 @@ Now that you understand Osmynt's development roadmap:
 
 1. **[Get started with Osmynt](getting-started/installation)** - Install and set up Osmynt
 2. **[Learn about features](features/code-sharing)** - Explore Osmynt's features
-3. **[Join our community](resources/support)** - Connect with other users
-4. **[Contribute to development](https://github.com/moeen-mahmud/osmynt)** - Contribute to Osmynt's development
+3. **[Get support](resources/support)** - Get help and support

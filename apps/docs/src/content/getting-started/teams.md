@@ -211,8 +211,8 @@ If you received an invitation URL:
 If you're having team-related issues:
 
 - **Email**: [support@osmynt.dev](mailto:support@osmynt.dev)
-- **GitHub Issues**: [Report team issues](https://github.com/moeen-mahmud/osmynt/issues)
-- **Discord**: [Get help from the community](https://discord.gg/osmynt)
+<!-- - **GitHub Issues**: [Report team issues](https://github.com/moeen-mahmud/osmynt/issues)
+- **Discord**: [Get help from the community](https://discord.gg/osmynt) -->
 
 ## Next Steps
 

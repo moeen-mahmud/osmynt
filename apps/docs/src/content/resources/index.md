@@ -37,10 +37,10 @@ Additional resources to help you get the most out of Osmynt.
 
 ## 📚 Additional Resources
 
-### Community
-- **Discord Server**: [Join our community](https://discord.gg/osmynt)
+<!-- ### Community
+<!-- - **Discord Server**: [Join our community](https://discord.gg/osmynt)
 - **GitHub Discussions**: [Ask questions](https://github.com/moeen-mahmud/osmynt/discussions)
-- **Reddit Community**: [r/osmynt](https://reddit.com/r/osmynt)
+- **Reddit Community**: [r/osmynt](https://reddit.com/r/osmynt) --> -->
 
 ### Development
 - **GitHub Repository**: [View source code](https://github.com/moeen-mahmud/osmynt)
@@ -92,8 +92,8 @@ Additional resources to help you get the most out of Osmynt.
 
 ### General Support
 - **Email**: [support@osmynt.dev](mailto:support@osmynt.dev)
-- **Discord**: [Join our community](https://discord.gg/osmynt)
-- **GitHub**: [Open an issue](https://github.com/moeen-mahmud/osmynt/issues)
+<!-- - **Discord**: [Join our community](https://discord.gg/osmynt)
+- **GitHub**: [Open an issue](https://github.com/moeen-mahmud/osmynt/issues) -->
 
 ### Business Inquiries
 - **Email**: [business@osmynt.dev](mailto:business@osmynt.dev)

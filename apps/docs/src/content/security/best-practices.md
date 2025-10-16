@@ -194,9 +194,12 @@ This guide provides security best practices for using Osmynt safely and securely
 ### Support
 
 - **Security issues**: [security@osmynt.dev](mailto:security@osmynt.dev)
-- **Bug reports**: [Report security bugs](https://github.com/moeen-mahmud/osmynt/issues)
+- > Bug reports are coming soon...
+- > Security questions are coming soon...
+- > Security updates are coming soon...
+<!-- - **Bug reports**: [Report security bugs](https://github.com/moeen-mahmud/osmynt/issues)
 - **Security questions**: [Ask security questions](https://discord.gg/osmynt)
-- **Security updates**: [Subscribe to security updates](https://osmynt.dev/security)
+- **Security updates**: [Subscribe to security updates](https://osmynt.dev/security) -->
 
 ## Next Steps
 

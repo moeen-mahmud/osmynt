@@ -19,15 +19,19 @@ This document provides comprehensive support information for Osmynt users, inclu
 - **Availability**: Monday-Friday, 9 AM - 5 PM EST
 
 #### GitHub Issues
-- **Repository**: [github.com/moeen-mahmud/osmynt](https://github.com/moeen-mahmud/osmynt)
+
+> GitHub support is coming soon...
+<!-- - **Repository**: [github.com/moeen-mahmud/osmynt](https://github.com/moeen-mahmud/osmynt)
 - **Response Time**: 1-3 days
 - **Best For**: Bug reports, feature requests, technical discussions
-- **Availability**: 24/7 (community-driven)
+- **Availability**: 24/7 (community-driven) -->
 
 ### Community Support
 
 #### Discord Community
-- **Server**: [discord.gg/osmynt](https://discord.gg/osmynt)
+
+> Discord support is coming soon...
+<!-- - **Server**: [discord.gg/osmynt](https://discord.gg/osmynt)
 - **Response Time**: Real-time
 - **Best For**: Quick questions, community help, discussions
 - **Availability**: 24/7 (community-driven)
@@ -292,10 +296,10 @@ Any additional information or context
 
 ## Contact Information
 
-### General Support
-- **Email**: [support@osmynt.dev](mailto:support@osmynt.dev)
-- **GitHub**: [github.com/moeen-mahmud/osmynt](https://github.com/moeen-mahmud/osmynt)
-- **Discord**: [discord.gg/osmynt](https://discord.gg/osmynt)
+<!-- ### General Support
+- **Email**: [support@osmynt.dev](mailto:support@osmynt.dev) -->
+<!-- - **GitHub**: [github.com/moeen-mahmud/osmynt](https://github.com/moeen-mahmud/osmynt) -->
+<!-- - **Discord**: [discord.gg/osmynt](https://discord.gg/osmynt) -->
 
 ### Specialized Support
 - **Security**: [security@osmynt.dev](mailto:security@osmynt.dev)
@@ -304,16 +308,16 @@ Any additional information or context
 - **Brand**: [brand@osmynt.dev](mailto:brand@osmynt.dev)
 
 ### Community
-- **Discord**: [discord.gg/osmynt](https://discord.gg/osmynt)
-- **GitHub Discussions**: [github.com/moeen-mahmud/osmynt/discussions](https://github.com/moeen-mahmud/osmynt/discussions)
-- **Twitter**: [@osmynt](https://twitter.com/osmynt)
-- **LinkedIn**: [Osmynt](https://linkedin.com/company/osmynt)
+
+> Community support is coming soon...
+<!-- - **Discord**: [discord.gg/osmynt](https://discord.gg/osmynt) -->
+<!-- - **GitHub Discussions**: [github.com/moeen-mahmud/osmynt/discussions](https://github.com/moeen-mahmud/osmynt/discussions) -->
+<!-- - **Twitter**: [@osmynt](https://twitter.com/osmynt)
+- **LinkedIn**: [Osmynt](https://linkedin.com/company/osmynt) -->
 
 ## Next Steps
 
 Now that you know how to get support:
 
-1. **[Check the documentation](resources)** - Review the complete documentation
-2. **[Join our community](https://discord.gg/osmynt)** - Connect with other users
-3. **[Report issues](https://github.com/moeen-mahmud/osmynt/issues)** - Report bugs and request features
-4. **[Get started](getting-started/installation)** - Install and start using Osmynt
+1. **[Check the documentation](/)** - Review the complete documentation
+2. **[Get started with Osmynt](getting-started/installation)** - Install and start using Osmynt

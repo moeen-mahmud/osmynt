@@ -37,11 +37,6 @@ If you're using VS Code alternatives like VSCodium or Theia:
 4. Run `Extensions: Install from VSIX...`
 5. Select the downloaded `.vsix` file
 
-### Manual Installation from GitHub
-
-1. Go to the [Osmynt releases page](https://github.com/moeen-mahmud/osmynt/releases)
-2. Download the latest `.vsix` file
-3. Install using the VSIX method above
 
 ## Verify Installation
 
@@ -116,5 +111,5 @@ To remove Osmynt:
 If you're having trouble with installation:
 
 - **Email**: [support@osmynt.dev](mailto:support@osmynt.dev)
-- **GitHub Issues**: [Report installation issues](https://github.com/moeen-mahmud/osmynt/issues)
-- **Discord**: [Get help from the community](https://discord.gg/osmynt)
+<!-- - **GitHub Issues**: [Report installation issues](https://github.com/moeen-mahmud/osmynt/issues)
+- **Discord**: [Get help from the community](https://discord.gg/osmynt) -->

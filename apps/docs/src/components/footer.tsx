@@ -92,7 +92,7 @@ export function Footer() {
 					<div className="space-y-4">
 						<h4 className="font-semibold text-foreground">Community</h4>
 						<ul className="space-y-2 text-sm">
-							<li>
+							{/* <li>
 								<a
 									href="https://github.com/moeen-mahmud/osmynt"
 									target="_blank"
@@ -101,8 +101,8 @@ export function Footer() {
 								>
 									GitHub
 								</a>
-							</li>
-							<li>
+							</li> */}
+							{/* <li>
 								<a
 									href="https://discord.gg/osmynt"
 									target="_blank"
@@ -111,7 +111,7 @@ export function Footer() {
 								>
 									Discord
 								</a>
-							</li>
+							</li> */}
 							<li>
 								<a
 									href="mailto:support@osmynt.dev"

@@ -53,7 +53,7 @@ Once you've completed the getting started guide:
 
 1. **[Explore Features](features/code-sharing)** - Learn about all available features
 2. **[Read the Reference](reference/commands)** - Complete command and configuration reference
-3. **[Get Support](resources/support)** - Find help and community resources
+3. **[Get support](resources/support)** - Get help and support
 
 ## 💡 Tips for Success
 

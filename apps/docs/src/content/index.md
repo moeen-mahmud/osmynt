@@ -1,12 +1,12 @@
 ---
 layout: default
 title: Osmynt Documentation
-description: "Secure, Git-powered, Realtime DM for code blocks ⚡"
+description: "Secure, Git-powered, Realtime DM for code blocks"
 ---
 
-# Osmynt Documentation ⚡
+# Osmynt
 
-> **Secure, Git-powered, Realtime DM for code blocks**
+### Secure, Git-powered, Realtime DM for code blocks ⚡
 
 Welcome to the Osmynt documentation! Osmynt is a VS Code extension that brings seamless, secure, end-to-end encrypted code sharing directly into your editor. No context switching, no workflow disruption - just pure developer experience.
 
@@ -32,23 +32,40 @@ Osmynt solves the frustrating experience of sharing code blocks with your team. 
 
 ## ✨ Key Features
 
-### 🔒 **Security First**
+### 🔒 **Enterprise-Grade Encryption**
 
-- **End-to-End Encryption**: Your code is encrypted before leaving your machine
+- **AES-256 Encryption**: Your code is encrypted before leaving your machine
+- **Zero-knowledge Architecture**: We can never access your unencrypted content
 - **Team-only Sharing**: Code can only be shared with verified team members
-- **Zero-knowledge architecture**: We can't read your code
+- **Device Verification**: Secure handshakes ensure you're sharing with the right people
 
-### ⚡ **Real-time Collaboration**
+### ⚡ **Real-Time Sharing**
 
-- **Instant Sharing**: Share code blocks in real-time with your team
+- **Instant Sharing**: Share code blocks in milliseconds with real-time updates
+- **No Context Switching**: Stay in your editor, no workflow disruption
 - **Multi-device Support**: Share across all your development devices
-- **Real-time Updates**: See updates from your team members instantly
+- **Smart Notifications**: Respect your focus time with intelligent alerts
 
-### 🛠️ **Developer Experience**
+### 🔄 **Git-Like Diff Application**
 
-- **Git-like Diff Application**: Apply shared code changes directly to your files
-- **Syntax Highlighting**: Preserve code formatting and readability
-- **Command Palette Integration**: Access all features via `Ctrl+Shift+P`
+- **Three-way Merge**: Apply shared code changes using Git's merge algorithm
+- **Workflow Integrity**: Maintain your commit history and development flow
+- **Line-by-line Precision**: See exactly what changes before applying
+- **Automatic Detection**: Works with any file type and language
+
+### 👥 **Team Management**
+
+- **Role-based Permissions**: Advanced team management with audit logs
+- **Built for Scale**: Works with teams of any size
+- **Compliance Ready**: Built-in reporting and security features
+- **Easy Onboarding**: Simple team creation and member invitation
+
+### 💻 **Language Support**
+
+- **200+ Languages**: Syntax highlighting for virtually any programming language
+- **Preserved Formatting**: Maintain indentation, encoding, and readability
+- **Cross-platform**: Works with any file type and development environment
+- **Native Integration**: Seamless VS Code experience
 
 ### 🎯 **Versatile Use Cases**
 
@@ -101,14 +118,14 @@ Osmynt solves the frustrating experience of sharing code blocks with your team. 
 
 ## 🆘 Need Help?
 
+> We are only accepting support via email for now. GitHub and Discord support is coming soon...
 - **📧 Email**: [support@osmynt.dev](mailto:support@osmynt.dev)
-- **🐛 GitHub Issues**: [Report bugs and feature requests](https://github.com/moeen-mahmud/osmynt/issues)
-- **💬 Discord**: [Join our community](https://discord.gg/osmynt)
+<!-- - **🐛 GitHub Issues**: [Report bugs and feature requests](https://github.com/moeen-mahmud/osmynt/issues)
+- **💬 Discord**: [Join our community](https://discord.gg/osmynt) -->
 
 ---
 
-
 **Made with ❤️ for the developers, by the developers**
 
-[⭐ Star us on GitHub](https://github.com/moeen-mahmud/osmynt) • [🐛 Report Issues](https://github.com/moeen-mahmud/osmynt/issues) • [📧 Contact Us](mailto:support@osmynt.dev)
+<!-- [⭐ Star us on GitHub](https://github.com/moeen-mahmud/osmynt) • [🐛 Report Issues](https://github.com/moeen-mahmud/osmynt/issues) • [📧 Contact Us](mailto:support@osmynt.dev) -->
 

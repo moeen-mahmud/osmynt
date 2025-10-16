@@ -54,13 +54,13 @@ This document provides a complete reference of all Osmynt commands available in 
 
 ## Team Commands
 
-### `Osmynt: Invite Team Member`
+### `Osmynt: Invite Member`
 
 **Description**: Create a team and generate an invitation token for team members.
 
 **Usage**:
 - Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
-- Type `Osmynt: Invite Team Member`
+- Type `Osmynt: Invite Member`
 - Press Enter
 - Copy the invitation token
 - Share with team members
@@ -100,6 +100,29 @@ This document provides a complete reference of all Osmynt commands available in 
 - Setting up team access
 - Collaborating with team
 
+### `Osmynt: Remove Member`
+
+**Description**: Remove a team member from your team.
+
+**Usage**:
+- Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+- Type `Osmynt: Remove Member`
+- Press Enter
+- Select member to remove
+- Confirm removal
+
+**What it does**:
+- Removes member from team
+- Revokes access to shared code
+- Updates team permissions
+- Notifies other members
+
+**When to use**:
+- Removing inactive members
+- Managing team access
+- Security cleanup
+- Team restructuring
+
 ## Code Sharing Commands
 
 ### `Osmynt: Share Selected Code`
@@ -125,13 +148,13 @@ This document provides a complete reference of all Osmynt commands available in 
 - Getting code reviews
 - Sharing solutions
 
-### `Osmynt: View Shared Code`
+### `Osmynt: View Code blocks`
 
 **Description**: View all shared code in the Osmynt panel.
 
 **Usage**:
 - Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
-- Type `Osmynt: View Shared Code`
+- Type `Osmynt: View Code blocks`
 - Press Enter
 
 **What it does**:
@@ -146,7 +169,253 @@ This document provides a complete reference of all Osmynt commands available in 
 - Checking device status
 - Troubleshooting issues
 
-## Device Commands
+### `Osmynt: Copy Code blocks`
+
+**Description**: Copy shared code to clipboard.
+
+**Usage**:
+- Right-click on shared code in panel
+- Select "Copy Code blocks"
+- Or use Command Palette
+
+**What it does**:
+- Copies code to clipboard
+- Preserves formatting
+- Maintains syntax highlighting
+- Ready for pasting
+
+**When to use**:
+- Copying shared code
+- Using code in other files
+- Quick code access
+- Code integration
+
+### `Osmynt: Open Code blocks to Side`
+
+**Description**: Open shared code in a new editor tab.
+
+**Usage**:
+- Right-click on shared code in panel
+- Select "Open Code blocks to Side"
+- Or use Command Palette
+
+**What it does**:
+- Opens code in new tab
+- Preserves syntax highlighting
+- Enables editing
+- Shows full context
+
+**When to use**:
+- Reviewing shared code
+- Working with code
+- Full code context
+- Code analysis
+
+### `Osmynt: Insert Code blocks at Cursor`
+
+**Description**: Insert shared code at current cursor position.
+
+**Usage**:
+- Position cursor in editor
+- Right-click on shared code in panel
+- Select "Insert Code blocks at Cursor"
+- Or use Command Palette
+
+**What it does**:
+- Inserts code at cursor
+- Preserves indentation
+- Maintains formatting
+- Updates file
+
+**When to use**:
+- Adding shared code
+- Code integration
+- Quick insertion
+- Code completion
+
+### `Osmynt: Apply Diff`
+
+**Description**: Apply shared code changes directly to your files.
+
+**Usage**:
+- Select shared code with diff
+- Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+- Type `Osmynt: Apply Diff`
+- Press Enter
+- Review and confirm changes
+
+**What it does**:
+- Shows diff preview
+- Applies changes to files
+- Maintains git history
+- Preserves workflow
+
+**When to use**:
+- Applying code changes
+- Code integration
+- Git-like workflow
+- Collaborative coding
+
+## Device Management Commands
+
+### `Osmynt: Add Device (Primary - generate code)`
+
+**Description**: Add a new device as primary (generates pairing code).
+
+**Usage**:
+- Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+- Type `Osmynt: Add Device (Primary - generate code)`
+- Press Enter
+- Copy the generated code
+- Use on companion device
+
+**What it does**:
+- Generates pairing code
+- Sets up device encryption
+- Prepares for companion pairing
+- Establishes secure connection
+
+**When to use**:
+- Adding new devices
+- Setting up primary device
+- Device pairing
+- Multi-device setup
+
+### `Osmynt: Add Device (Companion - paste code)`
+
+**Description**: Add a new device as companion (uses pairing code).
+
+**Usage**:
+- Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+- Type `Osmynt: Add Device (Companion - paste code)`
+- Press Enter
+- Paste the pairing code
+- Confirm pairing
+
+**What it does**:
+- Validates pairing code
+- Sets up device encryption
+- Syncs with primary device
+- Establishes secure connection
+
+**When to use**:
+- Adding companion devices
+- Device pairing
+- Multi-device setup
+- Device synchronization
+
+### `Osmynt: Remove Device`
+
+**Description**: Remove a device from your account.
+
+**Usage**:
+- Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+- Type `Osmynt: Remove Device`
+- Press Enter
+- Select device to remove
+- Confirm removal
+
+**What it does**:
+- Removes device access
+- Revokes encryption keys
+- Clears device data
+- Notifies other devices
+
+**When to use**:
+- Removing old devices
+- Security cleanup
+- Device management
+- Account maintenance
+
+### `Osmynt: List Devices`
+
+**Description**: List all devices associated with your account.
+
+**Usage**:
+- Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+- Type `Osmynt: List Devices`
+- Press Enter
+
+**What it does**:
+- Shows all devices
+- Displays device status
+- Shows last activity
+- Shows device types
+
+**When to use**:
+- Checking device status
+- Device management
+- Security audit
+- Troubleshooting
+
+### `Osmynt: Repair This Device`
+
+**Description**: Repair device connection and encryption.
+
+**Usage**:
+- Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+- Type `Osmynt: Repair This Device`
+- Press Enter
+- Follow repair process
+
+**What it does**:
+- Repairs device connection
+- Regenerates encryption keys
+- Syncs with servers
+- Restores functionality
+
+**When to use**:
+- Device connection issues
+- Encryption problems
+- Sync failures
+- Troubleshooting
+
+### `Osmynt: Force Remove Device`
+
+**Description**: Force remove a device (use when normal removal fails).
+
+**Usage**:
+- Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+- Type `Osmynt: Force Remove Device`
+- Press Enter
+- Select device to remove
+- Confirm force removal
+
+**What it does**:
+- Force removes device
+- Revokes all access
+- Clears all data
+- Notifies other devices
+
+**When to use**:
+- Normal removal failed
+- Security emergency
+- Device compromised
+- Account cleanup
+
+### `Osmynt: Backfill Access for Companion`
+
+**Description**: Backfill access for companion devices (primary device only).
+
+**Usage**:
+- Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+- Type `Osmynt: Backfill Access for Companion`
+- Press Enter
+- Follow backfill process
+
+**What it does**:
+- Syncs historical data
+- Provides access to past shares
+- Updates encryption keys
+- Restores full functionality
+
+**When to use**:
+- New companion device
+- Missing historical data
+- Sync issues
+- Device setup
+
+## Utility Commands
 
 ### `Osmynt: Refresh`
 
@@ -191,138 +460,59 @@ This document provides a complete reference of all Osmynt commands available in 
 - When cache is corrupted
 - Regular maintenance
 
-## Utility Commands
+## Filter Commands
 
-### `Osmynt: Show Status`
+### `Osmynt: Filter Shared items by This Member`
 
-**Description**: Display current Osmynt status and connection information.
+**Description**: Filter shared code by specific team member.
+
+**Usage**:
+- Right-click on team member in panel
+- Select "Filter Shared items by This Member"
+- Or use Command Palette
+
+**What it does**:
+- Filters shared code
+- Shows only selected member's shares
+- Updates panel view
+- Maintains filter state
+
+**When to use**:
+- Finding specific shares
+- Member-specific code
+- Code organization
+- Quick access
+
+### `Osmynt: Clear Shared items Filter`
+
+**Description**: Clear all filters and show all shared code.
 
 **Usage**:
 - Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
-- Type `Osmynt: Show Status`
+- Type `Osmynt: Clear Shared items Filter`
 - Press Enter
 
 **What it does**:
-- Shows authentication status
-- Displays team information
-- Shows device status
-- Shows connection status
+- Clears all filters
+- Shows all shared code
+- Resets panel view
+- Restores full view
 
 **When to use**:
-- Checking status
-- Troubleshooting issues
-- Verifying setup
-- Debugging problems
+- After filtering
+- Viewing all code
+- Resetting filters
+- Full overview
 
-### `Osmynt: Open Panel`
-
-**Description**: Open the Osmynt panel in the sidebar.
-
-**Usage**:
-- Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
-- Type `Osmynt: Open Panel`
-- Press Enter
-
-**What it does**:
-- Opens Osmynt panel
-- Shows team members
-- Displays shared code
-- Shows device status
-
-**When to use**:
-- Accessing Osmynt features
-- Managing teams
-- Viewing shared code
-- Checking status
-
-## Advanced Commands
-
-### `Osmynt: Export Team Data`
-
-**Description**: Export team data for backup or migration.
-
-**Usage**:
-- Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
-- Type `Osmynt: Export Team Data`
-- Press Enter
-- Choose export options
-
-**What it does**:
-- Exports team data
-- Creates backup file
-- Includes team members
-- Includes shared code
-
-**When to use**:
-- Creating backups
-- Migrating teams
-- Data recovery
-- Team management
-
-### `Osmynt: Import Team Data`
-
-**Description**: Import team data from backup or migration.
-
-**Usage**:
-- Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
-- Type `Osmynt: Import Team Data`
-- Press Enter
-- Select import file
-
-**What it does**:
-- Imports team data
-- Restores team members
-- Restores shared code
-- Sets up encryption
-
-**When to use**:
-- Restoring backups
-- Migrating teams
-- Data recovery
-- Team setup
-
-## Command Shortcuts
-
-### Keyboard Shortcuts
-
-| Command | Shortcut | Description |
-|---------|----------|-------------|
-| `Osmynt: Login` | `Ctrl+Shift+L` / `Cmd+Shift+L` | Quick login |
-| `Osmynt: Share Selected Code` | `Ctrl+Shift+S` / `Cmd+Shift+S` | Quick share |
-| `Osmynt: Open Panel` | `Ctrl+Shift+O` / `Cmd+Shift+O` | Open panel |
-| `Osmynt: Refresh` | `Ctrl+Shift+R` / `Cmd+Shift+R` | Quick refresh |
-
-### Context Menu Commands
+## Context Menu Commands
 
 | Command | Context | Description |
 |---------|---------|-------------|
 | `Share Selected Code` | Right-click on selected code | Share code |
-| `Copy to Clipboard` | Right-click on shared code | Copy code |
-| `Open to Side` | Right-click on shared code | Open in new tab |
-| `Insert to Cursor` | Right-click on shared code | Insert at cursor |
-
-## Command Parameters
-
-### Share Code Parameters
-
-- **Title**: Descriptive title for the code
-- **Recipients**: Choose team members to share with
-- **Context**: Include file context for diff application
-- **Encryption**: End-to-end encryption (automatic)
-
-### Team Parameters
-
-- **Team Name**: Name for the team
-- **Members**: List of team members
-- **Permissions**: Access permissions for members
-- **Encryption**: Team encryption keys (automatic)
-
-### Device Parameters
-
-- **Device Name**: Name for the device
-- **Device Type**: Type of device (desktop, laptop, etc.)
-- **Network**: Network configuration
-- **Security**: Device security settings
+| `Copy Code blocks` | Right-click on shared code | Copy code |
+| `Open Code blocks to Side` | Right-click on shared code | Open in new tab |
+| `Insert Code blocks at Cursor` | Right-click on shared code | Insert at cursor |
+| `Filter by This Member` | Right-click on team member | Filter by member |
 
 ## Command Examples
 
@@ -336,7 +526,7 @@ Osmynt: Login
 Osmynt: Share Selected Code
 
 # View shared code
-Osmynt: View Shared Code
+Osmynt: View Code blocks
 
 # Refresh sync
 Osmynt: Refresh
@@ -346,13 +536,29 @@ Osmynt: Refresh
 
 ```bash
 # Create team and invite members
-Osmynt: Invite Team Member
+Osmynt: Invite Member
 
 # Join existing team
 Osmynt: Accept Invitation
 
-# View team status
-Osmynt: Show Status
+# Remove team member
+Osmynt: Remove Member
+```
+
+### Device Management
+
+```bash
+# Add primary device
+Osmynt: Add Device (Primary - generate code)
+
+# Add companion device
+Osmynt: Add Device (Companion - paste code)
+
+# List all devices
+Osmynt: List Devices
+
+# Remove device
+Osmynt: Remove Device
 ```
 
 ### Troubleshooting
@@ -364,8 +570,8 @@ Osmynt: Clear Local Cache
 # Refresh sync
 Osmynt: Refresh
 
-# Show status
-Osmynt: Show Status
+# Repair device
+Osmynt: Repair This Device
 ```
 
 ## Command Best Practices

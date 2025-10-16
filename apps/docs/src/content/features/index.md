@@ -8,45 +8,53 @@ description: "Explore all of Osmynt's features including code sharing, team mana
 
 Discover all the powerful features that make Osmynt the perfect tool for secure, real-time code collaboration.
 
-## 🔗 Code Sharing
+## 🔒 Enterprise-Grade Encryption
 
-**[Code Sharing](features/code-sharing)** - Share and receive code snippets with your team in real-time
-- End-to-end encrypted sharing
-- Syntax highlighting preserved
-- Multiple sharing options
-- Real-time notifications
+**[Security Overview](security/overview)** - AES-256 encryption with zero-knowledge architecture
+- End-to-end encryption before transmission
+- Zero-knowledge architecture - we can never access your unencrypted content
+- Team-only sharing with verified members
+- Device verification and secure handshakes
+
+## ⚡ Real-Time Sharing
+
+**[Code Sharing](features/code-sharing)** - Share code blocks in milliseconds with real-time updates
+- Instant sharing without context switching
+- Real-time updates as changes happen
+- Multi-device synchronization
+- Smart notifications that respect your focus time
+
+## 🔄 Git-Like Diff Application
+
+**[Diff Application](features/diff-application)** - Apply shared code changes directly to your files
+- Git's three-way merge algorithm
+- Maintain your commit history and workflow integrity
+- Line-by-line precision with change preview
+- Automatic file detection and application
 
 ## 👥 Team Management
 
-**[Team Management](features/team-management)** - Create and manage teams for secure collaboration
+**[Team Management](features/team-management)** - Advanced team management with role-based permissions
 - Create and invite team members
-- Manage team permissions
-- Role-based access control
-- Team security features
+- Role-based access control and audit logs
+- Built for teams of any size
+- Compliance reporting and security features
 
-## 📱 Device Management
+## 💻 Language Support
 
-**[Device Management](features/device-management)** - Set up multiple devices for seamless access
-- Multi-device synchronization
-- Device verification
+**[Code Sharing](features/code-sharing)** - Syntax highlighting for 200+ languages
+- Preserved formatting, indentation, and encoding
+- Works with any file type
+- Native editor integration
 - Cross-platform support
-- Offline support
 
-## 🔄 Diff Application
+## 🔔 Notifications
 
-**[Diff Application](features/diff-application)** - Apply code changes directly to your files
-- Git-like diff application
-- Line-by-line precision
-- Change preview
-- Automatic file detection
-
-## ⚡ Real-time Updates
-
-**[Real-time Updates](features/realtime-updates)** - Stay synchronized with your team
-- Instant notifications
+**[Real-time Updates](features/realtime-updates)** - Smart notifications that respect your focus time
+- Get notified about relevant code shares
+- No interruption of deep work
 - Multi-device updates
-- Offline queuing
-- Network optimization
+- Offline queuing and network optimization
 
 ## 🎯 Use Cases
 

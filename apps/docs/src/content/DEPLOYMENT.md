@@ -284,10 +284,10 @@ To add Google Analytics:
 
 The documentation is licensed under the same license as the main project. See the main repository for license details.
 
-## Support
+<!-- ## Support
 
 For documentation-related questions:
 
 - **Email**: [docs@osmynt.dev](mailto:docs@osmynt.dev)
 - **GitHub Issues**: [Report documentation issues](https://github.com/moeen-mahmud/osmynt/issues)
-- **Discord**: [Get help from community](https://discord.gg/osmynt)
+- **Discord**: [Get help from community](https://discord.gg/osmynt) -->

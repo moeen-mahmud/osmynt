@@ -42,6 +42,8 @@ const navigation = [
 			{ title: "Team Management", href: "/features/team-management" },
 			{ title: "Device Management", href: "/features/device-management" },
 			{ title: "Diff Application", href: "/features/diff-application" },
+			{ title: "Language Support", href: "/features/language-support" },
+			{ title: "Notifications", href: "/features/notifications" },
 			{ title: "Real-time Updates", href: "/features/realtime-updates" },
 		],
 	},
@@ -51,8 +53,18 @@ const navigation = [
 		icon: Settings,
 		items: [
 			{ title: "Commands", href: "/reference/commands" },
-			{ title: "Keyboard Shortcuts", href: "/reference/shortcuts" },
+			{ title: "Command Access", href: "/reference/shortcuts" },
 			{ title: "Configuration", href: "/reference/configuration" },
+		],
+	},
+	{
+		title: "Security",
+		href: "/security",
+		icon: Shield,
+		items: [
+			{ title: "Overview", href: "/security/overview" },
+			{ title: "Encryption", href: "/security/encryption" },
+			{ title: "Best Practices", href: "/security/best-practices" },
 		],
 	},
 	{
@@ -67,21 +79,11 @@ const navigation = [
 		],
 	},
 	{
-		title: "Security",
-		href: "/security",
-		icon: Shield,
-		items: [
-			{ title: "Overview", href: "/security/overview" },
-			{ title: "Encryption", href: "/security/encryption" },
-			{ title: "Best Practices", href: "/security/best-practices" },
-		],
-	},
-	{
 		title: "Resources",
 		href: "/resources",
 		icon: HelpCircle,
 		items: [
-			{ title: "Brand Guidelines", href: "/resources/brand-guidelines" },
+			// { title: "Brand Guidelines", href: "/resources/brand-guidelines" },
 			{ title: "Development Roadmap", href: "/resources/roadmap" },
 			{ title: "Support", href: "/resources/support" },
 		],
@@ -106,7 +108,7 @@ function AppSidebar() {
 			</SidebarHeader>
 			<SidebarContent>
 				<SidebarGroup>
-					<SidebarGroupLabel>Documentation</SidebarGroupLabel>
+					{/* <SidebarGroupLabel>Documentation</SidebarGroupLabel> */}
 					<SidebarGroupContent>
 						<SidebarMenu>
 							{navigation.map(section => (

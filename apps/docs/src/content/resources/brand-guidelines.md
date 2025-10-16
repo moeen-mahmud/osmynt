@@ -347,6 +347,6 @@ The logo should have clear space equal to the height of the "O" on all sides.
 Now that you understand Osmynt's brand guidelines:
 
 1. **[Learn about the development roadmap](roadmap.md)** - Upcoming features and improvements
-2. **[Get support](support.md)** - Get help and contact information
+2. **[Get support](resources/support)** - Get help and support
 3. **[Learn about security](security/overview.md)** - Security and encryption details
 4. **[Start using Osmynt](getting-started/installation.md)** - Get started with Osmynt

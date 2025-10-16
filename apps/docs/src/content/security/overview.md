@@ -6,16 +6,23 @@ description: "Learn how Osmynt keeps your code secure with end-to-end encryption
 
 # Security Overview
 
-Osmynt is built with security as a core principle. This section provides an overview of how Osmynt protects your code and ensures secure collaboration.
+Osmynt is built with enterprise-grade security as a core principle. This section provides an overview of how Osmynt protects your code with AES-256 encryption and zero-knowledge architecture.
 
-## Security Principles
+## Enterprise-Grade Security
 
-### End-to-End Encryption
+### AES-256 Encryption
 
-- **Your code is encrypted** before leaving your device
-- **Only team members** can decrypt shared code
-- **No server storage** - code is not stored on our servers
-- **Zero-knowledge architecture** - we can't read your code
+- **Military-grade encryption** - Your code is encrypted with AES-256 before leaving your device
+- **Zero-knowledge architecture** - We can never access your unencrypted content
+- **End-to-end encryption** - Only team members can decrypt shared code
+- **Perfect forward secrecy** - Past communications remain secure even if keys are compromised
+
+### Zero-Knowledge Architecture
+
+- **We cannot read your code** - it's encrypted before transmission
+- **No server storage** - Code is not stored on our servers in unencrypted form
+- **Local encryption** - Encryption happens on your device
+- **Secure key exchange** - Keys are exchanged securely between team members
 
 ### Team-only Sharing
 
@@ -23,13 +30,6 @@ Osmynt is built with security as a core principle. This section provides an over
 - **Member verification** ensures only authorized users can access code
 - **Device management** controls which devices can access teams
 - **Access control** prevents unauthorized access
-
-### Zero-Knowledge Architecture
-
-- **We cannot read your code** - it's encrypted before transmission
-- **No server storage** - code is not stored on our servers
-- **Local encryption** - encryption happens on your device
-- **Secure key exchange** - keys are exchanged securely between team members
 
 ## Security Features
 
@@ -156,12 +156,12 @@ Osmynt is built with security as a core principle. This section provides an over
 - **[Security FAQ](security/faq)** - Frequently asked security questions
 - **[Security Updates](security/updates)** - Security update information
 
-### Support
+<!-- ### Support
 
 - **Security issues**: [security@osmynt.dev](mailto:security@osmynt.dev)
 - **Bug reports**: [Report security bugs](https://github.com/moeen-mahmud/osmynt/issues)
 - **Security questions**: [Ask security questions](https://discord.gg/osmynt)
-- **Security updates**: [Subscribe to security updates](https://osmynt.dev/security)
+- **Security updates**: [Subscribe to security updates](https://osmynt.dev/security) -->
 
 ## Next Steps
 
