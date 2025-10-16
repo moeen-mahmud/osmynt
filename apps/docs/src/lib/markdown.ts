@@ -7,7 +7,7 @@ import { visit } from "unist-util-visit";
 
 const docsDirectory = path.join(process.cwd(), "src/content");
 
-// Custom remark plugin to handle Jekyll-style relative URLs
+// Custom remark plugin to handle Jekyll-style relative URLs and fix relative paths
 function remarkRelativeLinks() {
 	return (tree: any) => {
 		visit(tree, "link", node => {
@@ -16,6 +16,15 @@ function remarkRelativeLinks() {
 				const jekyllMatch = node.url.match(/\{\{\s*['"]([^'"]+)['"]\s*\|\s*relative_url\s*\}\}/);
 				if (jekyllMatch) {
 					node.url = jekyllMatch[1];
+				}
+				// Fix relative paths that don't start with / or http
+				else if (
+					!node.url.startsWith("/") &&
+					!node.url.startsWith("http") &&
+					!node.url.startsWith("#") &&
+					!node.url.startsWith("mailto:")
+				) {
+					node.url = "/" + node.url;
 				}
 			}
 		});
