@@ -70,7 +70,7 @@ export function Navigation() {
 	const pathname = usePathname();
 
 	return (
-		<aside className="hidden lg:block sticky top-16 h-[calc(100vh-4rem)] w-64 border-r border-border bg-card overflow-y-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+		<aside className="hidden lg:block sticky top-16 h-screen w-64 border-r border-border bg-card overflow-y-auto scrollbar-thin">
 			<nav className="p-4 space-y-6">
 				{navigation.map(section => (
 					<div key={section.title}>

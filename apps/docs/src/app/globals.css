@@ -96,35 +96,35 @@
 }
 
 .prose h1 {
-	@apply text-4xl font-bold tracking-tight text-foreground mb-8;
+	@apply mb-8 text-4xl font-bold tracking-tight text-foreground;
 }
 
 .prose h2 {
-	@apply text-3xl font-semibold tracking-tight text-foreground mt-12 mb-6;
+	@apply mt-12 mb-6 text-3xl font-semibold tracking-tight text-foreground;
 }
 
 .prose h3 {
-	@apply text-2xl font-semibold tracking-tight text-foreground mt-10 mb-4;
+	@apply mt-10 mb-4 text-2xl font-semibold tracking-tight text-foreground;
 }
 
 .prose h4 {
-	@apply text-xl font-semibold tracking-tight text-foreground mt-8 mb-3;
+	@apply mt-8 mb-3 text-xl font-semibold tracking-tight text-foreground;
 }
 
 .prose h5 {
-	@apply text-lg font-semibold tracking-tight text-foreground mt-6 mb-2;
+	@apply mt-6 mb-2 text-lg font-semibold tracking-tight text-foreground;
 }
 
 .prose h6 {
-	@apply text-base font-semibold tracking-tight text-foreground mt-4 mb-2;
+	@apply mt-4 mb-2 text-base font-semibold tracking-tight text-foreground;
 }
 
 .prose p {
-	@apply text-muted-foreground leading-7 mb-6;
+	@apply mb-6 leading-7 text-muted-foreground;
 }
 
 .prose a {
-	@apply text-primary hover:text-primary/80 transition-colors;
+	@apply transition-colors text-primary hover:text-primary/80;
 }
 
 .prose strong {
@@ -132,56 +132,56 @@
 }
 
 .prose code {
-	@apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-foreground;
+	@apply px-1.5 py-0.5 font-mono text-sm rounded bg-muted text-foreground;
 }
 
 .prose pre {
-	@apply bg-muted border rounded-lg p-4 overflow-x-auto my-6;
+	@apply overflow-x-auto p-4 my-6 rounded-lg border bg-muted;
 }
 
 .prose pre code {
-	@apply bg-transparent p-0 text-sm;
+	@apply p-0 text-sm bg-transparent;
 }
 
 .prose blockquote {
-	@apply border-l-4 border-primary/20 pl-4 italic text-muted-foreground my-6;
+	@apply pl-4 my-6 italic border-l-4 border-primary/20 text-muted-foreground;
 }
 
 .prose ul {
-	@apply list-disc pl-6 my-6;
+	@apply pl-6 my-6 list-disc;
 }
 
 .prose ol {
-	@apply list-decimal pl-6 my-6;
+	@apply pl-6 my-6 list-decimal;
 }
 
 .prose li {
-	@apply text-muted-foreground leading-7 mb-2;
+	@apply mb-2 leading-7 text-muted-foreground;
 }
 
 .prose table {
-	@apply w-full border-collapse my-6;
+	@apply my-6 w-full border-collapse;
 }
 
 .prose th {
-	@apply border border-border px-4 py-2 text-left font-semibold bg-muted;
+	@apply px-4 py-2 font-semibold text-left border border-border bg-muted;
 }
 
 .prose td {
-	@apply border border-border px-4 py-2;
+	@apply px-4 py-2 border border-border;
 }
 
 .prose img {
-	@apply rounded-lg my-6;
+	@apply my-6 rounded-lg;
 }
 
 /* Navigation styles */
 .nav-link {
-	@apply text-muted-foreground hover:text-foreground transition-colors;
+	@apply transition-colors text-muted-foreground hover:text-foreground;
 }
 
 .nav-link.active {
-	@apply text-primary font-medium;
+	@apply font-medium text-primary;
 }
 
 /* Sidebar styles */
@@ -190,11 +190,11 @@
 }
 
 .sidebar-item {
-	@apply block px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors;
+	@apply block px-3 py-2 text-sm rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted;
 }
 
 .sidebar-item.active {
-	@apply text-primary bg-primary/10 font-medium;
+	@apply font-medium text-primary bg-primary/10;
 }
 
 /* Code highlighting */
@@ -209,7 +209,7 @@
 /* Custom scrollbar */
 .scrollbar-thin {
 	scrollbar-width: thin;
-	scrollbar-color: hsl(var(--muted-foreground)) transparent;
+	scrollbar-color: hsl(var(--primary)) transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -221,10 +221,14 @@
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-	background-color: hsl(var(--muted-foreground));
+	background-color: hsl(var(--primary));
 	border-radius: 3px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-	background-color: hsl(var(--foreground));
+	background-color: hsl(var(--background));
+}
+
+.container {
+	@apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8;
 }

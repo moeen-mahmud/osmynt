@@ -21,7 +21,7 @@ export function Header() {
 						<span className="text-muted-foreground text-sm">Documentation</span>
 					</div>
 
-					<nav className="hidden md:flex items-center gap-8">
+					{/* <nav className="hidden lg:flex items-center gap-8">
 						<Link
 							href="/getting-started"
 							className="text-sm text-muted-foreground hover:text-primary transition-colors"
@@ -58,16 +58,16 @@ export function Header() {
 						>
 							Resources
 						</Link>
-					</nav>
+					</nav> */}
 
 					<div className="flex items-center gap-4">
-						<Button variant="outline" size="sm" className="hidden md:inline-flex" asChild>
+						<Button variant="outline" size="sm" className="hidden lg:inline-flex" asChild>
 							<a href="https://github.com/moeen-mahmud/osmynt" target="_blank" rel="noopener">
 								<Github className="h-4 w-4 mr-2" />
 								GitHub
 							</a>
 						</Button>
-						<Button size="sm" className="hidden md:inline-flex" asChild>
+						<Button size="sm" className="hidden lg:inline-flex" asChild>
 							<a href="https://discord.gg/osmynt" target="_blank" rel="noopener">
 								<MessageCircle className="h-4 w-4 mr-2" />
 								Discord
@@ -76,7 +76,7 @@ export function Header() {
 
 						<button
 							type="button"
-							className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
+							className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
 							onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
 						>
 							<Menu className="h-6 w-6" />
@@ -85,7 +85,7 @@ export function Header() {
 				</div>
 
 				{mobileMenuOpen && (
-					<div className="md:hidden py-4 border-t border-border">
+					<div className="lg:hidden py-4 border-t border-border">
 						<nav className="flex flex-col gap-4">
 							<button
 								type="button"

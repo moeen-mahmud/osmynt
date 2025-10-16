@@ -2,9 +2,9 @@ import Link from "next/link";
 
 export function Footer() {
 	return (
-		<footer className="border-t border-border bg-card">
-			<div className="container py-8">
-				<div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+		<footer className="w-full border-t border-border bg-card">
+			<div className="container px-4 py-8">
+				<div className="grid grid-cols-1 gap-8 md:grid-cols-4">
 					<div className="space-y-4">
 						<h3 className="font-semibold text-foreground">Osmynt</h3>
 						<p className="text-sm text-muted-foreground">
@@ -19,7 +19,7 @@ export function Footer() {
 							<li>
 								<Link
 									href="/getting-started"
-									className="text-muted-foreground hover:text-foreground transition-colors"
+									className="transition-colors text-muted-foreground hover:text-foreground"
 								>
 									Getting Started
 								</Link>
@@ -27,7 +27,7 @@ export function Footer() {
 							<li>
 								<Link
 									href="/features"
-									className="text-muted-foreground hover:text-foreground transition-colors"
+									className="transition-colors text-muted-foreground hover:text-foreground"
 								>
 									Features
 								</Link>
@@ -35,7 +35,7 @@ export function Footer() {
 							<li>
 								<Link
 									href="/reference"
-									className="text-muted-foreground hover:text-foreground transition-colors"
+									className="transition-colors text-muted-foreground hover:text-foreground"
 								>
 									Reference
 								</Link>
@@ -43,7 +43,7 @@ export function Footer() {
 							<li>
 								<Link
 									href="/troubleshooting"
-									className="text-muted-foreground hover:text-foreground transition-colors"
+									className="transition-colors text-muted-foreground hover:text-foreground"
 								>
 									Troubleshooting
 								</Link>
@@ -57,7 +57,7 @@ export function Footer() {
 							<li>
 								<Link
 									href="/security"
-									className="text-muted-foreground hover:text-foreground transition-colors"
+									className="transition-colors text-muted-foreground hover:text-foreground"
 								>
 									Security
 								</Link>
@@ -65,7 +65,7 @@ export function Footer() {
 							<li>
 								<Link
 									href="/resources/support"
-									className="text-muted-foreground hover:text-foreground transition-colors"
+									className="transition-colors text-muted-foreground hover:text-foreground"
 								>
 									Support
 								</Link>
@@ -73,7 +73,7 @@ export function Footer() {
 							<li>
 								<Link
 									href="/resources/roadmap"
-									className="text-muted-foreground hover:text-foreground transition-colors"
+									className="transition-colors text-muted-foreground hover:text-foreground"
 								>
 									Roadmap
 								</Link>
@@ -81,7 +81,7 @@ export function Footer() {
 							<li>
 								<Link
 									href="/resources/brand-guidelines"
-									className="text-muted-foreground hover:text-foreground transition-colors"
+									className="transition-colors text-muted-foreground hover:text-foreground"
 								>
 									Brand Guidelines
 								</Link>
@@ -97,7 +97,7 @@ export function Footer() {
 									href="https://github.com/moeen-mahmud/osmynt"
 									target="_blank"
 									rel="noopener"
-									className="text-muted-foreground hover:text-foreground transition-colors"
+									className="transition-colors text-muted-foreground hover:text-foreground"
 								>
 									GitHub
 								</a>
@@ -107,7 +107,7 @@ export function Footer() {
 									href="https://discord.gg/osmynt"
 									target="_blank"
 									rel="noopener"
-									className="text-muted-foreground hover:text-foreground transition-colors"
+									className="transition-colors text-muted-foreground hover:text-foreground"
 								>
 									Discord
 								</a>
@@ -115,7 +115,7 @@ export function Footer() {
 							<li>
 								<a
 									href="mailto:support@osmynt.dev"
-									className="text-muted-foreground hover:text-foreground transition-colors"
+									className="transition-colors text-muted-foreground hover:text-foreground"
 								>
 									Email
 								</a>
@@ -125,7 +125,7 @@ export function Footer() {
 									href="https://twitter.com/osmynt"
 									target="_blank"
 									rel="noopener"
-									className="text-muted-foreground hover:text-foreground transition-colors"
+									className="transition-colors text-muted-foreground hover:text-foreground"
 								>
 									Twitter
 								</a>
@@ -134,7 +134,7 @@ export function Footer() {
 					</div>
 				</div>
 
-				<div className="mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground">
+				<div className="pt-8 mt-8 text-sm text-center border-t border-border text-muted-foreground">
 					<p>&copy; 2024 Osmynt. All rights reserved.</p>
 					<p className="mt-2">Made with ❤️ for the developers, by the developers</p>
 				</div>

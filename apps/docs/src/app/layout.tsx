@@ -91,9 +91,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 						<Header />
 						<div className="flex">
 							<Navigation />
-							<div className="flex-1 lg:ml-64">
-								<main>
-									<div className="container mx-auto px-4 py-8">{children}</div>
+							<div className="flex-1">
+								<main style={{ border: "1px solid red" }} className="container px-4 py-8">
+									{children}
 								</main>
 								<Footer />
 							</div>
