@@ -221,7 +221,7 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 			`${base}/${ENDPOINTS.base}/${ENDPOINTS.teams.me}`,
 			{ headers: { Authorization: `Bearer ${access}` } }
 		);
-		const data: TeamsMeResponse = await res.json();
+		const data = (await res.json()) as TeamsMeResponse;
 		if (!res.ok || !Array.isArray(data?.teams)) {
 			this.cachedTeams = [];
 			this.cachedMembersByTeam = {};
