@@ -5,4 +5,4 @@
 "@osmynt/docs": patch
 ---
 
-Updates license aggrement and made the project opensource!
+Updates license agreement and made the project opensource!
