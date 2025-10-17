@@ -20,15 +20,15 @@
 
 This project is a monorepo created with Bun workspace. It has two parts:
 
-1. **apps**: Contains the backend and VS Code extension.
+1. **apps**: Contains the Backend Engine, Osmynt Extension, Landing Page, and Documentation Page
 2. **packages**: Contains the shared code between the apps (e.g. api client, library, database).
 
 ## Getting Started
 
 ### Prerequisites
 
-Make sure you have node.js and bun installed on your machine. If not, please install them first by following the documentations.
-To run individual project please follow the project README.md file.
+Make sure you have node.js and bun installed on your machine. If not, please install them first by following the respective documentation.
+To run an individual project, please follow the project's README.md file.
 
 ## License
 
