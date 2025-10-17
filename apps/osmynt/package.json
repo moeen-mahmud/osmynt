@@ -15,7 +15,7 @@
 		"type": "git",
 		"url": "https://github.com/moeen-mahmud/osmynt"
 	},
-	"license": "BSL1.1",
+	"license": "AGPL-3.0",
 	"devDependencies": {
 		"@types/bun": "1.1.13",
 		"@osmynt-core/api": "workspace:*",
