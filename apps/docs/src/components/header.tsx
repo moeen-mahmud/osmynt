@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Github, MessageCircle } from "lucide-react";
 import { OsmyntLogo } from "@/components/ui/osmynt-logo";
 import { SidebarTrigger } from "@/components/sidebar";
+import { version } from "../../package.json";
 
 export function Header() {
 	return (
@@ -18,7 +19,7 @@ export function Header() {
 								<OsmyntLogo />
 								<span className="text-xl font-bold">Osmynt</span>
 							</Link>
-							<span className="text-muted-foreground text-sm">v1.3.5</span>
+							<span className="text-muted-foreground text-sm">v{version}</span>
 						</div>
 					</div>
 
