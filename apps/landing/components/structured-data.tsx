@@ -52,7 +52,7 @@ export function StructuredData() {
 		softwareVersion: "1.3.5",
 		datePublished: "2025-10-16",
 		dateModified: new Date().toISOString().split("T")[0],
-		license: "https://opensource.org/licenses/BSL-1.1", // TODO: Replace with actual license
+		license: "AGPL-3.0",
 		downloadUrl: "https://marketplace.visualstudio.com/items?itemName=osmynt.osmynt",
 		aggregateRating: {
 			"@type": "AggregateRating",

@@ -32,7 +32,7 @@ To run individual project please follow the project README.md file.
 
 ## License
 
-This project is licensed under the Business Source License 1.1 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the AGPL-3.0 - see the [LICENSE](LICENSE) file for details.
 
 ## Creator
 

@@ -106,7 +106,7 @@ These approaches break your development flow and hurt productivity. **There has 
 
 ## Contributing (Coming soon)
 
-Right now, this project is licensed under the BSL1.1 License. We are working on making it open source with Apache License 2.0. Stay tuned!
+Right now, this project is licensed under the AGPL-3.0 License.
 
 
 ## Support & Feedback
@@ -117,7 +117,7 @@ Right now, this project is licensed under the BSL1.1 License. We are working on 
 
 ## License
 
-This project is licensed under the BSL1.1 License - see the [LICENSE](./LICENSE.txt) file for details.
+This project is licensed under the AGPL-3.0 License - see the [LICENSE](./LICENSE.txt) file for details.
 
 ## Author
 
