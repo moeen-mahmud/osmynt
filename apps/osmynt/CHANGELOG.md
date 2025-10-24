@@ -1,5 +1,11 @@
 # @osmynt-core/osmynt
 
+## 1.3.8
+
+### Patch Changes
+
+- [#38](https://github.com/moeen-mahmud/osmynt/pull/38) [`a5bfdc8`](https://github.com/moeen-mahmud/osmynt/commit/a5bfdc859dd54288b3957011180a461e511a4c80) Thanks [@moeen-mahmud](https://github.com/moeen-mahmud)! - removed unnecessary information messasges while viewing git diffs
+
 ## 1.3.7
 
 ### Patch Changes
