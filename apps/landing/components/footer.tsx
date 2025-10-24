@@ -110,7 +110,7 @@ export function Footer() {
 				</div>
 
 				<div className="pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-					<p>© {new Date().getFullYear()} Osmynt. Licensed under AGPL-3.0.</p>
+					<p>&copy; {new Date().getFullYear()} Osmynt. Licensed under AGPL-3.0.</p>
 					<p>Made with ❤️ for developers, by developers</p>
 				</div>
 			</div>
