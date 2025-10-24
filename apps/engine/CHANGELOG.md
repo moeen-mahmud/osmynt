@@ -1,5 +1,11 @@
 # @osmynt-core/engine
 
+## 1.3.7
+
+### Patch Changes
+
+- [#36](https://github.com/moeen-mahmud/osmynt/pull/36) [`984baee`](https://github.com/moeen-mahmud/osmynt/commit/984baee1be1022fdfa234963e58f1dc8250c0123) Thanks [@moeen-mahmud](https://github.com/moeen-mahmud)! - Fixed project root mismatch error while sharing with git-diff capabilities
+
 ## 1.3.6
 
 ### Patch Changes
