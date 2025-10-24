@@ -68,7 +68,7 @@ export function Footer() {
 									target="_blank"
 									rel="noopener noreferrer"
 								>
-									VS Code Marketplace
+									VS Code
 								</a>
 							</li>
 							<li>
