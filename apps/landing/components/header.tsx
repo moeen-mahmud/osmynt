@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Book, BookOpen, Code2, Menu } from "lucide-react";
+import { BookOpen, Menu } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { OsmyntLogo } from "@/components/osmynt-logo";
@@ -66,7 +66,7 @@ export function Header() {
 					</nav>
 
 					<div className="flex items-center gap-4">
-						<Button variant="outline" className="hidden md:inline-flex" asChild>
+						<Button variant="secondary" className="hidden md:inline-flex" asChild>
 							<a href="https://docs.osmynt.dev">
 								<BookOpen className="h-4 w-4" />
 								Docs

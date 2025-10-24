@@ -33,7 +33,7 @@ export function CTA() {
 								<ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
 							</a>
 						</Button>
-						<Button size="lg" variant="outline" asChild>
+						<Button size="lg" variant="secondary" asChild>
 							<a href="mailto:support@osmynt.dev">Contact Us</a>
 						</Button>
 					</div>

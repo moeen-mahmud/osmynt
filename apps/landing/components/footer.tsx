@@ -1,4 +1,5 @@
-import { Code2, Github, Mail } from "lucide-react";
+import { OsmyntLogo } from "@/components/osmynt-logo";
+import { Github, Mail } from "lucide-react";
 
 export function Footer() {
 	return (
@@ -7,7 +8,7 @@ export function Footer() {
 				<div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
 					<div className="space-y-4">
 						<div className="flex items-center gap-2">
-							<Code2 className="h-6 w-6 text-primary" />
+							<OsmyntLogo height={16} width={32} />
 							<span className="text-xl font-bold">Osmynt</span>
 						</div>
 						<p className="text-sm text-muted-foreground">
@@ -44,7 +45,7 @@ export function Footer() {
 					<div>
 						<h3 className="font-semibold mb-4">Resources</h3>
 						<ul className="space-y-2 text-sm text-muted-foreground">
-							{/* <li>
+							<li>
 								<a
 									href="https://github.com/moeen-mahmud/osmynt"
 									className="hover:text-foreground transition-colors"
@@ -59,7 +60,7 @@ export function Footer() {
 								>
 									Report Issues
 								</a>
-							</li> */}
+							</li>
 							<li>
 								<a
 									href="https://marketplace.visualstudio.com/items?itemName=osmynt.osmynt"
@@ -109,7 +110,7 @@ export function Footer() {
 				</div>
 
 				<div className="pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-					<p>© {new Date().getFullYear()} Osmynt. Licensed under BSL1.1.</p>
+					<p>&copy; {new Date().getFullYear()} Osmynt. Licensed under AGPL-3.0.</p>
 					<p>Made with ❤️ for developers, by developers</p>
 				</div>
 			</div>
