@@ -47,18 +47,18 @@ export class OsmyntTreeProvider implements vscode.TreeDataProvider<OsmyntItem> {
 				const ds = await getDeviceState(this.context);
 				if (ds.kind === "removed" || ds.kind === "unpaired") return [];
 				await this.ensureTeams();
-				if (!Array.isArray(this.cachedTeams) || this.cachedTeams.length === 0) {
-					// const emptyItem = new OsmyntItem(
-					// 	"action",
-					// 	"Log in to get started",
-					// 	vscode.TreeItemCollapsibleState.None,
-					// 	undefined,
-					// 	"github"
-					// );
-					// emptyItem.command = { command: "osmynt.login", title: "Login", arguments: [] };
-					// return [emptyItem];
-					return [];
-				}
+				// if (!Array.isArray(this.cachedTeams) || this.cachedTeams.length === 0) {
+				// 	// const emptyItem = new OsmyntItem(
+				// 	// 	"action",
+				// 	// 	"Log in to get started",
+				// 	// 	vscode.TreeItemCollapsibleState.None,
+				// 	// 	undefined,
+				// 	// 	"github"
+				// 	// );
+				// 	// emptyItem.command = { command: "osmynt.login", title: "Login", arguments: [] };
+				// 	// return [emptyItem];
+				// 	return [];
+				// }
 				return this.cachedTeams.map(
 					t =>
 						new OsmyntItem(

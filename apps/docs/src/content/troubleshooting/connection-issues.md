@@ -363,11 +363,9 @@ When contacting support, include:
 
 ### Support Channels
 
-> GitHub and Discord support is coming soon...
-
 - **📧 Email**: [support@osmynt.dev](mailto:support@osmynt.dev)
-<!-- - **🐛 GitHub Issues**: [Report issues](https://github.com/moeen-mahmud/osmynt/issues)
-- **💬 Discord**: [Get help from community](https://discord.gg/osmynt) -->
+- **🐛 GitHub Issues**: [Report issues](https://github.com/moeen-mahmud/osmynt/issues)
+<!-- - **💬 Discord**: [Get help from community](https://discord.gg/osmynt) -->
 
 ## Next Steps
 

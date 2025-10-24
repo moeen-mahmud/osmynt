@@ -111,5 +111,5 @@ To remove Osmynt:
 If you're having trouble with installation:
 
 - **Email**: [support@osmynt.dev](mailto:support@osmynt.dev)
-<!-- - **GitHub Issues**: [Report installation issues](https://github.com/moeen-mahmud/osmynt/issues)
-- **Discord**: [Get help from the community](https://discord.gg/osmynt) -->
+- **GitHub Issues**: [Report installation issues](https://github.com/moeen-mahmud/osmynt/issues)
+<!-- - **Discord**: [Get help from the community](https://discord.gg/osmynt) -->

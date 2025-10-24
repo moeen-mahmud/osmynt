@@ -14,6 +14,7 @@ import {
 	clearLocalDeviceSecrets,
 } from "@/services/osmynt.services";
 import { extractInviteToken } from "@/utils/osmynt.utils";
+import * as path from "path";
 import * as vscode from "vscode";
 import { ENDPOINTS } from "@/constants/endpoints.constant";
 import { computeAndSetDeviceContexts, backfillAccessForCompanion, showDiffPreview } from "@/services/osmynt.services";
@@ -365,13 +366,36 @@ export async function handleShareCode(context: vscode.ExtensionContext, treeProv
 		const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || "";
 
 		if (includeContext?.label?.startsWith("Include")) {
-			metadataExtra.filePath = editorFile;
 			metadataExtra.fileExt = (editorFile.split(".").pop() || "").toLowerCase();
 
-			// Add project root directory for diff application
-			if (workspaceRoot) {
-				metadataExtra.projectRoot = workspaceRoot;
-				metadataExtra.relativeFilePath = editorFile.replace(workspaceRoot, "").replace(/^[/\\]/, "");
+			// Prefer Git repository root/name/remote to make paths portable across machines
+			try {
+				const gitExt = vscode.extensions.getExtension("vscode.git");
+				const api = (gitExt as any)?.exports?.getAPI?.(1);
+				const repo =
+					api?.getRepository?.(editor.document.uri) ||
+					api?.repositories?.find?.((r: any) => {
+						return r?.rootUri && editor.document.uri.fsPath.startsWith(r.rootUri.fsPath);
+					});
+				const repoRoot: string | undefined = repo?.rootUri?.fsPath;
+				if (repoRoot) {
+					const origin =
+						repo?.state?.remotes?.find((r: any) => r?.name === "origin") || repo?.state?.remotes?.[0];
+					metadataExtra.repoName = path.basename(repoRoot);
+					metadataExtra.repoRemoteUrl = origin?.fetchUrl || origin?.pushUrl;
+					metadataExtra.repoHead = repo?.state?.HEAD?.commit;
+					metadataExtra.relativeFilePath = path.relative(repoRoot, editorFile).replace(/^[/\\]/, "");
+					// Do NOT include absolute paths when repo is detected
+				} else if (workspaceRoot) {
+					// Fallback: include relative to workspace; avoid absolute fields
+					metadataExtra.workspaceName = path.basename(workspaceRoot);
+					metadataExtra.relativeFilePath = editorFile.replace(workspaceRoot, "").replace(/^[/\\]/, "");
+				}
+			} catch {
+				if (workspaceRoot) {
+					metadataExtra.workspaceName = path.basename(workspaceRoot);
+					metadataExtra.relativeFilePath = editorFile.replace(workspaceRoot, "").replace(/^[/\\]/, "");
+				}
 			}
 
 			// If full context is requested, include line numbers and full file content
@@ -517,19 +541,38 @@ export async function handleApplyDiff(context: vscode.ExtensionContext, snippetI
 			return;
 		}
 
-		// Check if project root matches
-		const currentWorkspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || "";
-		if (metadata?.projectRoot && currentWorkspaceRoot !== metadata.projectRoot) {
-			const proceed = await vscode.window.showWarningMessage(
-				`Project root mismatch. Code blocks was created in "${metadata.projectRoot}" but current workspace is "${currentWorkspaceRoot}". Do you want to proceed anyway?`,
-				{ modal: true },
-				"Yes",
-				"No"
-			);
-			if (proceed !== "Yes") return;
-		}
+		// Resolve target file path by matching Git repository name/remote or workspace folder
+		let resolvedRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || "";
+		try {
+			const gitExt = vscode.extensions.getExtension("vscode.git");
+			const api = (gitExt as any)?.exports?.getAPI?.(1);
+			const repos: any[] = api?.repositories || [];
+			const byRemote = (repos as any[]).find(r => {
+				const remotes: any[] = r?.state?.remotes || [];
+				return remotes.some(m => {
+					const url = m?.fetchUrl || m?.pushUrl || "";
+					return metadata?.repoRemoteUrl && typeof metadata.repoRemoteUrl === "string"
+						? url.includes(metadata.repoRemoteUrl)
+						: false;
+				});
+			});
+			const byName =
+				!byRemote && metadata?.repoName
+					? (repos as any[]).find(r => {
+							const root = r?.rootUri?.fsPath || "";
+							return root && path.basename(root) === metadata.repoName;
+						})
+					: null;
+			const repo = (byRemote as any) || (byName as any);
+			if (repo?.rootUri?.fsPath) resolvedRoot = repo.rootUri.fsPath;
+		} catch {}
 
-		// Show diff preview and apply
+		const relative = (metadata?.relativeFilePath as string | undefined) || "";
+		const resolvedFilePath = relative ? path.join(resolvedRoot, relative) : (metadata?.filePath as string) || "";
+
+		vscode.window.showInformationMessage(
+			`Resolved file path: ${resolvedFilePath}, relative file path: ${relative}, repo name: ${metadata?.repoName}, repo remote url: ${metadata?.repoRemoteUrl}, repo head: ${metadata?.repoHead}, workspace name: ${metadata?.workspaceName}`
+		);
 		await showDiffPreview(context, {
 			snippetId: id,
 			content: text,
@@ -537,8 +580,8 @@ export async function handleApplyDiff(context: vscode.ExtensionContext, snippetI
 			originalContent: metadata?.fullFileContent || "",
 			startLine: metadata?.startLine || 1,
 			endLine: metadata?.endLine || 1,
-			filePath: metadata?.filePath || "",
-			relativeFilePath: metadata?.relativeFilePath || "",
+			filePath: resolvedFilePath,
+			relativeFilePath: relative,
 		});
 	} catch (e) {
 		console.error("Apply diff error:", e);

@@ -7,7 +7,6 @@ scripts/**
 **/.env
 **/.env.*
 
-# Whitelist what you need
 !.vscodeignore
 !dist/*
 !CHANGELOG.md

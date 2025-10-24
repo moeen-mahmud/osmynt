@@ -123,12 +123,14 @@ This guide helps you optimize Osmynt performance and troubleshoot slow performan
 - Intermittent connection issues
 
 **Common causes:**
+
 - Limited bandwidth
 - Network congestion
 - Multiple devices using bandwidth
 - Network throttling
 
 **Solutions:**
+
 1. **Check bandwidth**: Ensure sufficient bandwidth
 2. **Reduce code size**: Keep shared code blocks smaller
 3. **Stagger updates**: Avoid simultaneous updates on multiple devices
@@ -313,7 +315,7 @@ This guide helps you optimize Osmynt performance and troubleshoot slow performan
 
 ### Contacting Support
 
-When contacting support, include:
+**Include the following information when contacting support:**
 
 1. **Detailed description** of the performance issue
 2. **System information** (OS, VS Code version, etc.)
@@ -323,11 +325,9 @@ When contacting support, include:
 
 ### Support Channels
 
-> GitHub and Discord support is coming soon...
-
 - **📧 Email**: [support@osmynt.dev](mailto:support@osmynt.dev)
-<!-- - **🐛 GitHub Issues**: [Report issues](https://github.com/moeen-mahmud/osmynt/issues)
-- **💬 Discord**: [Get help from community](https://discord.gg/osmynt) -->
+- **🐛 GitHub Issues**: [Report issues](https://github.com/moeen-mahmud/osmynt/issues)
+<!-- - **💬 Discord**: [Get help from community](https://discord.gg/osmynt) -->
 
 ## Next Steps
 
