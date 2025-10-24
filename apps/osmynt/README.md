@@ -128,10 +128,6 @@ This project is licensed under the AGPL-3.0 License - see the [LICENSE](./LICENS
 
 ---
 
-<div align="center">
+[⭐ Star us on GitHub](https://github.com/moeen-mahmud/osmynt) • [🐛 Report Issues](https://github.com/moeen-mahmud/osmynt/issues) • [📧 Contact Us](mailto:support@osmynt.dev)
 
 **Made with ❤️ for the developers, by the developers**
-
-<!-- [⭐ Star us on GitHub](https://github.com/moeen-mahmud/osmynt) • [🐛 Report Issues](https://github.com/moeen-mahmud/osmynt/issues) • [📧 Contact Us](mailto:support@osmynt.dev) -->
-
-</div>
