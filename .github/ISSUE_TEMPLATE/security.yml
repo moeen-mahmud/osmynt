@@ -1,0 +1,97 @@
+name: 🔒 Security Issue
+description: Report a security vulnerability
+title: "[Security]: "
+labels: ["security", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **⚠️ IMPORTANT: Security issues should be reported privately to maintain security.**
+        
+        Please **DO NOT** create a public issue for security vulnerabilities. Instead, please email us at security@osmynt.com or use our private security reporting process.
+
+  - type: textarea
+    id: security-description
+    attributes:
+      label: Security Issue Description
+      description: A clear and concise description of the security issue.
+      placeholder: Describe the security vulnerability...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity Level
+      description: How severe is this security issue?
+      options:
+        - Low - Minor security concern
+        - Medium - Moderate security risk
+        - High - Significant security risk
+        - Critical - Severe security vulnerability
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected-components
+    attributes:
+      label: Affected Components
+      description: Which parts of Osmynt are affected by this security issue?
+      placeholder: List the affected components (VSCode Extension, Engine, Landing Page, etc.)
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can this security issue be reproduced?
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See vulnerability
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Potential Impact
+      description: What could an attacker do with this vulnerability?
+      placeholder: Describe the potential impact of this security issue...
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Please provide your environment details
+      placeholder: |
+        - OS: [e.g. macOS, Windows, Linux]
+        - Browser: [e.g. Chrome, Safari, Firefox] (if applicable)
+        - VSCode Version: [e.g. 1.85.0] (if applicable)
+        - Node.js Version: [e.g. 18.17.0]
+        - Osmynt Version: [e.g. 1.0.0]
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any additional context about the security issue.
+      placeholder: Any other information that might be helpful...
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Security Reporting Agreement
+      description: By submitting this security issue, you agree to our security reporting terms
+      options:
+        - label: I understand this is a security issue and should be handled privately
+          required: true
+        - label: I will not disclose this vulnerability publicly until it's been fixed
+          required: true
+        - label: I have provided accurate and complete information
+          required: true
