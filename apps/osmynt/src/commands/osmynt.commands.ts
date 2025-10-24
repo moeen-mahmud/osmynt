@@ -570,9 +570,6 @@ export async function handleApplyDiff(context: vscode.ExtensionContext, snippetI
 		const relative = (metadata?.relativeFilePath as string | undefined) || "";
 		const resolvedFilePath = relative ? path.join(resolvedRoot, relative) : (metadata?.filePath as string) || "";
 
-		vscode.window.showInformationMessage(
-			`Resolved file path: ${resolvedFilePath}, relative file path: ${relative}, repo name: ${metadata?.repoName}, repo remote url: ${metadata?.repoRemoteUrl}, repo head: ${metadata?.repoHead}, workspace name: ${metadata?.workspaceName}`
-		);
 		await showDiffPreview(context, {
 			snippetId: id,
 			content: text,

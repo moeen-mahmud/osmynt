@@ -1195,15 +1195,7 @@ async function showGitWorkingTreeView(diffData: {
 	});
 
 	// Show instructions | configurable from config -> DO not show this message again
-	vscode.window.showInformationMessage(`You are now in the Git Working Tree View`, {
-		modal: true,
-		detail: `
-• LEFT: Code blocks content (new changes)
-• RIGHT: Original file (your current file)
-• Use VS Code's diff controls to apply changes from code blocks to original file.
-• Save the changes to the original file to apply the changes.
-		`,
-	});
+	vscode.window.showInformationMessage(`You are now in the Git Working Tree View`);
 
 	// Set up cleanup when the diff editor is closed
 	const closeDisposable = vscode.workspace.onDidCloseTextDocument(async document => {
