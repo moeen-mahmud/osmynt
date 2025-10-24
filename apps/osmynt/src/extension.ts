@@ -107,7 +107,22 @@ export async function activate(context: vscode.ExtensionContext) {
 	);
 
 	// Set Contexts
-	const access = await context.secrets.get(ACCESS_SECRET_KEY);
+	let access = await context.secrets.get(ACCESS_SECRET_KEY);
+	if (!access) {
+		// Try a silent GitHub session to hydrate tokens without prompting
+		try {
+			const session = await vscode.authentication.getSession("github", ["read:user", "user:email"], {
+				createIfNone: false,
+				silent: true,
+			});
+			if (session) {
+				try {
+					await handleLogin(context, tree, connectRealtime);
+				} catch {}
+				access = await context.secrets.get(ACCESS_SECRET_KEY);
+			}
+		} catch {}
+	}
 	await vscode.commands.executeCommand("setContext", "osmynt.isLoggedIn", Boolean(access));
 	await vscode.commands.executeCommand("setContext", "osmynt.isPrimaryDevice", false);
 	await vscode.commands.executeCommand("setContext", "osmynt.isCompanionDevice", false);

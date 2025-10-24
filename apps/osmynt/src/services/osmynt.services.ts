@@ -39,7 +39,7 @@ export async function nativeSecureLogin(context: vscode.ExtensionContext, github
 		vscode.window.showErrorMessage(`Engine login failed (${res.status})`);
 		throw new Error(`Engine login failed (${res.status})`);
 	}
-	const data: AuthLoginResponse = await res.json();
+	const data = (await res.json()) as unknown as AuthLoginResponse;
 
 	const serverPub: any = await subtle.importKey(
 		"jwk",
@@ -216,7 +216,7 @@ export async function getDeviceState(context: vscode.ExtensionContext): Promise<
 		const res = await fetch(`${base}/${ENDPOINTS.base}/${ENDPOINTS.keys.me}`, {
 			headers: { Authorization: `Bearer ${access}` },
 		});
-		const data: KeysMeResponse = await res.json();
+		const data = (await res.json()) as unknown as KeysMeResponse;
 		const devices: DeviceKeySummary[] = Array.isArray(data?.devices) ? data.devices : [];
 		const idx = devices.findIndex(d => d.deviceId === localId);
 		if (idx === -1) return { kind: "removed" };
@@ -543,7 +543,48 @@ export async function backfillAccessForCompanion(context: vscode.ExtensionContex
 
 export async function getBaseAndAccess(context: vscode.ExtensionContext) {
 	const base = ENDPOINTS.engineBaseUrl!.replace(/\/$/, "");
-	const access = await context.secrets.get(ACCESS_SECRET_KEY);
+
+	let access = await context.secrets.get(ACCESS_SECRET_KEY);
+
+	const getJwtExp = (tok: string): number | null => {
+		try {
+			const parts = tok.split(".");
+			if (parts.length !== 3) return null;
+			const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8"));
+			return typeof payload?.exp === "number" ? payload.exp : null;
+		} catch {
+			return null;
+		}
+	};
+
+	const maybeSilentGithubLogin = async () => {
+		try {
+			const session = await vscode.authentication.getSession("github", ["read:user", "user:email"], {
+				createIfNone: false,
+				silent: true,
+			});
+			if (!session) return false;
+			await nativeSecureLogin(context, session.accessToken);
+			return true;
+		} catch {
+			return false;
+		}
+	};
+
+	if (access) {
+		const exp = getJwtExp(access);
+		const nowSec = Math.floor(Date.now() / 1000);
+		if (exp !== null && exp - nowSec <= 5 * 60) {
+			await maybeSilentGithubLogin();
+			access = await context.secrets.get(ACCESS_SECRET_KEY);
+		}
+	}
+
+	if (!access) {
+		await maybeSilentGithubLogin();
+		access = await context.secrets.get(ACCESS_SECRET_KEY);
+	}
+
 	if (!access) throw new Error("Not logged in");
 	return { base, access };
 }
