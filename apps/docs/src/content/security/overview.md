@@ -156,11 +156,11 @@ Osmynt is built with enterprise-grade security as a core principle. This section
 - **[Security FAQ](security/faq)** - Frequently asked security questions
 - **[Security Updates](security/updates)** - Security update information
 
-<!-- ### Support
+### Support
 
 - **Security issues**: [security@osmynt.dev](mailto:security@osmynt.dev)
 - **Bug reports**: [Report security bugs](https://github.com/moeen-mahmud/osmynt/issues)
-- **Security questions**: [Ask security questions](https://discord.gg/osmynt)
+<!-- - **Security questions**: [Ask security questions](https://discord.gg/osmynt)
 - **Security updates**: [Subscribe to security updates](https://osmynt.dev/security) -->
 
 ## Next Steps

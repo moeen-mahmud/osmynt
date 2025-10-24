@@ -211,13 +211,13 @@ If you received an invitation URL:
 If you're having team-related issues:
 
 - **Email**: [support@osmynt.dev](mailto:support@osmynt.dev)
-<!-- - **GitHub Issues**: [Report team issues](https://github.com/moeen-mahmud/osmynt/issues)
-- **Discord**: [Get help from the community](https://discord.gg/osmynt) -->
+- **GitHub Issues**: [Report team issues](https://github.com/moeen-mahmud/osmynt/issues)
+<!-- - **Discord**: [Get help from the community](https://discord.gg/osmynt) -->
 
 ## Next Steps
 
 Now that you understand teams, you're ready to:
 
 1. **[Share your first code](getting-started/first-share)** - Learn the basics of code sharing
-1. **[Set up multiple devices](features/device-management)** - Access from anywhere
-2. **[Learn about diff application](features/diff-application)** - Apply code changes directly
+2. **[Set up multiple devices](features/device-management)** - Access from anywhere
+3. **[Learn about diff application](features/diff-application)** - Apply code changes directly
