@@ -118,14 +118,12 @@ Osmynt solves the frustrating experience of sharing code blocks with your team. 
 
 ## 🆘 Need Help?
 
-> We are only accepting support via email for now. GitHub and Discord support is coming soon...
 - **📧 Email**: [support@osmynt.dev](mailto:support@osmynt.dev)
-<!-- - **🐛 GitHub Issues**: [Report bugs and feature requests](https://github.com/moeen-mahmud/osmynt/issues)
-- **💬 Discord**: [Join our community](https://discord.gg/osmynt) -->
+- **🐛 GitHub Issues**: [Report bugs and feature requests](https://github.com/moeen-mahmud/osmynt/issues)
+<!-- - **💬 Discord**: [Join our community](https://discord.gg/osmynt) --> -->
 
 ---
 
 **Made with ❤️ for the developers, by the developers**
 
-<!-- [⭐ Star us on GitHub](https://github.com/moeen-mahmud/osmynt) • [🐛 Report Issues](https://github.com/moeen-mahmud/osmynt/issues) • [📧 Contact Us](mailto:support@osmynt.dev) -->
-
+[⭐ Star us on GitHub](https://github.com/moeen-mahmud/osmynt) • [🐛 Report Issues](https://github.com/moeen-mahmud/osmynt/issues) • [📧 Contact Us](mailto:support@osmynt.dev)

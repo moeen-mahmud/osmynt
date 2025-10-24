@@ -13,6 +13,7 @@ This document provides comprehensive support information for Osmynt users, inclu
 ### Primary Support
 
 #### Email Support
+
 - **Email**: [support@osmynt.dev](mailto:support@osmynt.dev)
 - **Response Time**: 24-48 hours
 - **Best For**: Technical issues, account problems, security concerns
@@ -20,11 +21,10 @@ This document provides comprehensive support information for Osmynt users, inclu
 
 #### GitHub Issues
 
-> GitHub support is coming soon...
-<!-- - **Repository**: [github.com/moeen-mahmud/osmynt](https://github.com/moeen-mahmud/osmynt)
+- **Repository**: [github.com/moeen-mahmud/osmynt](https://github.com/moeen-mahmud/osmynt)
 - **Response Time**: 1-3 days
 - **Best For**: Bug reports, feature requests, technical discussions
-- **Availability**: 24/7 (community-driven) -->
+- **Availability**: 24/7 (community-driven)
 
 ### Community Support
 
@@ -34,9 +34,10 @@ This document provides comprehensive support information for Osmynt users, inclu
 <!-- - **Server**: [discord.gg/osmynt](https://discord.gg/osmynt)
 - **Response Time**: Real-time
 - **Best For**: Quick questions, community help, discussions
-- **Availability**: 24/7 (community-driven)
+- **Availability**: 24/7 (community-driven) -->
 
 #### GitHub Discussions
+
 - **Repository**: [github.com/moeen-mahmud/osmynt/discussions](https://github.com/moeen-mahmud/osmynt/discussions)
 - **Response Time**: 1-7 days
 - **Best For**: General questions, feature discussions, community help
@@ -61,15 +62,6 @@ When contacting support, include:
 3. **System Information** - OS, VS Code version, Osmynt version
 4. **Error Messages** - Any error messages or logs
 5. **What You've Tried** - Troubleshooting steps you've already tried
-
-### Support Response Times
-
-| Channel | Response Time | Best For |
-|---------|---------------|----------|
-| **Email** | 24-48 hours | Technical issues, account problems |
-| **GitHub Issues** | 1-3 days | Bug reports, feature requests |
-| **Discord** | Real-time | Quick questions, community help |
-| **GitHub Discussions** | 1-7 days | General questions, discussions |
 
 ## Troubleshooting Resources
 
@@ -165,23 +157,8 @@ When contacting support, include:
 
 #### Enterprise Contact
 - **Email**: [enterprise@osmynt.dev](mailto:enterprise@osmynt.dev)
-- **Phone**: +1 (555) 123-4567
 - **Response Time**: 4-8 hours
 - **Availability**: 24/7 for critical issues
-
-### Training and Consulting
-
-#### Training Services
-- **Team Onboarding** - Onboard your team to Osmynt
-- **Best Practices** - Learn best practices for code sharing
-- **Security Training** - Security best practices and training
-- **Integration Training** - Learn to integrate with other tools
-
-#### Consulting Services
-- **Implementation** - Help implement Osmynt in your organization
-- **Custom Integrations** - Develop custom integrations
-- **Security Audits** - Security audits and recommendations
-- **Performance Optimization** - Optimize performance and usage
 
 ## Reporting Issues
 
@@ -296,12 +273,13 @@ Any additional information or context
 
 ## Contact Information
 
-<!-- ### General Support
-- **Email**: [support@osmynt.dev](mailto:support@osmynt.dev) -->
-<!-- - **GitHub**: [github.com/moeen-mahmud/osmynt](https://github.com/moeen-mahmud/osmynt) -->
+### General Support
+- **Email**: [support@osmynt.dev](mailto:support@osmynt.dev)
+- **GitHub**: [github.com/moeen-mahmud/osmynt](https://github.com/moeen-mahmud/osmynt)
 <!-- - **Discord**: [discord.gg/osmynt](https://discord.gg/osmynt) -->
 
 ### Specialized Support
+
 - **Security**: [security@osmynt.dev](mailto:security@osmynt.dev)
 - **Enterprise**: [enterprise@osmynt.dev](mailto:enterprise@osmynt.dev)
 - **Privacy**: [privacy@osmynt.dev](mailto:privacy@osmynt.dev)
@@ -309,11 +287,9 @@ Any additional information or context
 
 ### Community
 
-> Community support is coming soon...
-<!-- - **Discord**: [discord.gg/osmynt](https://discord.gg/osmynt) -->
-<!-- - **GitHub Discussions**: [github.com/moeen-mahmud/osmynt/discussions](https://github.com/moeen-mahmud/osmynt/discussions) -->
-<!-- - **Twitter**: [@osmynt](https://twitter.com/osmynt)
-- **LinkedIn**: [Osmynt](https://linkedin.com/company/osmynt) -->
+- **GitHub Discussions**: [github.com/moeen-mahmud/osmynt/discussions](https://github.com/moeen-mahmud/osmynt/discussions)
+<!-- - **Twitter**: [@osmynt](https://twitter.com/osmynt) -->
+<!-- - **LinkedIn**: [Osmynt](https://linkedin.com/company/osmynt) -->
 
 ## Next Steps
 

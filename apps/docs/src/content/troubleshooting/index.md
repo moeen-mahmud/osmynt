@@ -59,6 +59,7 @@ Solve common problems and optimize your Osmynt experience.
 - **Members not appearing**: Run `Osmynt: Refresh`
 
 ### Code Sharing Issues
+
 - **Share failed**: Check internet connection
 - **Code not appearing**: Run `Osmynt: Refresh`
 - **No code selected**: Select code before sharing
@@ -66,18 +67,22 @@ Solve common problems and optimize your Osmynt experience.
 ## 🆘 Getting Help
 
 ### Before Contacting Support
+
 1. **Check this guide** - Look for your specific issue
 2. **Try basic solutions** - Restart VS Code, clear cache, re-authenticate
 3. **Check system requirements** - Ensure your system meets requirements
 4. **Update everything** - Ensure VS Code and Osmynt are updated
 
 ### Support Channels
+
 - **📧 Email**: [support@osmynt.dev](mailto:support@osmynt.dev)
 - **🐛 GitHub Issues**: [Report issues](https://github.com/moeen-mahmud/osmynt/issues)
-- **💬 Discord**: [Get help from community](https://discord.gg/osmynt)
+<!-- - **💬 Discord**: [Get help from community](https://discord.gg/osmynt) -->
 
 ### When Contacting Support
-Include:
+
+**Include the following information when contacting support:**
+
 - **Detailed description** of the problem
 - **Steps to reproduce** the issue
 - **System information** (OS, VS Code version, etc.)
