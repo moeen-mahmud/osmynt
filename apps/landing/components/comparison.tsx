@@ -246,5 +246,3 @@ export function Comparison() {
 		</section>
 	);
 }
-
-// triggers build
