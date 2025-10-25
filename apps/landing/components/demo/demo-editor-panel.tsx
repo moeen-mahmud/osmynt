@@ -85,7 +85,7 @@ const DemoEditorPanel: React.FC<DemoEditorPanelProps> = ({
 			)}
 		</div>
 
-		<div className="h-[400px] border-b border-border">
+		<div className="h-[50vh] border-b border-border">
 			<StableMonacoEditor
 				height="100%"
 				language="javascript"

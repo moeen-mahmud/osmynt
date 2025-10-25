@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Play, Pause, RotateCcw, Users, AlertCircle, UserPlus, LogIn, X, HelpCircle } from "lucide-react";
+import { RotateCcw, Users, AlertCircle, UserPlus, LogIn, X, HelpCircle } from "lucide-react";
 import type { User, TeamMember, CodeBlock } from "@/components/demo/demo.types";
 import { guideSteps } from "@/components/demo/demo.data";
 import { userCodeBlocks, bobCodeBlocks } from "@/components/demo/demo.config";
@@ -175,6 +175,7 @@ export function GuidedDemo() {
 		setNotifications([]);
 		setCurrentGuideStep(0);
 		setShowGuide(true);
+		setBobCode(bobCodeBlocks);
 	};
 
 	const handleEditorMount = useCallback((editor: any) => {
@@ -217,7 +218,7 @@ export function GuidedDemo() {
 	return (
 		<Dialog open={showDemo} modal>
 			<DialogContent
-				className="!max-w-[95vw] overflow-y-auto p-0 scrollbar-thumb-green-400 scrollbar-track-green-950 scrollbar-thin focus:outline-none h-full"
+				className="!max-w-[95vw] overflow-y-auto p-0 scrollbar-thumb-green-400 scrollbar-track-green-950 scrollbar-thin focus:outline-none h-full flex flex-col gap-6"
 				showCloseButton={false}
 			>
 				<div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">

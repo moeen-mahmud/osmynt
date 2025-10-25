@@ -14,6 +14,10 @@ export function Footer() {
 						<p className="text-sm text-muted-foreground">
 							Secure, Git-powered, real-time code sharing for developer teams.
 						</p>
+						<p className="text-muted-foreground text-xs">
+							*This is a simulation to show how Osmynt works. The actual extension provides native VS Code
+							or VSCode-like editor integration with real-time collaboration.
+						</p>
 					</div>
 
 					<div>
@@ -47,6 +51,8 @@ export function Footer() {
 						<ul className="space-y-2 text-sm text-muted-foreground">
 							<li>
 								<a
+									target="_blank"
+									rel="noopener noreferrer"
 									href="https://github.com/moeen-mahmud/osmynt"
 									className="hover:text-foreground transition-colors"
 								>
@@ -55,6 +61,8 @@ export function Footer() {
 							</li>
 							<li>
 								<a
+									target="_blank"
+									rel="noopener noreferrer"
 									href="https://github.com/moeen-mahmud/osmynt/issues"
 									className="hover:text-foreground transition-colors"
 								>
@@ -89,6 +97,8 @@ export function Footer() {
 						<ul className="space-y-2 text-sm text-muted-foreground">
 							<li>
 								<a
+									target="_blank"
+									rel="noopener noreferrer"
 									href="mailto:support@osmynt.dev"
 									className="hover:text-foreground transition-colors flex items-center gap-2"
 								>
@@ -98,11 +108,13 @@ export function Footer() {
 							</li>
 							<li>
 								<a
-									href="https://github.com/moeen-mahmud"
+									target="_blank"
+									rel="noopener noreferrer"
+									href="https://github.com/moeen-mahmud/osmynt"
 									className="hover:text-foreground transition-colors flex items-center gap-2"
 								>
 									<Github className="h-4 w-4" />
-									@moeen-mahmud
+									@Osmynt
 								</a>
 							</li>
 						</ul>
