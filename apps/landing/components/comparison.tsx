@@ -236,8 +236,9 @@ export function Comparison() {
 						<h3 className="text-xl font-semibold mb-2 text-primary">Why choose Osmynt?</h3>
 						<p className="text-muted-foreground">
 							Osmynt is the only solution that combines end-to-end encryption, real-time collaboration,
-							native editor integration, and multi-device support. Built specifically for developer teams
-							who value security, productivity, and seamless workflow integration.
+							git-like diff support, native editor integration, multi-device support, and is built
+							specifically for developer teams who value security, productivity, and seamless workflow
+							integration.
 						</p>
 					</div>
 				</motion.div>
