@@ -245,7 +245,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 If you discover a security vulnerability, please report it responsibly:
 
 1. **Do not** create a public issue
-2. **Email** security details to [moeen.mahmud007@gmail.com](mailto:moeen.mahmud007@gmail.com)
+2. **Email** security details to [security@osmynt.dev](mailto:security@osmynt.dev)
 3. **Include** steps to reproduce the vulnerability
 4. **Wait** for acknowledgment before public disclosure
 

@@ -3,8 +3,31 @@
 	"version": "0.0.1",
 	"author": {
 		"name": "Moeen Mahmud",
-		"email": "moeen.mahmud007@gmail.com"
+		"email": "moeen@osmynt.dev"
 	},
+	"license": "AGPL-3.0",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/moeen-mahmud/osmynt"
+	},
+	"homepage": "https://osmynt.dev",
+	"documentationUrl": "https://docs.osmynt.dev",
+	"bugs": {
+		"url": "https://github.com/moeen-mahmud/osmynt/issues"
+	},
+	"keywords": [
+		"osmynt",
+		"code-sharing",
+		"real-time",
+		"git",
+		"encryption",
+		"team-sharing",
+		"developer-tools"
+	],
+	"engines": {
+		"node": ">=18.0.0"
+	},
+	"packageManager": "bun@1.2.23",
 	"devDependencies": {
 		"@biomejs/biome": "2.2.4",
 		"@changesets/changelog-github": "^0.5.1",
