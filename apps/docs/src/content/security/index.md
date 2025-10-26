@@ -38,8 +38,8 @@ Understand Osmynt's security features and learn how to keep your code secure.
 ## 🔑 Key Security Features
 
 ### End-to-End Encryption
-- **AES-256 encryption** for all code
-- **RSA-4096 keys** for secure key exchange
+- **AES-256-GCM encryption** for all code
+- **ECDH-P256 keys** for secure key exchange
 - **Perfect Forward Secrecy** for session keys
 - **Zero-knowledge architecture** - we cannot read your code
 
@@ -51,16 +51,16 @@ Understand Osmynt's security features and learn how to keep your code secure.
 
 ### Device Security
 - **Multi-device verification** - Secure device registration
-- **Device management** - Control and revoke device access
+- **Device management** - Maximum 2 devices per account
 - **Secure synchronization** - Encrypted data transfer
-- **Offline security** - Secure local storage
+- **Offline security** - Secure local storage in VS Code secrets
 
 ## 🚨 Security Considerations
 
 ### What We Protect
-- ✅ **Your code** - End-to-end encrypted
-- ✅ **Team communications** - Encrypted channels
-- ✅ **Device data** - Secure synchronization
+- ✅ **Your code** - End-to-end encrypted with AES-256-GCM
+- ✅ **Team communications** - Encrypted channels via ECDH-P256
+- ✅ **Device data** - Secure synchronization with device limits
 - ✅ **User privacy** - Zero-knowledge architecture
 
 ### What We Don't Protect
@@ -76,8 +76,8 @@ Understand Osmynt's security features and learn how to keep your code secure.
 {
   "osmynt.security.encryption": true,
   "osmynt.security.requireAuth": true,
-  "osmynt.security.auditLogging": true,
-  "osmynt.security.deviceVerification": true
+  "osmynt.security.deviceVerification": true,
+  "osmynt.security.maxDevices": 2
 }
 ```
 
@@ -85,7 +85,7 @@ Understand Osmynt's security features and learn how to keep your code secure.
 - ✅ Enable encryption
 - ✅ Use strong authentication
 - ✅ Verify team members
-- ✅ Manage device access
+- ✅ Manage device access (max 2 devices)
 - ✅ Regular security updates
 - ✅ Monitor team activities
 
@@ -99,7 +99,7 @@ Understand Osmynt's security features and learn how to keep your code secure.
 ### Security Updates
 - **Automatic updates**: Security updates are applied automatically
 - **Security notifications**: We notify users of security issues
-- **Update policy**: We provide security updates for 2 years
+- **Update policy**: We provide security updates for supported versions
 
 ## 🔗 Related Documentation
 

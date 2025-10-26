@@ -24,7 +24,7 @@ This guide provides security best practices for using Osmynt safely and securely
 2. **Keep devices updated** - ensure OS and software are updated
 3. **Use antivirus software** - protect against malware
 4. **Secure device access** - use strong device passwords
-5. **Regular device cleanup** - remove unused devices
+5. **Device limit management** - maximum 2 devices per account
 
 ### Network Security
 
@@ -168,19 +168,17 @@ This guide provides security best practices for using Osmynt safely and securely
 
 ### Regulatory Compliance
 
-1. **GDPR compliance** - ensure compliance with European data protection
-2. **CCPA compliance** - ensure compliance with California consumer privacy
-3. **HIPAA compliance** - ensure compliance with healthcare data protection
-4. **SOX compliance** - ensure compliance with financial data protection
-5. **Regular compliance reviews** - periodically review compliance
+1. **Data minimization** - only collect necessary authentication data
+2. **User control** - users control their own encryption keys
+3. **Transparency** - open source code allows for security verification
+4. **Regular compliance reviews** - periodically review compliance
 
 ### Industry Standards
 
-1. **ISO 27001 compliance** - ensure compliance with information security management
-2. **SOC 2 compliance** - ensure compliance with security and availability
-3. **FIPS 140-2 compliance** - ensure compliance with cryptographic modules
-4. **Common Criteria compliance** - ensure compliance with security evaluation
-5. **Regular standards reviews** - periodically review standards compliance
+1. **Web Crypto API** - uses browser-standard cryptographic APIs
+2. **Industry best practices** - follows established cryptographic standards
+3. **Open source** - all cryptographic code is open source and auditable
+4. **Regular standards reviews** - periodically review standards compliance
 
 ## Security Resources
 
