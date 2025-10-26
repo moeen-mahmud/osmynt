@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { RotateCcw, Users, AlertCircle, UserPlus, LogIn, X, HelpCircle } from "lucide-react";
 import type { User, TeamMember, CodeBlock } from "@/components/demo/demo.types";
@@ -15,6 +15,7 @@ import { DemoGuide } from "@/components/demo/demo-guide";
 import { DemoCodeBlocksPanel } from "@/components/demo/demo-code-blocks-panel";
 import { DemoLogin } from "@/components/demo/demo-login";
 import { DemoInvite } from "@/components/demo/demo-invite";
+import Image from "next/image";
 
 export function GuidedDemo() {
 	// User state
@@ -49,6 +50,7 @@ export function GuidedDemo() {
 	const [currentGuideStep, setCurrentGuideStep] = useState(0);
 	const [showGuide, setShowGuide] = useState(true);
 	const [showDemo, setShowDemo] = useState(false);
+	const [showGif, setShowGif] = useState(false);
 
 	const userEditorRef = useRef<any>(null);
 	const bobEditorRef = useRef<any>(null);
@@ -211,199 +213,224 @@ export function GuidedDemo() {
 		setUserEmail(e.target.value);
 	}, []);
 
-	if (!showDemo) {
-		return <DemoPreview setShowDemo={setShowDemo} />;
+	if (!showDemo && !showGif) {
+		return <DemoPreview setShowGif={setShowGif} setShowDemo={setShowDemo} />;
 	}
 
 	return (
-		<Dialog open={showDemo} modal>
-			<DialogContent
-				className="!max-w-[95vw] overflow-y-auto p-0 scrollbar-thumb-green-400 scrollbar-track-green-950 scrollbar-thin focus:outline-none h-full flex flex-col gap-6"
-				showCloseButton={false}
-			>
-				<div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
-					<div className="flex items-center gap-3">
-						<div className="flex gap-1.5">
-							<div className="h-3 w-3 rounded-full bg-red-500/80"></div>
-							<div className="h-3 w-3 rounded-full bg-yellow-500/80"></div>
-							<div className="h-3 w-3 rounded-full bg-green-500/80"></div>
+		<>
+			<Dialog open={showDemo} modal>
+				<DialogContent
+					className="max-w-[95vw]! overflow-y-auto overflow-x-hidden p-0 scrollbar-thumb-green-400 scrollbar-track-green-950 scrollbar-thin focus:outline-none h-full flex flex-col gap-6"
+					showCloseButton={false}
+				>
+					<div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
+						<div className="flex items-center gap-3">
+							<div className="flex gap-1.5">
+								<div className="h-3 w-3 rounded-full bg-red-500/80"></div>
+								<div className="h-3 w-3 rounded-full bg-yellow-500/80"></div>
+								<div className="h-3 w-3 rounded-full bg-green-500/80"></div>
+							</div>
+							<span className="text-sm text-muted-foreground font-mono">Osmynt Interactive Demo</span>
 						</div>
-						<span className="text-sm text-muted-foreground font-mono">Osmynt Interactive Demo</span>
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={() => {
+								setShowDemo(false);
+								resetDemo();
+							}}
+						>
+							<X className="h-4 w-4" />
+						</Button>
 					</div>
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={() => {
-							setShowDemo(false);
-							resetDemo();
-						}}
-					>
-						<X className="h-4 w-4" />
-					</Button>
-				</div>
-				<div className="overflow-auto px-6">
-					<div className="flex items-center justify-between mb-6">
-						<div className="flex items-center gap-2">
-							{!isLoggedIn ? (
-								<Button
-									variant="secondary"
-									size="sm"
-									onClick={() => setShowLoginDialog(true)}
-									className="gap-2"
-									id="login-button"
-								>
-									<LogIn className="h-4 w-4" />
-									Login
-								</Button>
-							) : (
-								<>
-									{teamMembers.length === 0 && (
-										<Button
-											variant="secondary"
-											size="sm"
-											onClick={() => setShowInviteDialog(true)}
-											className="gap-2"
-											id="invite-button"
-										>
-											<UserPlus className="h-4 w-4" />
-											Invite Bob
-										</Button>
-									)}
-									<Button variant="outline" size="sm" onClick={resetDemo} className="gap-2">
-										<RotateCcw className="h-4 w-4" />
-										Reset
+					<div className="overflow-y-auto overflow-x-hidden px-6 scrollbar-thumb-green-400 scrollbar-track-green-950 scrollbar-thin">
+						<div className="flex items-center justify-between mb-6">
+							<div className="flex items-center gap-2">
+								{!isLoggedIn ? (
+									<Button
+										variant="secondary"
+										size="sm"
+										onClick={() => setShowLoginDialog(true)}
+										className="gap-2"
+										id="login-button"
+									>
+										<LogIn className="h-4 w-4" />
+										Login
 									</Button>
-								</>
-							)}
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => setShowGuide(!showGuide)}
-								className="gap-2"
-							>
-								<HelpCircle className="h-4 w-4" />
-								{showGuide ? "Hide Guide" : "Show Guide"}
-							</Button>
-						</div>
-					</div>
-
-					{showGuide && (
-						<DemoGuide
-							currentGuideStep={currentGuideStep}
-							prevGuideStep={prevGuideStep}
-							nextGuideStep={nextGuideStep}
-							setShowGuide={setShowGuide}
-						/>
-					)}
-
-					{/* Team Status */}
-					{teamMembers.length > 0 && (
-						<div className="mb-6 p-4 bg-muted/30 rounded-lg">
-							<div className="flex items-center gap-2 mb-3">
-								<Users className="h-4 w-4 text-primary" />
-								<span className="font-medium">Team Members</span>
+								) : (
+									<>
+										{teamMembers.length === 0 && (
+											<Button
+												variant="secondary"
+												size="sm"
+												onClick={() => setShowInviteDialog(true)}
+												className="gap-2"
+												id="invite-button"
+											>
+												<UserPlus className="h-4 w-4" />
+												Invite Bob
+											</Button>
+										)}
+										<Button variant="outline" size="sm" onClick={resetDemo} className="gap-2">
+											<RotateCcw className="h-4 w-4" />
+											Reset
+										</Button>
+									</>
+								)}
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => setShowGuide(!showGuide)}
+									className="gap-2"
+								>
+									<HelpCircle className="h-4 w-4" />
+									{showGuide ? "Hide Guide" : "Show Guide"}
+								</Button>
 							</div>
-							<div className="flex gap-3">
-								{teamMembers.map(member => (
-									<div key={member.id} className="flex items-center gap-2">
-										<div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-semibold">
-											{member.avatar}
+						</div>
+
+						{showGuide && (
+							<DemoGuide
+								currentGuideStep={currentGuideStep}
+								prevGuideStep={prevGuideStep}
+								nextGuideStep={nextGuideStep}
+								setShowGuide={setShowGuide}
+							/>
+						)}
+
+						{/* Team Status */}
+						{teamMembers.length > 0 && (
+							<div className="mb-6 p-4 bg-muted/30 rounded-lg">
+								<div className="flex items-center gap-2 mb-3">
+									<Users className="h-4 w-4 text-primary" />
+									<span className="font-medium">Team Members</span>
+								</div>
+								<div className="flex gap-3">
+									{teamMembers.map(member => (
+										<div key={member.id} className="flex items-center gap-2">
+											<div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-semibold">
+												{member.avatar}
+											</div>
+											<span className="text-sm">{member.name}</span>
+											<Badge variant="outline" className="text-xs">
+												{member.role}
+											</Badge>
 										</div>
-										<span className="text-sm">{member.name}</span>
-										<Badge variant="outline" className="text-xs">
-											{member.role}
-										</Badge>
-									</div>
-								))}
+									))}
+								</div>
 							</div>
-						</div>
-					)}
+						)}
 
-					{/* Dual Editor Layout */}
-					<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-						{/* User's Editor */}
-						<div id="user-editor">
+						{/* Dual Editor Layout */}
+						<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+							{/* User's Editor */}
+							<div id="user-editor">
+								<StableDemoEditorPanel
+									title="Your Editor"
+									user={{
+										id: "user-1",
+										name: userName || "You",
+										email: userEmail,
+										avatar: userName ? userName[0].toUpperCase() : "U",
+										isLoggedIn,
+									}}
+									code={userCode}
+									setCode={setUserCode}
+									onMount={handleEditorMount}
+									showActions={isLoggedIn}
+									selectedLines={selectedLines}
+									handleShareCode={handleShareCode}
+									showCodeBlocks={showCodeBlocks}
+									setShowCodeBlocks={setShowCodeBlocks}
+									sharedCodeBlocks={sharedCodeBlocks}
+									isBobTyping={isBobTyping}
+								/>
+							</div>
+
+							{/* Bob's Editor */}
 							<StableDemoEditorPanel
-								title="Your Editor"
-								user={{
-									id: "user-1",
-									name: userName || "You",
-									email: userEmail,
-									avatar: userName ? userName[0].toUpperCase() : "U",
-									isLoggedIn,
-								}}
-								code={userCode}
-								setCode={setUserCode}
-								onMount={handleEditorMount}
-								showActions={isLoggedIn}
-								selectedLines={selectedLines}
-								handleShareCode={handleShareCode}
-								showCodeBlocks={showCodeBlocks}
-								setShowCodeBlocks={setShowCodeBlocks}
-								sharedCodeBlocks={sharedCodeBlocks}
-								isBobTyping={isBobTyping}
+								title="Bob's Editor"
+								user={bobUser}
+								code={bobCode}
+								setCode={() => {}} // Bob's editor is read-only
+								selectedLines={null}
+								handleShareCode={() => {}}
+								showCodeBlocks={false}
+								setShowCodeBlocks={() => {}}
+								sharedCodeBlocks={[]}
+								isBobTyping={false}
+								onMount={handleBobEditorMount}
+								showActions={bobUser.isLoggedIn}
 							/>
 						</div>
 
-						{/* Bob's Editor */}
-						<StableDemoEditorPanel
-							title="Bob's Editor"
-							user={bobUser}
-							code={bobCode}
-							setCode={() => {}} // Bob's editor is read-only
-							selectedLines={null}
-							handleShareCode={() => {}}
-							showCodeBlocks={false}
-							setShowCodeBlocks={() => {}}
-							sharedCodeBlocks={[]}
-							isBobTyping={false}
-							onMount={handleBobEditorMount}
-							showActions={bobUser.isLoggedIn}
+						{/* Code Blocks Panel */}
+						{showCodeBlocks && sharedCodeBlocks.length > 0 && (
+							<DemoCodeBlocksPanel
+								sharedCodeBlocks={sharedCodeBlocks}
+								handleApplyDiff={handleApplyDiff}
+							/>
+						)}
+
+						{/* Notifications */}
+						<AnimatePresence>
+							{notifications.map((notification, index) => (
+								<motion.div
+									key={index}
+									initial={{ opacity: 0, x: 100, y: -100 }}
+									animate={{ opacity: 1, x: 0, y: 0 }}
+									exit={{ opacity: 0, x: 100, y: -100 }}
+									className="fixed top-4 right-4 bg-primary text-primary-foreground rounded-lg p-3 shadow-lg z-50 max-w-sm"
+								>
+									<div className="flex items-center gap-2">
+										<AlertCircle className="h-4 w-4" />
+										<span className="text-sm font-medium">{notification}</span>
+									</div>
+								</motion.div>
+							))}
+						</AnimatePresence>
+
+						{/* Login Dialog */}
+						<DemoLogin
+							showLoginDialog={showLoginDialog}
+							setShowLoginDialog={setShowLoginDialog}
+							userName={userName}
+							userEmail={userEmail}
+							handleLogin={handleLogin}
+							onChangeUserName={onChangeUserName}
+							onChangeUserEmail={onChangeUserEmail}
+						/>
+
+						{/* Invite Dialog */}
+						<DemoInvite
+							showInviteDialog={showInviteDialog}
+							setShowInviteDialog={setShowInviteDialog}
+							handleInviteBob={handleInviteBob}
 						/>
 					</div>
-
-					{/* Code Blocks Panel */}
-					{showCodeBlocks && sharedCodeBlocks.length > 0 && (
-						<DemoCodeBlocksPanel sharedCodeBlocks={sharedCodeBlocks} handleApplyDiff={handleApplyDiff} />
-					)}
-
-					{/* Notifications */}
-					<AnimatePresence>
-						{notifications.map((notification, index) => (
-							<motion.div
-								key={index}
-								initial={{ opacity: 0, x: 100, y: -100 }}
-								animate={{ opacity: 1, x: 0, y: 0 }}
-								exit={{ opacity: 0, x: 100, y: -100 }}
-								className="fixed top-4 right-4 bg-primary text-primary-foreground rounded-lg p-3 shadow-lg z-50 max-w-sm"
-							>
-								<div className="flex items-center gap-2">
-									<AlertCircle className="h-4 w-4" />
-									<span className="text-sm font-medium">{notification}</span>
-								</div>
-							</motion.div>
-						))}
-					</AnimatePresence>
-
-					{/* Login Dialog */}
-					<DemoLogin
-						showLoginDialog={showLoginDialog}
-						setShowLoginDialog={setShowLoginDialog}
-						userName={userName}
-						userEmail={userEmail}
-						handleLogin={handleLogin}
-						onChangeUserName={onChangeUserName}
-						onChangeUserEmail={onChangeUserEmail}
-					/>
-
-					{/* Invite Dialog */}
-					<DemoInvite
-						showInviteDialog={showInviteDialog}
-						setShowInviteDialog={setShowInviteDialog}
-						handleInviteBob={handleInviteBob}
-					/>
-				</div>
-			</DialogContent>
-		</Dialog>
+				</DialogContent>
+			</Dialog>
+			<Dialog open={showGif} onOpenChange={setShowGif}>
+				<DialogContent className="max-w-[95vw]! overflow-y-auto scrollbar-thumb-green-400 scrollbar-track-green-950 scrollbar-thin focus:outline-none h-full flex flex-col gap-6">
+					<DialogHeader>
+						<DialogTitle>90-second GIF Demo</DialogTitle>
+						<DialogDescription>
+							A quick overview of how Osmynt works. Here we focused on the Github diff application
+							functionality.
+						</DialogDescription>
+					</DialogHeader>
+					<div className="flex items-center justify-center">
+						<Image
+							src="osmynt-demo.gif"
+							alt="Osmynt GIF Demo"
+							width={1000}
+							height={700}
+							className="w-full h-full object-contain"
+						/>
+					</div>
+				</DialogContent>
+			</Dialog>
+		</>
 	);
 }
