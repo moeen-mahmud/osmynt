@@ -1,7 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 
-export const DemoPreview: React.FC<{ setShowDemo: (show: boolean) => void }> = ({ setShowDemo }) => {
+type DemoPreviewProps = {
+	setShowGif: (show: boolean) => void;
+	setShowDemo: (show: boolean) => void;
+};
+
+export const DemoPreview: React.FC<DemoPreviewProps> = ({ setShowGif, setShowDemo }) => {
 	return (
 		<div className="relative rounded-lg border border-border bg-card p-6 max-w-7xl mx-auto">
 			<div className="flex flex-col items-center justify-center py-16 text-center">
@@ -23,10 +28,20 @@ export const DemoPreview: React.FC<{ setShowDemo: (show: boolean) => void }> = (
 						</div>
 					</div> */}
 				</div>
-				<Button size="lg" onClick={() => setShowDemo(true)} className="gap-2 px-8 py-3">
-					<Play className="h-5 w-5" />
-					Start Demo
-				</Button>
+				<div className="flex flex-col items-center justify-center gap-1">
+					<Button size="lg" onClick={() => setShowDemo(true)} className="gap-2 px-8 py-3 cursor-pointer">
+						<Play className="h-5 w-5" />
+						Start Demo
+					</Button>
+					<Button
+						variant="link"
+						size="sm"
+						className="text-xs text-muted-foreground cursor-pointer underline"
+						onClick={() => setShowGif(true)}
+					>
+						Watch the 90-second GIF instead
+					</Button>
+				</div>
 			</div>
 		</div>
 	);
