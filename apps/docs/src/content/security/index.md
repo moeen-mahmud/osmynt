@@ -29,6 +29,7 @@ Understand Osmynt's security features and learn how to keep your code secure.
 ## 🛡️ Best Practices
 
 **[Security Best Practices](security/best-practices)** - Keep your code secure
+
 - Team management security
 - Device security
 - Code sharing security
@@ -38,12 +39,14 @@ Understand Osmynt's security features and learn how to keep your code secure.
 ## 🔑 Key Security Features
 
 ### End-to-End Encryption
+
 - **AES-256-GCM encryption** for all code
 - **ECDH-P256 keys** for secure key exchange
 - **Perfect Forward Secrecy** for session keys
 - **Zero-knowledge architecture** - we cannot read your code
 
 ### Team Security
+
 - **Invitation-only teams** - Only invited members can join
 - **Device verification** - Only authorized devices can access
 - **Role-based permissions** - Control who can share and receive
