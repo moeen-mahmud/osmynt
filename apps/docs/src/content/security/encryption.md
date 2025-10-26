@@ -13,10 +13,9 @@ This document provides technical details about Osmynt's encryption implementatio
 ### Encryption Standards
 
 - **AES-256-GCM** for symmetric encryption of shared code
-- **RSA-4096** for asymmetric encryption of team keys
-- **ECDH-P256** for key exchange between team members
-- **SHA-256** for cryptographic hashing
-- **PBKDF2** for key derivation
+- **ECDH-P256** for key exchange between team members and devices
+- **HMAC-SHA256** for JWT token signing
+- **Web Crypto API** for all cryptographic operations
 
 ### Encryption Flow
 
@@ -32,9 +31,9 @@ This document provides technical details about Osmynt's encryption implementatio
 ### Team Keys
 
 - **Team keys are generated** when teams are created
-- **RSA-4096 key pairs** are generated for each team
-- **Public keys are shared** with all team members
-- **Private keys are stored** securely on each device
+- **AES-256 symmetric keys** are generated for each team
+- **Team keys are shared** with all team members via ECDH
+- **Keys are stored** securely in VS Code secrets
 - **Keys are rotated** when team membership changes
 
 ### Device Keys
@@ -63,12 +62,12 @@ This document provides technical details about Osmynt's encryption implementatio
 - **Authentication**: Built-in authentication
 - **Randomization**: Cryptographically secure random number generation
 
-### Asymmetric Encryption
+### JWT Authentication
 
-- **Algorithm**: RSA-4096
-- **Key size**: 4096 bits
-- **Padding**: OAEP padding
-- **Hash function**: SHA-256
+- **Algorithm**: HMAC-SHA256
+- **Key size**: Variable (from JWT_SECRET)
+- **Access token expiry**: 12 hours
+- **Refresh token expiry**: 30 days
 - **Key generation**: Cryptographically secure key generation
 
 ### Key Exchange
@@ -76,8 +75,8 @@ This document provides technical details about Osmynt's encryption implementatio
 - **Algorithm**: ECDH-P256
 - **Curve**: P-256 (secp256r1)
 - **Key size**: 256 bits
-- **Key derivation**: PBKDF2 with SHA-256
-- **Iterations**: 100,000 iterations
+- **Key derivation**: Direct ECDH key agreement
+- **Handshake expiry**: 5 minutes
 
 ## Security Measures
 
@@ -90,15 +89,15 @@ This document provides technical details about Osmynt's encryption implementatio
 
 ### Authentication
 
-- **Device authentication** using RSA signatures
-- **Team authentication** using RSA signatures
-- **Message authentication** using HMAC-SHA256
+- **Device authentication** using ECDH key pairs
+- **Team authentication** using shared team keys
+- **Message authentication** using AES-GCM built-in authentication
 - **Key verification** ensures keys are authentic
 
 ### Integrity Protection
 
-- **Message authentication codes** (MAC) for integrity
-- **Hash-based authentication** using SHA-256
+- **Message authentication codes** (MAC) for integrity via AES-GCM
+- **JWT signature verification** using HMAC-SHA256
 - **Tamper detection** for all communications
 - **Integrity verification** for all data
 
@@ -123,11 +122,11 @@ This document provides technical details about Osmynt's encryption implementatio
 
 ### Authentication Protocol
 
-1. **Device generates** RSA key pair
+1. **Device generates** ECDH key pair
 2. **Public key is shared** with team members
-3. **Private key is stored** securely on device
-4. **Messages are signed** using private key
-5. **Messages are verified** using public key
+3. **Private key is stored** securely in VS Code secrets
+4. **Messages are encrypted** using derived keys
+5. **Messages are decrypted** using recipient's private key
 
 ## Security Properties
 
@@ -186,17 +185,15 @@ This document provides technical details about Osmynt's encryption implementatio
 
 ### Standards Compliance
 
-- **FIPS 140-2** Level 3 compliance for cryptographic modules
-- **Common Criteria** EAL4+ certification for security evaluation
-- **ISO 27001** compliance for information security management
-- **SOC 2 Type II** compliance for security and availability
+- **Web Crypto API** - Uses browser-standard cryptographic APIs
+- **Industry best practices** - Follows established cryptographic standards
+- **Open source** - All cryptographic code is open source and auditable
 
 ### Regulatory Compliance
 
-- **GDPR** compliance for European data protection
-- **CCPA** compliance for California consumer privacy
-- **HIPAA** compliance for healthcare data protection
-- **SOX** compliance for financial data protection
+- **Data minimization** - Only collects necessary authentication data
+- **User control** - Users control their own encryption keys
+- **Transparency** - Open source code allows for security verification
 
 ## Security Resources
 
