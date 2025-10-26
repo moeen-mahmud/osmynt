@@ -35,23 +35,24 @@ Osmynt is built with enterprise-grade security as a core principle. This section
 
 ### Encryption
 
-- **AES-256 encryption** for all shared code
-- **RSA key exchange** for secure team communication
+- **AES-256-GCM encryption** for all shared code
+- **ECDH-P256 key exchange** for secure team communication
 - **Perfect forward secrecy** - past communications remain secure
 - **End-to-end encryption** - only team members can decrypt
 
 ### Authentication
 
 - **GitHub OAuth** for secure authentication
+- **JWT tokens** with 12-hour access and 30-day refresh tokens
 - **Device verification** ensures only authorized devices can access teams
-- **Secure token management** - tokens are stored securely
+- **Secure token management** - tokens are stored in VS Code secrets
 - **Automatic token refresh** - tokens are refreshed automatically
 
 ### Access Control
 
 - **Team-based access** - code can only be shared within teams
 - **Member verification** - only verified team members can access code
-- **Device management** - control which devices can access teams
+- **Device management** - maximum 2 devices per user account
 - **Permission management** - control who can share and receive code
 
 ## Security Best Practices
@@ -110,24 +111,22 @@ Osmynt is built with enterprise-grade security as a core principle. This section
 
 ### Data Protection
 
-- **GDPR compliant** - European data protection regulations
-- **CCPA compliant** - California consumer privacy regulations
-- **SOC 2 Type II** - security and availability controls
-- **ISO 27001** - information security management
+- **Encrypted storage** - all data encrypted at rest and in transit
+- **Minimal data collection** - only necessary user data is collected
+- **User control** - users control their own encryption keys
 
 ### Privacy Protection
 
-- **No data collection** - we don't collect personal data
+- **Minimal data collection** - only necessary authentication data
 - **No tracking** - we don't track user activity
 - **No analytics** - we don't use analytics
 - **No third-party sharing** - we don't share data with third parties
 
 ### Security Audits
 
-- **Regular security audits** - third-party security audits
-- **Penetration testing** - regular penetration testing
 - **Code reviews** - regular code security reviews
 - **Vulnerability assessments** - regular vulnerability assessments
+- **Security testing** - ongoing security testing during development
 
 ## Security Incidents
 
