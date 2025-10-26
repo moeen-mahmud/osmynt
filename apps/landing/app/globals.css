@@ -84,6 +84,7 @@
 @layer base {
 	* {
 		@apply border-border outline-ring/50;
+		@apply scrollbar-thumb-green-400 scrollbar-track-green-950 scrollbar-thin;
 	}
 	body {
 		@apply bg-background text-foreground;
@@ -117,3 +118,5 @@
 .animate-float {
 	animation: float 3s ease-in-out infinite;
 }
+
+@plugin "tailwind-scrollbar";

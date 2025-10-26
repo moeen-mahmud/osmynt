@@ -12,6 +12,7 @@
 		"@commitlint/cli": "^19.8.1",
 		"@commitlint/config-conventional": "^19.8.1",
 		"@types/bun": "latest",
+		"critters": "^0.0.25",
 		"husky": "^9.1.7"
 	},
 	"peerDependencies": {
