@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { Suspense } from "react";
 import { StructuredData } from "@/components/structured-data";
@@ -84,8 +85,7 @@ export default function RootLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	// Get GTM ID from environment variable, fallback to your current GA ID
-	const gtmId = process.env.NEXT_PUBLIC_GTM_ID || "G-5W3B8H1SR1";
+	const gtmId = process.env.NEXT_PUBLIC_GTM_ID || "GTM-N744GSGN";
 
 	return (
 		<html lang="en">
@@ -99,6 +99,7 @@ export default function RootLayout({
 					<PerformanceOptimizer />
 					{/* <RebrandBanner /> */}
 					<Suspense fallback={null}>{children}</Suspense>
+					<SpeedInsights />
 					<Analytics />
 				</ThemeProvider>
 			</body>
