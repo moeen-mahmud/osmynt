@@ -85,8 +85,7 @@ export default function RootLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	// Get GTM ID from environment variable, fallback to your current GA ID
-	const gtmId = process.env.NEXT_PUBLIC_GTM_ID || "G-5W3B8H1SR1";
+	const gtmId = process.env.NEXT_PUBLIC_GTM_ID || "GTM-N744GSGN";
 
 	return (
 		<html lang="en">
