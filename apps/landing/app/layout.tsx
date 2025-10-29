@@ -9,7 +9,7 @@ import { Suspense } from "react";
 import { StructuredData } from "@/components/structured-data";
 import { PerformanceOptimizer } from "@/components/performance";
 import { ThemeProvider } from "@/components/theme-provider";
-import { GoogleTagManager, GTMNoScript } from "@/components/gtm";
+import { GoogleAnalytics } from "@/components/gtm";
 
 export const metadata: Metadata = {
 	title: {
@@ -85,16 +85,15 @@ export default function RootLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	const gtmId = process.env.NEXT_PUBLIC_GTM_ID || "GTM-N744GSGN";
+	const gaId = process.env.NEXT_PUBLIC_GA_ID || "G-C83WMRT0LJ";
 
 	return (
 		<html lang="en">
 			<head>
-				<GoogleTagManager gtmId={gtmId} />
+				<GoogleAnalytics gaId={gaId} />
 				<StructuredData />
 			</head>
 			<body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-				<GTMNoScript gtmId={gtmId} />
 				<ThemeProvider>
 					<PerformanceOptimizer />
 					{/* <RebrandBanner /> */}
